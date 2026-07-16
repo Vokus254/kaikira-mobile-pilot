@@ -1057,117 +1057,85 @@ window.addEventListener('load', () => {
     <a class="close" href="#workflow-step-live">← Workflow 6</a>
     <div class="eyebrow">Maßnahme 6.3 · Digitales Workpaper</div>
     <h2>Anlagenspiegel erstellen</h2>
-    <p><b>Soll-Ergebnis:</b> Vollständiger, rechnerisch korrekter und mit Anlagenbuchhaltung, Hauptbuch und Bilanz abgestimmter Anlagenspiegel.</p>
+    <p><b>Soll-Ergebnis:</b> Anlagenspiegel aus den vorhandenen Abschlussdaten vorbelegen und anschließend fachlich vervollständigen.</p>
 
     <div class="statusbar">
       <span class="status orange">Vorbelegung fachlich prüfen</span>
-      <span class="status blue">Rechnerisch abgestimmt</span>
-    </div>
-
-    <div class="asset-summary">
-      <div class="kpi"><strong>12,45 Mio. €</strong><small>Buchwert 31.12.</small></div>
-      <div class="kpi"><strong>0 €</strong><small>Differenz zur Bilanz</small></div>
-      <div class="kpi"><strong>0 €</strong><small>AfA-Differenz zur GuV</small></div>
-      <div class="kpi"><strong>SuSa</strong><small>RBW &amp; AfA Quelle</small></div>
-    </div>
-
-    <div class="asset-recon">
-      <strong>✓ Bilanzabstimmung erfolgreich</strong>
-      Restbuchwerte aus SuSa 12.450.000 € · Bilanz Anlagevermögen 12.450.000 € · Differenz 0 €
+      <span class="status blue">RBW &amp; AfA aus SuSa</span>
     </div>
 
     <div class="section-title">Anlagenspiegel · 3 geschlossene Akkordeons</div>
 
     <details class="card">
       <summary><b>1. AK/HK</b><span>Anschaffungs- und Herstellungskosten</span></summary>
-      <p>Darstellung der AK/HK nach Anlagenklassen. Die Restbuchwerte werden hiervon unabhängig direkt aus der SuSa übernommen.</p>
+      <p>AK/HK werden nicht aus Restbuchwerten geschätzt. Die Werte sind aus Anlagenbuchhaltung bzw. Anlagenverzeichnis zu übernehmen.</p>
       <div class="asset-table-wrap">
         <table class="asset-table">
-          <thead><tr><th>Anlagenklasse</th><th>AK/HK 31.12. BJ</th><th>Hinweis</th></tr></thead>
+          <thead><tr><th>Anlagenklasse</th><th>01.01.</th><th>Zugänge</th><th>Abgänge</th><th>Umbuchungen</th><th>31.12.</th></tr></thead>
           <tbody>
-            <tr><td>Immaterielle Vermögensgegenstände</td><td>2.460.000 €</td><td>Anlagenbuchhaltung</td></tr>
-            <tr><td>Grundstücke und Bauten</td><td>11.520.000 €</td><td>Anlagenbuchhaltung</td></tr>
-            <tr><td>Technische Anlagen und Maschinen</td><td>9.250.000 €</td><td>Anlagenbuchhaltung</td></tr>
-            <tr><td>Betriebs- und Geschäftsausstattung</td><td>—</td><td>zu ergänzen</td></tr>
-            <tr><td>Anlagen im Bau</td><td>—</td><td>zu ergänzen</td></tr>
-            <tr><td>Finanzanlagen</td><td>—</td><td>zu ergänzen</td></tr>
+            <tr><td>Immaterielle Vermögensgegenstände</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+            <tr><td>Sachanlagen</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+            <tr><td>Finanzanlagen</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+            <tr class="total"><td>Summe</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
           </tbody>
         </table>
       </div>
+      <div class="asset-issue"><b>Noch zu vervollständigen</b><p>AK/HK-Bewegungen benötigen die Anlagenbuchhaltung bzw. das Anlagenverzeichnis. Es werden keine Musterwerte erzeugt.</p></div>
     </details>
 
     <details class="card">
-      <summary><b>2. AfA</b><span>Geschäftsjahres-AfA aus SuSa · 1.340.000 €</span></summary>
+      <summary><b>2. AfA</b><span>Geschäftsjahres-AfA aus SuSa · 1.420.000 €</span></summary>
       <div class="asset-recon">
-        <strong>✓ GuV-Abstimmung erfolgreich</strong>
-        AfA laut SuSa 1.340.000 € · Abschreibungen laut GuV 1.340.000 € · Differenz 0 €
+        <strong>✓ GuV-Abstimmung</strong>
+        AfA aus SuSa 1.420.000 € · Abschreibungen laut GuV 1.420.000 € · Differenz 0 €
       </div>
       <div class="asset-table-wrap">
         <table class="asset-table">
-          <thead><tr><th>Anlagenklasse</th><th>AfA BJ</th><th>Herkunft</th></tr></thead>
+          <thead><tr><th>Anlagenklasse</th><th>AfA Geschäftsjahr</th><th>Herkunft</th></tr></thead>
           <tbody>
             <tr><td>Immaterielle Vermögensgegenstände</td><td>250.000 €</td><td>SuSa</td></tr>
-            <tr><td>Grundstücke und Bauten</td><td>370.000 €</td><td>SuSa</td></tr>
-            <tr><td>Technische Anlagen und Maschinen</td><td>720.000 €</td><td>SuSa</td></tr>
-            <tr class="total"><td>Summe AfA Geschäftsjahr</td><td>1.340.000 €</td><td>SuSa → GuV</td></tr>
+            <tr><td>Sachanlagen</td><td>1.170.000 €</td><td>SuSa</td></tr>
+            <tr><td>Finanzanlagen</td><td>0 €</td><td>SuSa</td></tr>
+            <tr class="total"><td>Summe AfA Geschäftsjahr</td><td>1.420.000 €</td><td>SuSa → GuV</td></tr>
           </tbody>
         </table>
       </div>
     </details>
 
     <details class="card">
-      <summary><b>3. RBW</b><span>Restbuchwerte aus SuSa · BJ 12.450.000 € · VJ 11.850.000 €</span></summary>
+      <summary><b>3. RBW</b><span>Restbuchwerte aus SuSa · BJ 12.850.000 € · VJ 12.420.000 €</span></summary>
       <div class="asset-recon">
-        <strong>✓ Bilanzabstimmung erfolgreich</strong>
-        Restbuchwerte laut SuSa 12.450.000 € · Bilanz Anlagevermögen 12.450.000 € · Differenz 0 €
+        <strong>✓ Bilanzabstimmung</strong>
+        RBW aus SuSa 12.850.000 € · Bilanz Anlagevermögen 12.850.000 € · Differenz 0 €
       </div>
-      <p><b>Vorbelegungslogik:</b> RBW BJ und RBW VJ werden immer direkt aus der SuSa übernommen. Positive Differenz BJ minus VJ wird als Zugang vorbelegt; negative Differenz wird als Abgang vorbelegt.</p>
+      <p><b>Vorbelegung:</b> RBW BJ und VJ werden direkt aus der SuSa übernommen. Positive Differenz BJ minus VJ = Zugang; negative Differenz = Abgang.</p>
       <div class="asset-table-wrap">
         <table class="asset-table">
           <thead><tr><th>Anlagenklasse</th><th>RBW VJ</th><th>Zugänge</th><th>Abgänge</th><th>RBW BJ</th><th>Herkunft</th></tr></thead>
           <tbody>
             <tr><td>Immaterielle Vermögensgegenstände</td><td>850.000 €</td><td>70.000 €</td><td>—</td><td>920.000 €</td><td>SuSa</td></tr>
-            <tr><td>Sachanlagen</td><td>10.800.000 €</td><td>550.000 €</td><td>—</td><td>11.350.000 €</td><td>SuSa</td></tr>
+            <tr><td>Sachanlagen</td><td>11.370.000 €</td><td>380.000 €</td><td>—</td><td>11.750.000 €</td><td>SuSa</td></tr>
             <tr><td>Finanzanlagen</td><td>200.000 €</td><td>—</td><td>20.000 €</td><td>180.000 €</td><td>SuSa</td></tr>
-            <tr class="total"><td>Summe</td><td>11.850.000 €</td><td>620.000 €</td><td>20.000 €</td><td>12.450.000 €</td><td>SuSa → Bilanz</td></tr>
+            <tr class="total"><td>Summe</td><td>12.420.000 €</td><td>450.000 €</td><td>20.000 €</td><td>12.850.000 €</td><td>SuSa → Bilanz</td></tr>
           </tbody>
         </table>
       </div>
-
-      <div class="section-title">KIRA · fachliche Prüfung der Vorbelegung</div>
       <div class="asset-issue">
-        <b>Hinweis zur Vorbelegung</b>
-        <p>Zugänge und Abgänge sind aus der Veränderung der Restbuchwerte vorbelegt. KIRA kennzeichnet diese als vorläufig, bis die tatsächlichen Anlagenbewegungen durch Anlagenbuchhaltung oder Nachweise bestätigt wurden.</p>
-        <div class="statusbar"><span class="status orange">Vorbelegung aus SuSa</span></div>
+        <b>KIRA-Hinweis</b>
+        <p>Zugänge und Abgänge sind zunächst ausschließlich aus der Veränderung der Restbuchwerte vorbelegt und müssen später mit den tatsächlichen Anlagenbewegungen verifiziert werden.</p>
       </div>
     </details>
 
-    <div class="section-title">Nachweise</div>
-    <div class="card">
-      <div class="asset-evidence"><div><b>Anlagenverzeichnis</b><span>Admin-Upload</span></div><span>✓ vorhanden</span></div>
-      <div class="asset-evidence"><div><b>SuSa / Sachkonten</b><span>Systemverknüpfung</span></div><span>✓ vorhanden</span></div>
-      <div class="asset-evidence"><div><b>Buchungsjournal</b><span>Admin-Upload</span></div><span>✓ vorhanden</span></div>
-      <div class="asset-evidence"><div><b>Beleg M-4711</b><span>Rechnung / Aktivierung</span></div><span>○ Review</span></div>
-      <div class="asset-evidence"><div><b>Abgangsbeleg M-1842</b><span>Verkauf / Ausbuchung</span></div><span>○ Review</span></div>
-      <div class="asset-evidence"><div><b>Nachweis M-3381</b><span>AfA / Inbetriebnahme</span></div><span>! fehlt</span></div>
-    </div>
-
     <div class="section-title">Automatische Prüfungen</div>
     <div class="card">
-      <div class="teamrow"><div><b>AK/HK</b><span>Separates Akkordeon · Anlagenbuchhaltung / Nachweise</span></div><span>✓</span></div>
-      <div class="teamrow"><div><b>AfA-Abstimmung</b><span>AfA Geschäftsjahr direkt aus SuSa = GuV</span></div><span>✓</span></div>
-      <div class="teamrow"><div><b>RBW-Übernahme</b><span>RBW BJ und VJ direkt aus SuSa</span></div><span>✓</span></div>
-      <div class="teamrow"><div><b>Bilanzabstimmung</b><span>Summe Buchwerte = Anlagevermögen</span></div><span>✓</span></div>
-      <div class="teamrow"><div><b>Bewegungsvorbelegung</b><span>positive RBW-Differenz = Zugang · negative = Abgang</span></div><span>✓</span></div>
-      <div class="teamrow"><div><b>Fachliche Verifikation</b><span>Vorbelegte Zugänge / Abgänge gegen Anlagenbewegungen prüfen</span></div><span>!</span></div>
+      <div class="teamrow"><div><b>RBW BJ</b><span>SuSa 12.850.000 € = Bilanz Anlagevermögen 12.850.000 €</span></div><span>✓</span></div>
+      <div class="teamrow"><div><b>RBW VJ</b><span>SuSa 12.420.000 € = Bilanz Anlagevermögen VJ 12.420.000 €</span></div><span>✓</span></div>
+      <div class="teamrow"><div><b>AfA Geschäftsjahr</b><span>SuSa 1.420.000 € = GuV Abschreibungen 1.420.000 €</span></div><span>✓</span></div>
+      <div class="teamrow"><div><b>AK/HK</b><span>Keine Schätzung; Anlagenbuchhaltung / Anlagenverzeichnis erforderlich</span></div><span>!</span></div>
     </div>
 
     <div class="section-title">Workpaper-Ergebnis</div>
-    <div class="blocker">RBW und AfA sind mit SuSa, Bilanz und GuV abgestimmt. Zugänge und Abgänge wurden aus der RBW-Veränderung vorbelegt und müssen vor der Freigabe fachlich gegen die tatsächlichen Anlagenbewegungen verifiziert werden.</div>
-
-    <div class="option">Status: Fachlicher Review erforderlich</div>
-    <div class="option">KAI: Nächsten offenen Sachverhalt anzeigen</div>
-    <div class="option">KIRA: Review erneut ausführen</div>
+    <div class="blocker">RBW und AfA sind aus der SuSa vorbelegt und gegen Bilanz bzw. GuV abgestimmt. AK/HK und die tatsächlichen Anlagenbewegungen sind noch aus der Anlagenbuchhaltung zu ergänzen und zu verifizieren.</div>
   </section>
 
   <section id="upload" class="detail"><a class="close" href="#">× Schließen</a><h2>SuSa vorbereiten</h2><p>Mobile Zielansicht: Datei auswählen, Unternehmen und Geschäftsjahr bestätigen, dann übernimmt KAI.</p><div class="option">Excel / CSV auswählen</div><div class="option">Spalten prüfen</div><div class="option">Import bestätigen</div></section>
