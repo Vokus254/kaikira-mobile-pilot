@@ -936,6 +936,15 @@ window.addEventListener('load', () => {
 });
 
 </script>
+
+<style id="report-parameter-css">
+.report-start{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}.report-start a{display:block;text-decoration:none}
+.param-group{margin:12px 0;border:1px solid rgba(255,255,255,.08);border-radius:16px;overflow:hidden;background:rgba(255,255,255,.03)}
+.param-group summary{display:flex;align-items:center;justify-content:space-between;padding:15px 16px;cursor:pointer;list-style:none}.param-group summary::-webkit-details-marker{display:none}.param-group summary span{color:#8f95a1;font-size:12px}.param-body{padding:0 16px 16px}.param-row{margin:12px 0}.param-row label{display:block;font-size:12px;color:#aeb3bd;margin-bottom:6px}.param-row select,.param-row input,.param-row textarea{width:100%;border:1px solid rgba(255,255,255,.12);background:#11141b;color:#fff;border-radius:12px;padding:12px;font:inherit}.param-row textarea{min-height:88px;resize:vertical}.prefill-note{font-size:11px;color:#8f95a1;margin-top:5px}.checkgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.checkitem{display:flex;gap:8px;align-items:flex-start;padding:9px 10px;border:1px solid rgba(255,255,255,.08);border-radius:11px;background:rgba(255,255,255,.03);font-size:13px}.checkitem input{width:auto;margin-top:2px}.report-preview{white-space:pre-wrap;line-height:1.55}.report-source{border-left:3px solid #6d7cff;padding-left:10px;margin:10px 0;color:#bfc4ce}.report-warning{border-left:3px solid #ffb24a;padding-left:10px;margin:10px 0;color:#f4cf98}.report-ok{border-left:3px solid #38d996;padding-left:10px;margin:10px 0;color:#bcefd8}.mini-actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.mini-actions button{border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);color:#fff;border-radius:999px;padding:8px 11px}.default-badge{display:inline-block;padding:2px 7px;border-radius:999px;background:rgba(109,124,255,.18);color:#aeb8ff;font-size:10px;margin-left:6px}
+#light:checked ~ .phone .param-group,#light:checked ~ .phone .checkitem{border-color:#e1e4e8;background:#fff}#light:checked ~ .phone .param-row select,#light:checked ~ .phone .param-row input,#light:checked ~ .phone .param-row textarea{background:#fff;color:#111;border-color:#d7dbe1}#light:checked ~ .phone .mini-actions button{background:#f4f6f8;color:#111;border-color:#dfe3e8}
+#pure:checked ~ .phone .param-group,#pure:checked ~ .phone .checkitem{border-color:#ccc;background:#fff}#pure:checked ~ .phone .param-row select,#pure:checked ~ .phone .param-row input,#pure:checked ~ .phone .param-row textarea{background:#fff;color:#000;border-color:#bbb}
+@media(max-width:430px){.report-start,.checkgrid{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
 <input class="theme" id="dark" type="radio" name="theme" checked>
@@ -1826,6 +1835,11 @@ window.addEventListener('load', () => {
     <div class="eyebrow">Workflow 5 · Berichtsreview</div>
     <h2>Anhang & Lagebericht</h2>
     <p>Abschnittsweises Review statt langer Dokumentansicht. KAI zeigt Datenherkunft und offene Punkte, KIRA markiert unbelegte oder prüfungsrelevante Aussagen.</p>
+    <div class="report-start">
+      <a class="action" href="#notes-parameters">Anhang erstellen</a>
+      <a class="action" href="#mgmt-parameters">Lagebericht erstellen</a>
+    </div>
+    <div class="card"><b>Bereits vorhandene Berichtslogik übernommen</b><p>Unternehmensprofil, Größenklasse, Rechtsform und Rechnungslegungsstandard steuern den Berichtsumfang. Auswahlfelder sind mit typischen Antworten vorbelegt und als Vorbelegung gekennzeichnet. Fakten- und Ursachenaussagen müssen vor Freigabe bestätigt werden.</p></div>
 
     <div class="kpi-grid">
       <div class="kpi"><strong>18</strong><small>Abschnitte</small></div>
@@ -1950,6 +1964,123 @@ window.addEventListener('load', () => {
   </section>
 
 
+  <section id="notes-parameters" class="detail">
+    <a class="close" href="#report-review">← Berichtsreview</a>
+    <div class="eyebrow">Workflow 5 · Anhang erstellen</div>
+    <h2>Anhangparameter</h2>
+    <p>KAI übernimmt vorhandene Stammdaten und Finanzdaten. Die gängigsten Antworten sind bereits vorbelegt. Eine Vorbelegung ist noch keine fachliche Bestätigung.</p>
+    <div class="statusbar"><span class="status blue">HGB</span><span class="status gray">GmbH</span><span class="status gray">Mittelgroß</span></div>
+
+    <details class="param-group" open><summary><b>1. Allgemeine Angaben</b><span>vorbelegt</span></summary><div class="param-body">
+      <div class="param-row"><label>Rechnungslegungsstandard <span class="default-badge">Vorbelegung</span></label><select data-notes="framework"><option selected>HGB</option><option>IFRS</option></select></div>
+      <div class="param-row"><label>Rechtsform <span class="default-badge">Vorbelegung</span></label><select data-notes="legalForm"><option selected>GmbH</option><option>UG (haftungsbeschränkt)</option><option>AG</option><option>GmbH &amp; Co. KG</option><option>eG</option><option>e. V.</option><option>Stiftung</option></select></div>
+      <div class="param-row"><label>Größenklasse <span class="default-badge">Vorbelegung</span></label><select data-notes="sizeClass"><option>Kleinst</option><option>Klein</option><option selected>Mittelgroß</option><option>Groß</option><option>Kapitalmarktorientiert</option></select></div>
+      <div class="param-row"><label>Abschlussart</label><select data-notes="statementType"><option selected>Einzelabschluss</option><option>Konzernabschluss</option><option>Zwischenabschluss</option></select></div>
+      <div class="param-row"><label>Branche</label><select data-notes="industry"><option selected>Industrie / Produktion</option><option>Handel</option><option>Dienstleistungen</option><option>Immobilienwirtschaft</option><option>Gesundheitswesen</option><option>Pflege</option><option>Sonstige</option></select></div>
+    </div></details>
+
+    <details class="param-group"><summary><b>2. Bilanzierungs- und Bewertungsmethoden</b><span>typische Auswahl</span></summary><div class="param-body">
+      <div class="param-row"><label>Aufstellungsgrundsatz</label><select data-notes="goingConcern"><option selected>Unternehmensfortführung</option><option>Abweichung von Unternehmensfortführung</option><option>Noch zu prüfen</option></select></div>
+      <div class="param-row"><label>Methoden gegenüber Vorjahr</label><select data-notes="consistency"><option selected>Unverändert</option><option>Geändert</option><option>Noch zu prüfen</option></select></div>
+      <div class="param-row"><label>Sachanlagen</label><select data-notes="fixedAssetMethod"><option selected>Anschaffungs-/Herstellungskosten abzüglich planmäßiger Abschreibungen</option><option>Abweichende Bewertung</option><option>Noch zu prüfen</option></select></div>
+      <div class="param-row"><label>Planmäßige Abschreibung</label><select data-notes="depreciationMethod"><option selected>Linear über betriebsgewöhnliche Nutzungsdauer</option><option>Degressiv</option><option>Leistungsabhängig</option><option>Gemischt</option></select></div>
+      <div class="param-row"><label>Forderungen</label><select data-notes="receivablesMethod"><option selected>Nennwert abzüglich erforderlicher Wertberichtigungen</option><option>Abweichende Bewertung</option></select></div>
+      <div class="param-row"><label>Rückstellungen</label><select data-notes="provisionsMethod"><option selected>Notwendiger Erfüllungsbetrag</option><option>Abweichende Bewertung</option></select></div>
+      <div class="param-row"><label>Verbindlichkeiten</label><select data-notes="liabilitiesMethod"><option selected>Erfüllungsbetrag</option><option>Abweichende Bewertung</option></select></div>
+    </div></details>
+
+    <details class="param-group"><summary><b>3. Ergänzende Pflichtangaben</b><span>Management bestätigen</span></summary><div class="param-body">
+      <div class="param-row"><label>Ereignisse nach dem Abschlussstichtag</label><select data-notes="subsequentEvents"><option selected>Keine wesentlichen Ereignisse</option><option>Wesentliche Ereignisse vorhanden</option><option>Noch nicht bestätigt</option></select><div class="prefill-note">Vorbelegt als häufigster Fall – vor Freigabe zwingend bestätigen.</div></div>
+      <div class="param-row"><label>Haftungsverhältnisse</label><select data-notes="contingencies"><option selected>Keine wesentlichen Haftungsverhältnisse</option><option>Haftungsverhältnisse vorhanden</option><option>Noch nicht bestätigt</option></select></div>
+      <div class="param-row"><label>Geschäfte mit nahestehenden Unternehmen/Personen</label><select data-notes="relatedParties"><option selected>Keine wesentlichen nicht marktüblichen Geschäfte</option><option>Angabepflichtige Geschäfte vorhanden</option><option>Noch nicht bestätigt</option></select></div>
+      <div class="param-row"><label>Ergebnisverwendung</label><select data-notes="appropriation"><option selected>Gewinnvortrag / Ausschüttung gemäß Gesellschafterbeschluss</option><option>Gewinnvortrag</option><option>Ausschüttung</option><option>Verlustvortrag</option><option>Noch offen</option></select></div>
+    </div></details>
+
+    <div class="section-title">KAI Berichtsentwurf</div>
+    <div class="card report-preview" id="notesPreview"></div>
+    <div class="report-source">Zahlen werden aus SuSa, Bilanz, GuV und Spiegeln übernommen. Die Auswahlparameter steuern nur Text und Pflichtumfang.</div>
+    <div class="report-warning">KIRA: Vorbelegte Sachverhaltsaussagen wie Ereignisse nach dem Stichtag oder Haftungsverhältnisse müssen durch Management bestätigt werden.</div>
+    <div class="mini-actions"><button type="button" onclick="renderReportPreviews()">Entwurf aktualisieren</button><button type="button" onclick="confirmPrefill('notes')">Vorbelegungen bestätigen</button></div>
+  </section>
+
+  <section id="mgmt-parameters" class="detail">
+    <a class="close" href="#report-review">← Berichtsreview</a>
+    <div class="eyebrow">Workflow 7 · Lagebericht erstellen</div>
+    <h2>Lageberichtparameter</h2>
+    <p>Finanzzahlen und Vorjahresvergleiche kommen aus der Datenbasis. Die gängigsten strukturellen Antworten sind vorbelegt. Ursachen werden nicht automatisch erfunden.</p>
+
+    <details class="param-group" open><summary><b>1. Grundlagen & Geschäftsmodell</b><span>vorbelegt</span></summary><div class="param-body">
+      <div class="param-row"><label>Geschäftsmodell</label><select data-mgmt="businessModel"><option selected>Herstellung und Vertrieb von Produkten</option><option>Handel mit Waren</option><option>Erbringung von Dienstleistungen</option><option>Immobilienbewirtschaftung</option><option>Gesundheits-/Pflegeleistungen</option></select></div>
+      <div class="param-row"><label>Marktausrichtung</label><select data-mgmt="marketType"><option selected>B2B</option><option>B2C</option><option>B2B und B2C</option><option>Öffentlicher Sektor</option></select></div>
+      <div class="param-row"><label>Regionale Ausrichtung</label><select data-mgmt="region"><option selected>Deutschland und Europäische Union</option><option>Deutschland</option><option>Europa</option><option>International / weltweit</option></select></div>
+    </div></details>
+
+    <details class="param-group"><summary><b>2. Wirtschaftsbericht</b><span>Zahlen automatisch</span></summary><div class="param-body">
+      <div class="param-row"><label>Gesamtbeurteilung der Lage</label><select data-mgmt="assessment"><option>Sehr gut</option><option selected>Stabil</option><option>Gut</option><option>Angespannt</option><option>Kritisch</option><option>Noch zu formulieren</option></select></div>
+      <div class="param-row"><label>Geschäftsverlauf gegenüber Planung</label><select data-mgmt="course"><option selected>Planmäßig</option><option>Über Plan</option><option>Unter Plan</option><option>Durch Sondereffekte geprägt</option><option>Noch zu beurteilen</option></select></div>
+      <div class="param-row"><label>Ursache der Umsatzveränderung</label><select data-mgmt="revenueCause"><option selected>Noch nicht durch Management bestätigt</option><option>Preisveränderungen</option><option>Absatzmengen</option><option>Produkt-/Leistungsmix</option><option>Akquisitionen / Konsolidierungskreis</option><option>Mehrere Faktoren</option><option>Sonstige</option></select><div class="prefill-note">Bewusst keine Ursache vorbelegt: aus SuSa/GuV nicht ableitbar.</div></div>
+      <div class="param-row"><label>Wesentliche Einflussfaktoren</label><textarea data-mgmt="economicFactors" placeholder="Managementangabe; leer lassen, wenn noch nicht bekannt"></textarea></div>
+    </div></details>
+
+    <details class="param-group"><summary><b>3. Leistungsindikatoren</b><span>gängige KPIs markiert</span></summary><div class="param-body">
+      <div class="param-row"><label>Finanzielle KPIs</label><div class="checkgrid">
+        <label class="checkitem"><input type="checkbox" data-mgmt-check="kpis" value="Umsatz" checked>Umsatz</label>
+        <label class="checkitem"><input type="checkbox" data-mgmt-check="kpis" value="EBIT" checked>EBIT</label>
+        <label class="checkitem"><input type="checkbox" data-mgmt-check="kpis" value="EBITDA">EBITDA</label>
+        <label class="checkitem"><input type="checkbox" data-mgmt-check="kpis" value="Jahresergebnis">Jahresergebnis</label>
+        <label class="checkitem"><input type="checkbox" data-mgmt-check="kpis" value="Cashflow" checked>Cashflow</label>
+        <label class="checkitem"><input type="checkbox" data-mgmt-check="kpis" value="Eigenkapitalquote">Eigenkapitalquote</label>
+      </div></div>
+      <div class="param-row"><label>Nichtfinanzielle KPIs</label><div class="checkgrid">
+        <label class="checkitem"><input type="checkbox" data-mgmt-check="nonKpis" value="Mitarbeiter" checked>Mitarbeiter</label>
+        <label class="checkitem"><input type="checkbox" data-mgmt-check="nonKpis" value="Produktqualität" checked>Produktqualität</label>
+        <label class="checkitem"><input type="checkbox" data-mgmt-check="nonKpis" value="Kundenzufriedenheit">Kundenzufriedenheit</label>
+        <label class="checkitem"><input type="checkbox" data-mgmt-check="nonKpis" value="Liefertermintreue">Liefertermintreue</label>
+      </div></div>
+    </div></details>
+
+    <details class="param-group"><summary><b>4. Prognose</b><span>1 Jahr vorbelegt</span></summary><div class="param-body">
+      <div class="param-row"><label>Prognosehorizont</label><select data-mgmt="forecastHorizon"><option selected>Ein Jahr</option><option>Zwei Jahre</option><option>Mehr als zwei Jahre</option></select></div>
+      <div class="param-row"><label>Umsatzprognose</label><select data-mgmt="forecastRevenue"><option>Deutlich steigend</option><option>Leicht steigend</option><option selected>Stabil</option><option>Leicht rückläufig</option><option>Deutlich rückläufig</option><option>Noch nicht bestätigt</option></select></div>
+      <div class="param-row"><label>Ergebnisprognose</label><select data-mgmt="forecastResult"><option>Deutlich steigend</option><option>Leicht steigend</option><option selected>Stabil</option><option>Leicht rückläufig</option><option>Deutlich rückläufig</option><option>Noch nicht bestätigt</option></select></div>
+      <div class="param-row"><label>Wesentliche Annahmen / Unsicherheiten</label><textarea data-mgmt="forecastAssumptions" placeholder="Managementannahmen"></textarea></div>
+    </div></details>
+
+    <details class="param-group"><summary><b>5. Chancen & Risiken</b><span>typische Kategorien</span></summary><div class="param-body">
+      <div class="param-row"><label>Wesentliche Risiken</label><div class="checkgrid">
+        <label class="checkitem"><input type="checkbox" data-mgmt-check="risks" value="Marktrisiken" checked>Marktrisiken</label>
+        <label class="checkitem"><input type="checkbox" data-mgmt-check="risks" value="Personalrisiken" checked>Personalrisiken</label>
+        <label class="checkitem"><input type="checkbox" data-mgmt-check="risks" value="IT-/Cyberrisiken" checked>IT-/Cyberrisiken</label>
+        <label class="checkitem"><input type="checkbox" data-mgmt-check="risks" value="Beschaffungsrisiken">Beschaffungsrisiken</label>
+        <label class="checkitem"><input type="checkbox" data-mgmt-check="risks" value="Liquiditätsrisiken">Liquiditätsrisiken</label>
+        <label class="checkitem"><input type="checkbox" data-mgmt-check="risks" value="Rechtsrisiken">Rechtsrisiken</label>
+      </div></div>
+      <div class="param-row"><label>Wesentliche Chancen</label><div class="checkgrid">
+        <label class="checkitem"><input type="checkbox" data-mgmt-check="opportunities" value="Digitalisierung" checked>Digitalisierung</label>
+        <label class="checkitem"><input type="checkbox" data-mgmt-check="opportunities" value="Effizienzsteigerung" checked>Effizienzsteigerung</label>
+        <label class="checkitem"><input type="checkbox" data-mgmt-check="opportunities" value="Marktwachstum">Marktwachstum</label>
+        <label class="checkitem"><input type="checkbox" data-mgmt-check="opportunities" value="Neue Produkte">Neue Produkte</label>
+      </div></div>
+      <div class="param-row"><label>Risikomanagementsystem</label><select data-mgmt="riskSystem"><option selected>Vorhanden und regelmäßig aktualisiert</option><option>Vorhanden</option><option>Im Aufbau</option><option>Nicht formalisiert</option><option>Noch zu prüfen</option></select></div>
+    </div></details>
+
+    <details class="param-group"><summary><b>6. Internes Kontrollsystem</b><span>Standardkomponenten markiert</span></summary><div class="param-body">
+      <div class="checkgrid">
+        <label class="checkitem"><input type="checkbox" data-mgmt-check="ics" value="Kontrollumfeld" checked>Kontrollumfeld</label>
+        <label class="checkitem"><input type="checkbox" data-mgmt-check="ics" value="Risikobeurteilung" checked>Risikobeurteilung</label>
+        <label class="checkitem"><input type="checkbox" data-mgmt-check="ics" value="Kontrollaktivitäten" checked>Kontrollaktivitäten</label>
+        <label class="checkitem"><input type="checkbox" data-mgmt-check="ics" value="Information und Kommunikation" checked>Information & Kommunikation</label>
+        <label class="checkitem"><input type="checkbox" data-mgmt-check="ics" value="Überwachung" checked>Überwachung</label>
+      </div>
+    </div></details>
+
+    <div class="section-title">KAI Lageberichtsentwurf</div>
+    <div class="card report-preview" id="mgmtPreview"></div>
+    <div class="report-source">Vermögens-, Finanz- und Ertragslage verwenden ausschließlich vorhandene BJ/VJ-Finanzdaten. Ursachen kommen nur aus bestätigten Managementangaben.</div>
+    <div class="report-warning" id="mgmtWarning">KIRA: Umsatzursache noch nicht bestätigt. Der Entwurf bleibt an dieser Stelle neutral.</div>
+    <div class="mini-actions"><button type="button" onclick="renderReportPreviews()">Entwurf aktualisieren</button><button type="button" onclick="confirmPrefill('mgmt')">Vorbelegungen bestätigen</button></div>
+  </section>
+
 <div id="liveAuth" class="live-auth">
   <div class="auth-card">
     <div class="eyebrow">KAI & KIRA · Multi-User Pilot</div>
@@ -2037,5 +2168,40 @@ window.addEventListener('load', () => {
 </section>
 
 </div>
+
+<script id="report-parameter-js">
+(function(){
+  function getVal(scope,key){var el=document.querySelector('[data-'+scope+'="'+key+'"]');return el?el.value:''}
+  function checks(group){return Array.from(document.querySelectorAll('[data-mgmt-check="'+group+'"]:checked')).map(function(x){return x.value})}
+  window.renderReportPreviews=function(){
+    var np=document.getElementById('notesPreview');
+    if(np){
+      var fw=getVal('notes','framework'), lf=getVal('notes','legalForm'), sc=getVal('notes','sizeClass');
+      var gc=getVal('notes','goingConcern'), cons=getVal('notes','consistency'), fa=getVal('notes','fixedAssetMethod'), dep=getVal('notes','depreciationMethod');
+      var rec=getVal('notes','receivablesMethod'), prov=getVal('notes','provisionsMethod'), liab=getVal('notes','liabilitiesMethod');
+      var evt=getVal('notes','subsequentEvents'), cont=getVal('notes','contingencies');
+      np.textContent='ANHANG – ENTWURF\n\nAllgemeine Angaben\nDie Muster GmbH ist eine Gesellschaft mit beschränkter Haftung. Der Jahresabschluss wird nach '+fw+' aufgestellt. Die Gesellschaft ist als '+sc.toLowerCase()+'es Unternehmen eingeordnet.\n\nBilanzierungs- und Bewertungsmethoden\nDer Jahresabschluss wurde unter der Annahme der '+gc.toLowerCase()+' aufgestellt. Die Bilanzierungs- und Bewertungsmethoden wurden gegenüber dem Vorjahr '+cons.toLowerCase()+' angewendet. Sachanlagen werden zu '+fa.toLowerCase()+' bewertet. Die planmäßige Abschreibung erfolgt '+dep.toLowerCase()+'. Forderungen werden mit '+rec.toLowerCase()+' angesetzt. Rückstellungen werden mit dem '+prov.toLowerCase()+' bewertet. Verbindlichkeiten werden mit dem '+liab.toLowerCase()+' angesetzt.\n\nErgänzende Angaben\nEreignisse nach dem Abschlussstichtag: '+evt+'. Haftungsverhältnisse: '+cont+'.\n\n[Tabellen und Beträge werden aus Bilanz, GuV, SuSa und Spiegeln übernommen.]';
+    }
+    var mp=document.getElementById('mgmtPreview');
+    if(mp){
+      var bm=getVal('mgmt','businessModel'), mt=getVal('mgmt','marketType'), reg=getVal('mgmt','region'), assess=getVal('mgmt','assessment'), course=getVal('mgmt','course');
+      var cause=getVal('mgmt','revenueCause'), horizon=getVal('mgmt','forecastHorizon'), fr=getVal('mgmt','forecastRevenue'), fres=getVal('mgmt','forecastResult');
+      var k=checks('kpis').join(', '), nk=checks('nonKpis').join(', '), r=checks('risks').join(', '), o=checks('opportunities').join(', '), ics=checks('ics').join(', ');
+      var causeText=cause==='Noch nicht durch Management bestätigt'?'Die Ursachen der Umsatzveränderung sind noch durch das Management zu bestätigen.':'Als wesentliche Ursache der Umsatzveränderung wurde '+cause.toLowerCase()+' angegeben.';
+      mp.textContent='LAGEBERICHT – ENTWURF\n\nGrundlagen des Unternehmens\nDie Gesellschaft betreibt '+bm.toLowerCase()+' und ist überwiegend im '+mt+'-Markt tätig. Die regionale Ausrichtung umfasst '+reg+'.\n\nWirtschaftsbericht\nDie Unternehmensleitung beurteilt die wirtschaftliche Lage insgesamt als '+assess.toLowerCase()+'. Der Geschäftsverlauf war gegenüber der Planung '+course.toLowerCase()+'. Die Entwicklung der Vermögens-, Finanz- und Ertragslage wird aus den hinterlegten Bilanz- und GuV-Daten für Berichtsjahr und Vorjahr abgeleitet. '+causeText+'\n\nLeistungsindikatoren\nAls finanzielle Leistungsindikatoren werden insbesondere '+(k||'[noch festzulegen]')+' verwendet. Nichtfinanzielle Leistungsindikatoren sind '+(nk||'[noch festzulegen]')+'.\n\nPrognosebericht\nDer Prognosehorizont beträgt '+horizon.toLowerCase()+'. Für den Umsatz wird eine '+fr.toLowerCase()+'e Entwicklung erwartet; für das Ergebnis eine '+fres.toLowerCase()+'e Entwicklung. Annahmen und Unsicherheiten sind durch das Management zu ergänzen bzw. zu bestätigen.\n\nChancen und Risiken\nWesentliche Risikokategorien: '+(r||'[noch festzulegen]')+'. Wesentliche Chancen: '+(o||'[noch festzulegen]')+'.\n\nInternes Kontrollsystem\nDas rechnungslegungsbezogene interne Kontrollsystem umfasst: '+(ics||'[noch festzulegen]')+'.';
+      var warn=document.getElementById('mgmtWarning'); if(warn) warn.style.display=(cause==='Noch nicht durch Management bestätigt')?'block':'none';
+    }
+  };
+  window.confirmPrefill=function(scope){
+    try{localStorage.setItem('kaikira_'+scope+'_prefill_confirmed',new Date().toISOString())}catch(e){}
+    alert('Vorbelegte '+(scope==='notes'?'Anhang':'Lagebericht')+'-Parameter wurden als geprüft markiert. Sachverhaltsabhängige Angaben und Zahlen bleiben weiterhin KIRA-prüfpflichtig.');
+  };
+  document.addEventListener('change',function(e){if(e.target.matches('[data-notes],[data-mgmt],[data-mgmt-check]'))renderReportPreviews()});
+  document.addEventListener('input',function(e){if(e.target.matches('[data-notes],[data-mgmt]'))renderReportPreviews()});
+  document.addEventListener('DOMContentLoaded',renderReportPreviews);
+  renderReportPreviews();
+})();
+</script>
+
 </body>
 </html>
