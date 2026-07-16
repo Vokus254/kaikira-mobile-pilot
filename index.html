@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<title>KAI & KIRA Mobile v2.6.2 Workflow Navigation Fix</title>
+<title>KAI & KIRA Mobile v2.6.3 Workflow Übersicht</title>
 <style>
 :root{--bg:#0a0b10;--card:#12141b;--txt:#f7f8fb;--muted:#9aa0ad;--line:rgba(255,255,255,.09);--accent:#fff}
 *{box-sizing:border-box} html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;background:#000;color:var(--txt);overflow:hidden}
@@ -238,6 +238,19 @@ details.option[open] > summary:after{content:"−"}
 #pure:checked ~ .phone .admin-check{
   background:#fff;color:#000;border:1px solid #aaa;border-radius:8px;
 }
+
+
+.workflow-jump{
+  width:100%;
+  text-align:left;
+  color:inherit;
+  font:inherit;
+  cursor:pointer;
+}
+.workflow-jump b{font-size:16px}
+.workflow-jump span{font-size:13px;color:#9aa0ad}
+#light:checked ~ .phone .workflow-jump span{color:#666}
+#pure:checked ~ .phone .workflow-jump span{color:#555}
 
 </style>
 <script>
@@ -713,28 +726,23 @@ window.escalateAdminTask = async function(){
 };
 
 
-function goWorkflowHome(){
-  // Remove any open :target detail overlay.
-  if (window.location.hash) {
-    history.replaceState(null, '', window.location.pathname + window.location.search);
-  }
+window.jumpWorkflowStep = function(step){
+  // Close detail overlay by replacing the hash.
+  history.replaceState(null, '', window.location.pathname + window.location.search);
 
   const feed = document.getElementById('workflow-feed');
-  const home = document.getElementById('workflow-home');
+  const target = document.getElementById('workflow-' + step);
 
-  if (feed) {
-    feed.scrollTop = 0;
+  if(feed && target){
+    const top = target.offsetTop;
+    feed.scrollTo({ top, behavior: 'smooth' });
+
+    // Fallback for browsers with scroll-snap quirks.
+    setTimeout(() => {
+      feed.scrollTop = top;
+    }, 350);
   }
-
-  if (home) {
-    home.scrollIntoView({behavior:'auto', block:'start'});
-  }
-
-  // Second pass for mobile browsers / scroll-snap containers.
-  requestAnimationFrame(() => {
-    if (feed) feed.scrollTop = 0;
-  });
-}
+};
 
 // Einfache Pilot-Synchronisation ohne externe Realtime-Bibliothek:
 // bei sichtbarer App alle 10 Sekunden neu laden.
@@ -748,15 +756,6 @@ setInterval(() => {
 window.addEventListener('load', () => {
   const loginButton = document.getElementById('loginButton');
   if (loginButton) loginButton.addEventListener('click', liveLogin);
-
-  const workflowButton = document.getElementById('workflowNavButton');
-  if (workflowButton) {
-    workflowButton.addEventListener('click', (event) => {
-      event.preventDefault();
-      goWorkflowHome();
-    });
-  }
-
   initLiveApp();
 });
 
@@ -774,7 +773,7 @@ window.addEventListener('load', () => {
   <div class="skin"><label for="dark">Dunkel</label><label for="light">Hell</label><label for="pure">Pur</label></div>
 
   <main class="feed" id="workflow-feed">
-    <section class="screen" id="workflow-home">
+    <section class="screen" id="workflow-1">
       <div class="kai">KAI</div>
       <div class="eyebrow">Workflow 1 von 9 · Daten</div>
       <h1 class="title">Alles beginnt mit deiner SuSa.</h1>
@@ -783,7 +782,7 @@ window.addEventListener('load', () => {
       <div class="hint">Nach oben wischen</div>
     </section>
 
-    <section class="screen">
+    <section class="screen" id="workflow-2">
       <div class="eyebrow">Workflow 2 von 9 · Mapping</div>
       <div class="stat">842 <small>Konten</small></div>
       <h1 class="title">Nur 13 brauchen dich.</h1>
@@ -792,14 +791,14 @@ window.addEventListener('load', () => {
       <div class="hint">Feed statt Tabelle</div>
     </section>
 
-    <section class="screen">
+    <section class="screen" id="workflow-3">
       <div class="eyebrow">Workflow 3 von 9 · Plausibilität</div>
       <h1 class="title">Eine Auffälligkeit. Sonst sauber.</h1>
       <div class="card"><b>Rückstellungen +47 %</b><p>KIRA markiert den Ausreißer. Du entscheidest, ob eine Erläuterung erforderlich ist.</p></div>
       <a class="action" href="#plausi">Prüfen</a>
     </section>
 
-    <section class="screen">
+    <section class="screen" id="workflow-4">
       <div class="eyebrow">Workflow 4 von 9 · Aufgabensteuerung</div>
       <h1 class="title">3 Themen offen.</h1>
       <div class="task-meta">
@@ -811,14 +810,14 @@ window.addEventListener('load', () => {
       <a class="action" href="#abstimmung">Aufgabe steuern</a>
     </section>
 
-    <section class="screen">
+    <section class="screen" id="workflow-5">
       <div class="eyebrow">Workflow 5 von 9 · Anhang</div>
       <h1 class="title">86 % vorbereitet.</h1>
       <div class="sub">Fehlende Angaben erscheinen als einzelne Entscheidungen statt als langes Formular.</div>
       <a class="action" href="#financial-drilldown">Bilanz & GuV prüfen</a><a class="ghost" href="#report-review">Anhang & Lagebericht Review</a>
     </section>
 
-    <section class="screen">
+    <section class="screen" id="workflow-6">
       <div class="kai kira">KIRA</div>
       <div class="eyebrow">Workflow 6 von 9 · Prüfung</div>
       <h1 class="title">KIRA hat einen Hinweis.</h1>
@@ -826,14 +825,14 @@ window.addEventListener('load', () => {
       <a class="action" href="#kira">Jetzt klären</a>
     </section>
 
-    <section class="screen">
+    <section class="screen" id="workflow-7">
       <div class="eyebrow">Workflow 7 von 9 · Lagebericht</div>
       <h1 class="title">2 Aussagen brauchen Beleg.</h1>
       <div class="sub">KAI formuliert nur aus vorhandenen Informationen. Unbelegte Ursachen bleiben sichtbar markiert.</div>
       <a class="action" href="#lagebericht">Aussage prüfen</a>
     </section>
 
-    <section class="screen">
+    <section class="screen" id="workflow-8">
       <div class="eyebrow">Workflow 8 von 9 · Review</div>
       <div class="stat">96 <small>%</small></div>
       <h1 class="title">Fast fertig.</h1>
@@ -841,7 +840,7 @@ window.addEventListener('load', () => {
       <a class="action" href="#review">Review öffnen</a>
     </section>
 
-    <section class="screen">
+    <section class="screen" id="workflow-9">
       <div class="eyebrow">Workflow 9 von 9 · Freigabe</div>
       <h1 class="title">Bereit zur Freigabe.</h1>
       <div class="sub">Bilanz, GuV, Anhang, Lagebericht, Prüfpfad und Freigaben sind vollständig.</div>
@@ -851,11 +850,47 @@ window.addEventListener('load', () => {
 
   <nav class="bottom">
     <a href="#live-myday"><b class="ico">✓</b>Meine</a>
-    <a href="#" id="workflowNavButton" class="active"><b class="ico">▣</b>Workflow</a>
+    <a href="#workflow-overview" class="active"><b class="ico">▣</b>Workflow</a>
     <a href="#financial-drilldown" class="primary-nav"><b class="ico">≡</b>Bilanz/GuV</a>
     <a href="#kaifeed"><b class="ico">◉</b>KAI-Feed</a>
     <a href="#report-review"><b class="ico">▤</b>Berichte</a>
   </nav>
+
+
+  <section id="workflow-overview" class="detail">
+    <a class="close" href="#">× Schließen</a>
+    <div class="eyebrow">Workflow 1–9</div>
+    <h2>Abschluss-Workflow</h2>
+    <p>Wähle den Bereich, zu dem du springen möchtest.</p>
+
+    <button class="option workflow-jump" type="button" onclick="jumpWorkflowStep(1)">
+      <b>1 · Kickoff / Daten</b><br><span>SuSa und Datenbasis</span>
+    </button>
+    <button class="option workflow-jump" type="button" onclick="jumpWorkflowStep(2)">
+      <b>2 · Mapping</b><br><span>Kontenzuordnung prüfen</span>
+    </button>
+    <button class="option workflow-jump" type="button" onclick="jumpWorkflowStep(3)">
+      <b>3 · Plausibilität</b><br><span>Auffälligkeiten und Ausreißer</span>
+    </button>
+    <button class="option workflow-jump" type="button" onclick="jumpWorkflowStep(4)">
+      <b>4 · Aufgabensteuerung</b><br><span>Zuständigkeiten, Fristen und Blockaden</span>
+    </button>
+    <button class="option workflow-jump" type="button" onclick="jumpWorkflowStep(5)">
+      <b>5 · Berichte</b><br><span>Bilanz, GuV und Anhang</span>
+    </button>
+    <button class="option workflow-jump" type="button" onclick="jumpWorkflowStep(6)">
+      <b>6 · Prüfungsbegleitung</b><br><span>KIRA-Hinweise und Prüfsachfragen</span>
+    </button>
+    <button class="option workflow-jump" type="button" onclick="jumpWorkflowStep(7)">
+      <b>7 · Lagebericht</b><br><span>Aussagen und Nachweise</span>
+    </button>
+    <button class="option workflow-jump" type="button" onclick="jumpWorkflowStep(8)">
+      <b>8 · Review</b><br><span>Offene Punkte und Freigabereife</span>
+    </button>
+    <button class="option workflow-jump" type="button" onclick="jumpWorkflowStep(9)">
+      <b>9 · Freigabe</b><br><span>Abschluss und Audit Trail</span>
+    </button>
+  </section>
 
   <section id="upload" class="detail"><a class="close" href="#">× Schließen</a><h2>SuSa vorbereiten</h2><p>Mobile Zielansicht: Datei auswählen, Unternehmen und Geschäftsjahr bestätigen, dann übernimmt KAI.</p><div class="option">Excel / CSV auswählen</div><div class="option">Spalten prüfen</div><div class="option">Import bestätigen</div></section>
   <section id="mapping" class="detail"><a class="close" href="#">× Schließen</a><h2>Konto 4230</h2><p><b>Grundstücksaufwendungen</b></p><div class="option">✓ Sonstige betriebliche Aufwendungen · 94 %</div><div class="option">Alternative Position wählen</div><div class="option">KAI fragen</div></section>
