@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<title>KAI & KIRA Mobile v2.7 Supabase Workflow 1-9</title>
+<title>KAI & KIRA Mobile – Anlagenspiegel Workpaper</title>
 <style>
 :root{--bg:#0a0b10;--card:#12141b;--txt:#f7f8fb;--muted:#9aa0ad;--line:rgba(255,255,255,.09);--accent:#fff}
 *{box-sizing:border-box} html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;background:#000;color:var(--txt);overflow:hidden}
@@ -251,6 +251,33 @@ details.option[open] > summary:after{content:"−"}
 .workflow-jump span{font-size:13px;color:#9aa0ad}
 #light:checked ~ .phone .workflow-jump span{color:#666}
 #pure:checked ~ .phone .workflow-jump span{color:#555}
+
+
+.asset-summary{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 16px}
+.asset-summary .kpi{min-height:86px}
+.asset-recon{padding:14px;border-radius:14px;background:rgba(56,217,150,.10);border:1px solid rgba(56,217,150,.18);margin:10px 0 16px}
+.asset-recon strong{display:block;font-size:18px;margin-bottom:4px}
+.asset-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:10px 0 14px;border:1px solid rgba(255,255,255,.10);border-radius:14px}
+.asset-table{width:100%;min-width:640px;border-collapse:collapse;font-size:12px}
+.asset-table th,.asset-table td{padding:10px 9px;border-bottom:1px solid rgba(255,255,255,.08);text-align:right;white-space:nowrap}
+.asset-table th:first-child,.asset-table td:first-child{text-align:left}
+.asset-table th{color:#9aa0ad;font-weight:750;background:rgba(255,255,255,.03)}
+.asset-table tr:last-child td{border-bottom:0}
+.asset-table .total td{font-weight:850}
+.asset-issue{padding:14px;margin:10px 0;border-radius:14px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.04)}
+.asset-issue b{display:block;margin-bottom:5px}
+.asset-issue p{margin:0 0 10px}
+.asset-choice{width:100%;text-align:left;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.03);color:inherit;font:inherit;margin:5px 0}
+.asset-choice.active{border-color:#75e3b2;background:rgba(56,217,150,.10)}
+.asset-evidence{display:flex;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.asset-evidence:last-child{border-bottom:0}
+.asset-evidence span{color:#9aa0ad;font-size:12px}
+#light:checked ~ .phone .asset-recon{background:#e9f8f1;border-color:#cdeede;color:#175f45}
+#light:checked ~ .phone .asset-table-wrap{border-color:#ddd}
+#light:checked ~ .phone .asset-table th,#light:checked ~ .phone .asset-table td{border-bottom-color:#e5e7eb}
+#light:checked ~ .phone .asset-table th{background:#f6f7f9}
+#light:checked ~ .phone .asset-issue,#light:checked ~ .phone .asset-choice{background:#fff;border-color:#ddd}
+#pure:checked ~ .phone .asset-recon,#pure:checked ~ .phone .asset-table-wrap,#pure:checked ~ .phone .asset-issue,#pure:checked ~ .phone .asset-choice{background:#fff;border:1px solid #aaa;border-radius:8px;color:#000}
 
 </style>
 <script>
@@ -808,7 +835,7 @@ window.openWorkflowStep = async function(stepId, stepNo, stepTitle){
   try {
     let query =
       '/rest/v1/tasks?workflow_step_id=eq.' + encodeURIComponent(stepId) +
-      '&select=id,title,description,assigned_to,due_date,status,priority,blocks_release' +
+      '&select=id,title,description,assigned_to,due_date,status,priority,blocks_release,measure_no' +
       '&order=due_date.asc';
 
     if(!window.kaikiraIsAdmin){
@@ -864,6 +891,9 @@ window.openWorkflowStep = async function(stepId, stepNo, stepTitle){
           <span class="live-pill">Priorität: ${esc(t.priority || '—')}</span>
           ${t.blocks_release ? '<span class="live-pill">Blockiert Freigabe</span>' : ''}
         </div>
+        ${t.measure_no === '6.3'
+          ? `<a class="action" href="#workpaper-anlagenspiegel">Anlagenspiegel-Workpaper öffnen</a>`
+          : ''}
         ${window.kaikiraIsAdmin
           ? `<button type="button" class="ghost" onclick="openAdminTask('${esc(t.id)}')">Aufgabe steuern</button>`
           : `<select onchange="updateTaskStatus('${esc(t.id)}', this.value)">
@@ -880,6 +910,14 @@ window.openWorkflowStep = async function(stepId, stepNo, stepTitle){
     summaryEl.textContent = 'Fehler beim Laden';
     listEl.innerHTML = '<div class="live-empty">Fehler: ' + esc(err.message) + '</div>';
   }
+};
+
+
+window.setAssetChoice = function(button){
+  const parent = button.closest('.asset-issue');
+  if(!parent) return;
+  parent.querySelectorAll('.asset-choice').forEach(b => b.classList.remove('active'));
+  button.classList.add('active');
 };
 
 // Einfache Pilot-Synchronisation ohne externe Realtime-Bibliothek:
@@ -1012,6 +1050,156 @@ window.addEventListener('load', () => {
     <div id="workflowStepTasks" class="live-list">
       <div class="live-empty">Lade Aufgaben…</div>
     </div>
+  </section>
+
+
+  <section id="workpaper-anlagenspiegel" class="detail">
+    <a class="close" href="#workflow-step-live">← Workflow 6</a>
+    <div class="eyebrow">Maßnahme 6.3 · Digitales Workpaper</div>
+    <h2>Anlagenspiegel erstellen</h2>
+    <p><b>Soll-Ergebnis:</b> Vollständiger, rechnerisch korrekter und mit Anlagenbuchhaltung, Hauptbuch und Bilanz abgestimmter Anlagenspiegel.</p>
+
+    <div class="statusbar">
+      <span class="status orange">Fachlicher Review erforderlich</span>
+      <span class="status blue">Rechnerisch abgestimmt</span>
+    </div>
+
+    <div class="asset-summary">
+      <div class="kpi"><strong>12,45 Mio. €</strong><small>Buchwert 31.12.</small></div>
+      <div class="kpi"><strong>0 €</strong><small>Differenz zur Bilanz</small></div>
+      <div class="kpi"><strong>3</strong><small>Auffälligkeiten</small></div>
+      <div class="kpi"><strong>3 / 6</strong><small>Nachweise geprüft</small></div>
+    </div>
+
+    <div class="asset-recon">
+      <strong>✓ Bilanzabstimmung erfolgreich</strong>
+      Anlagenspiegel 12.450.000 € · Bilanz Anlagevermögen 12.450.000 € · Differenz 0 €
+    </div>
+
+    <div class="section-title">Anlagenspiegel · geschlossen starten</div>
+
+    <details class="card">
+      <summary><b>A. Immaterielle Vermögensgegenstände</b><span>Buchwert BJ 920.000 € · VJ 850.000 €</span></summary>
+      <div class="asset-table-wrap">
+        <table class="asset-table">
+          <thead><tr><th>Bewegung</th><th>AK/HK</th><th>kum. AfA</th><th>Buchwert</th></tr></thead>
+          <tbody>
+            <tr><td>01.01.</td><td>2.200.000 €</td><td>-1.350.000 €</td><td>850.000 €</td></tr>
+            <tr><td>Zugänge</td><td>+340.000 €</td><td>—</td><td>—</td></tr>
+            <tr><td>Abgänge</td><td>-80.000 €</td><td>+60.000 €</td><td>—</td></tr>
+            <tr><td>AfA Geschäftsjahr</td><td>—</td><td>-250.000 €</td><td>—</td></tr>
+            <tr class="total"><td>31.12.</td><td>2.460.000 €</td><td>-1.540.000 €</td><td>920.000 €</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><b>B. Sachanlagen</b><span>Buchwert BJ 11.350.000 € · VJ 10.800.000 €</span></summary>
+
+      <details class="option">
+        <summary>Grundstücke und Bauten · 7.200.000 €</summary>
+        <div class="asset-table-wrap">
+          <table class="asset-table">
+            <thead><tr><th>Bewegung</th><th>AK/HK</th><th>kum. AfA</th><th>Buchwert</th></tr></thead>
+            <tbody>
+              <tr><td>01.01.</td><td>10.900.000 €</td><td>-3.950.000 €</td><td>6.950.000 €</td></tr>
+              <tr><td>Zugänge</td><td>+620.000 €</td><td>—</td><td>—</td></tr>
+              <tr><td>AfA Geschäftsjahr</td><td>—</td><td>-370.000 €</td><td>—</td></tr>
+              <tr class="total"><td>31.12.</td><td>11.520.000 €</td><td>-4.320.000 €</td><td>7.200.000 €</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <details class="option">
+        <summary>Technische Anlagen und Maschinen · 2.850.000 €</summary>
+        <div class="asset-table-wrap">
+          <table class="asset-table">
+            <thead><tr><th>Bewegung</th><th>AK/HK</th><th>kum. AfA</th><th>Buchwert</th></tr></thead>
+            <tbody>
+              <tr><td>01.01.</td><td>8.500.000 €</td><td>-5.900.000 €</td><td>2.600.000 €</td></tr>
+              <tr><td>Zugänge</td><td>+900.000 €</td><td>—</td><td>—</td></tr>
+              <tr><td>Abgänge</td><td>-300.000 €</td><td>+220.000 €</td><td>—</td></tr>
+              <tr><td>Umbuchungen</td><td>+150.000 €</td><td>—</td><td>—</td></tr>
+              <tr><td>AfA Geschäftsjahr</td><td>—</td><td>-720.000 €</td><td>—</td></tr>
+              <tr class="total"><td>31.12.</td><td>9.250.000 €</td><td>-6.400.000 €</td><td>2.850.000 €</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="section-title">KIRA · 3 Sachverhalte prüfen</div>
+
+        <div class="asset-issue">
+          <b>Maschine M-4711 · CNC Bearbeitungszentrum</b>
+          <p>Wesentlicher Zugang · AK/HK 450.000 € · Anschaffung 15.03.2026 · Nutzungsdauer 10 Jahre · AfA 2026 35.625 €.</p>
+          <div class="statusbar"><span class="status orange">Wesentlicher Zugang</span></div>
+          <button class="asset-choice" type="button" onclick="setAssetChoice(this)">✓ Sachverhalt plausibel</button>
+          <button class="asset-choice" type="button" onclick="setAssetChoice(this)">? Rückfrage erforderlich</button>
+          <button class="asset-choice" type="button" onclick="setAssetChoice(this)">! Korrektur erforderlich</button>
+        </div>
+
+        <div class="asset-issue">
+          <b>Maschine M-1842 · Abgang</b>
+          <p>Abgang mit Restbuchwert 80.000 €. Abgangsergebnis und Ausbuchung sind fachlich zu prüfen.</p>
+          <div class="statusbar"><span class="status orange">Abgang prüfen</span></div>
+          <button class="asset-choice" type="button" onclick="setAssetChoice(this)">✓ Sachverhalt plausibel</button>
+          <button class="asset-choice" type="button" onclick="setAssetChoice(this)">? Rückfrage erforderlich</button>
+          <button class="asset-choice" type="button" onclick="setAssetChoice(this)">! Korrektur erforderlich</button>
+        </div>
+
+        <div class="asset-issue">
+          <b>Maschine M-3381 · Keine AfA</b>
+          <p>Im Geschäftsjahr wurde keine Abschreibung gebucht. Begründung bzw. Aktivierungsdatum prüfen.</p>
+          <div class="statusbar"><span class="status red">KIRA-Hinweis</span></div>
+          <button class="asset-choice" type="button" onclick="setAssetChoice(this)">✓ Sachverhalt plausibel</button>
+          <button class="asset-choice" type="button" onclick="setAssetChoice(this)">? Rückfrage erforderlich</button>
+          <button class="asset-choice" type="button" onclick="setAssetChoice(this)">! Korrektur erforderlich</button>
+        </div>
+      </details>
+
+      <details class="option">
+        <summary>Betriebs- und Geschäftsausstattung · 950.000 €</summary>
+        <p>Keine wesentliche Auffälligkeit erkannt.</p>
+      </details>
+
+      <details class="option">
+        <summary>Anlagen im Bau · 350.000 €</summary>
+        <p>KAI: 2 Projekte ohne Aktivierung. Zum Bilanzstichtag auf Fertigstellung prüfen.</p>
+      </details>
+    </details>
+
+    <details class="card">
+      <summary><b>C. Finanzanlagen</b><span>Buchwert BJ 180.000 € · VJ 200.000 €</span></summary>
+      <p>Keine wesentliche Auffälligkeit erkannt.</p>
+    </details>
+
+    <div class="section-title">Nachweise</div>
+    <div class="card">
+      <div class="asset-evidence"><div><b>Anlagenverzeichnis</b><span>Admin-Upload</span></div><span>✓ vorhanden</span></div>
+      <div class="asset-evidence"><div><b>SuSa / Sachkonten</b><span>Systemverknüpfung</span></div><span>✓ vorhanden</span></div>
+      <div class="asset-evidence"><div><b>Buchungsjournal</b><span>Admin-Upload</span></div><span>✓ vorhanden</span></div>
+      <div class="asset-evidence"><div><b>Beleg M-4711</b><span>Rechnung / Aktivierung</span></div><span>○ Review</span></div>
+      <div class="asset-evidence"><div><b>Abgangsbeleg M-1842</b><span>Verkauf / Ausbuchung</span></div><span>○ Review</span></div>
+      <div class="asset-evidence"><div><b>Nachweis M-3381</b><span>AfA / Inbetriebnahme</span></div><span>! fehlt</span></div>
+    </div>
+
+    <div class="section-title">Automatische Prüfungen</div>
+    <div class="card">
+      <div class="teamrow"><div><b>AK/HK-Fortschreibung</b><span>Anfang + Zugänge – Abgänge ± Umbuchungen</span></div><span>✓</span></div>
+      <div class="teamrow"><div><b>AfA-Fortschreibung</b><span>Kumulierte Abschreibungen rechnerisch</span></div><span>✓</span></div>
+      <div class="teamrow"><div><b>Buchwertformel</b><span>AK/HK – kumulierte AfA</span></div><span>✓</span></div>
+      <div class="teamrow"><div><b>Bilanzabstimmung</b><span>Summe Buchwerte = Anlagevermögen</span></div><span>✓</span></div>
+      <div class="teamrow"><div><b>Vorjahresübertrag</b><span>VJ-Endbestand = BJ-Anfangsbestand</span></div><span>✓</span></div>
+      <div class="teamrow"><div><b>Fachliche Auffälligkeiten</b><span>3 Punkte offen</span></div><span>!</span></div>
+    </div>
+
+    <div class="section-title">Workpaper-Ergebnis</div>
+    <div class="blocker">Rechnerisch ist der Anlagenspiegel abgestimmt. Die Aufgabe kann erst freigegeben werden, wenn die 3 fachlichen Auffälligkeiten dokumentiert beurteilt und der fehlende Nachweis zu M-3381 ergänzt oder begründet wurde.</div>
+
+    <div class="option">Status: Fachlicher Review erforderlich</div>
+    <div class="option">KAI: Nächsten offenen Sachverhalt anzeigen</div>
+    <div class="option">KIRA: Review erneut ausführen</div>
   </section>
 
   <section id="upload" class="detail"><a class="close" href="#">× Schließen</a><h2>SuSa vorbereiten</h2><p>Mobile Zielansicht: Datei auswählen, Unternehmen und Geschäftsjahr bestätigen, dann übernimmt KAI.</p><div class="option">Excel / CSV auswählen</div><div class="option">Spalten prüfen</div><div class="option">Import bestätigen</div></section>
