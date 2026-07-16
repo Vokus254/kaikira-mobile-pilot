@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<title>KAI & KIRA Mobile v2.6 Admin Aufgabensteuerung</title>
+<title>KAI & KIRA Mobile v2.6.2 Workflow Navigation Fix</title>
 <style>
 :root{--bg:#0a0b10;--card:#12141b;--txt:#f7f8fb;--muted:#9aa0ad;--line:rgba(255,255,255,.09);--accent:#fff}
 *{box-sizing:border-box} html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;background:#000;color:var(--txt);overflow:hidden}
@@ -712,6 +712,30 @@ window.escalateAdminTask = async function(){
   await window.saveAdminTask();
 };
 
+
+function goWorkflowHome(){
+  // Remove any open :target detail overlay.
+  if (window.location.hash) {
+    history.replaceState(null, '', window.location.pathname + window.location.search);
+  }
+
+  const feed = document.getElementById('workflow-feed');
+  const home = document.getElementById('workflow-home');
+
+  if (feed) {
+    feed.scrollTop = 0;
+  }
+
+  if (home) {
+    home.scrollIntoView({behavior:'auto', block:'start'});
+  }
+
+  // Second pass for mobile browsers / scroll-snap containers.
+  requestAnimationFrame(() => {
+    if (feed) feed.scrollTop = 0;
+  });
+}
+
 // Einfache Pilot-Synchronisation ohne externe Realtime-Bibliothek:
 // bei sichtbarer App alle 10 Sekunden neu laden.
 setInterval(() => {
@@ -724,6 +748,15 @@ setInterval(() => {
 window.addEventListener('load', () => {
   const loginButton = document.getElementById('loginButton');
   if (loginButton) loginButton.addEventListener('click', liveLogin);
+
+  const workflowButton = document.getElementById('workflowNavButton');
+  if (workflowButton) {
+    workflowButton.addEventListener('click', (event) => {
+      event.preventDefault();
+      goWorkflowHome();
+    });
+  }
+
   initLiveApp();
 });
 
@@ -740,8 +773,8 @@ window.addEventListener('load', () => {
   </header>
   <div class="skin"><label for="dark">Dunkel</label><label for="light">Hell</label><label for="pure">Pur</label></div>
 
-  <main class="feed">
-    <section class="screen">
+  <main class="feed" id="workflow-feed">
+    <section class="screen" id="workflow-home">
       <div class="kai">KAI</div>
       <div class="eyebrow">Workflow 1 von 9 · Daten</div>
       <h1 class="title">Alles beginnt mit deiner SuSa.</h1>
@@ -818,7 +851,7 @@ window.addEventListener('load', () => {
 
   <nav class="bottom">
     <a href="#live-myday"><b class="ico">✓</b>Meine</a>
-    <span class="active"><b class="ico">▣</b>Workflow</span>
+    <a href="#" id="workflowNavButton" class="active"><b class="ico">▣</b>Workflow</a>
     <a href="#financial-drilldown" class="primary-nav"><b class="ico">≡</b>Bilanz/GuV</a>
     <a href="#kaifeed"><b class="ico">◉</b>KAI-Feed</a>
     <a href="#report-review"><b class="ico">▤</b>Berichte</a>
