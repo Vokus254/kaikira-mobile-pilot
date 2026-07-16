@@ -1,0 +1,1760 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>KAI & KIRA Mobile v2.6.2 Workflow Navigation Fix</title>
+<style>
+:root{--bg:#0a0b10;--card:#12141b;--txt:#f7f8fb;--muted:#9aa0ad;--line:rgba(255,255,255,.09);--accent:#fff}
+*{box-sizing:border-box} html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;background:#000;color:var(--txt);overflow:hidden}
+input.theme{position:fixed;opacity:0;pointer-events:none}
+.phone{height:100dvh;background:#0a0b10;overflow:hidden;position:relative}
+.top{position:fixed;z-index:20;top:0;left:0;right:0;padding:calc(env(safe-area-inset-top) + 10px) 16px 10px;background:linear-gradient(180deg,rgba(10,11,16,.98),rgba(10,11,16,.65),transparent)}
+.toprow{display:flex;justify-content:space-between;align-items:center}.brand{font-weight:850;font-size:20px}.brand span{font-weight:500;color:#aeb3bf}.project{font-size:12px;color:#c1c5ce}
+.progress{display:flex;gap:5px;margin-top:14px}.progress i{height:3px;flex:1;border-radius:999px;background:rgba(255,255,255,.14)}.progress i.on{background:#fff}
+.skin{position:fixed;z-index:25;right:14px;top:calc(env(safe-area-inset-top) + 78px);display:flex;gap:4px;padding:4px;border-radius:999px;background:rgba(20,22,30,.9);border:1px solid var(--line)}
+.skin label{font-size:11px;font-weight:750;padding:7px 9px;border-radius:999px;color:#9da3ae}
+#dark:checked ~ .phone .skin label[for=dark],#light:checked ~ .phone .skin label[for=light],#pure:checked ~ .phone .skin label[for=pure]{background:#fff;color:#000}
+.feed{height:100dvh;overflow-y:auto;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch}
+.screen{height:100dvh;scroll-snap-align:start;padding:calc(env(safe-area-inset-top) + 118px) 18px calc(env(safe-area-inset-bottom) + 88px);display:flex;flex-direction:column;justify-content:flex-end;position:relative;background:radial-gradient(circle at 85% 15%,rgba(109,124,255,.16),transparent 28%),linear-gradient(180deg,#0b0c12,#0d0f15)}
+.screen:nth-child(even){background:radial-gradient(circle at 10% 15%,rgba(56,217,150,.12),transparent 26%),linear-gradient(180deg,#0b0c12,#0d0f15)}
+.eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#8f95a1;margin-bottom:10px}.title{font-size:35px;line-height:1.02;font-weight:850;margin:0 0 14px;max-width:90%}.sub{font-size:16px;line-height:1.45;color:#c3c7d0;max-width:90%;margin-bottom:18px}
+.stat{font-size:68px;line-height:.92;font-weight:900;margin:4px 0 10px}.stat small{font-size:18px;color:#a9aebb}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 18px}.chip{padding:10px 12px;border-radius:999px;background:rgba(255,255,255,.06);font-size:14px;color:#d8dbe3}.ok{color:#75e3b2;background:rgba(56,217,150,.13)}.warn{color:#ffd27e;background:rgba(242,184,75,.14)}
+.action,.ghost{display:block;text-decoration:none;text-align:center;width:100%;padding:17px 18px;border-radius:18px;font-size:17px;font-weight:800;margin-top:10px}
+.action{background:#fff;color:#090a0f}.ghost{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);color:#fff}
+.card{padding:16px;border-radius:18px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);margin:8px 0 12px}.card b{display:block;font-size:16px;margin-bottom:5px}.card p{margin:0;color:#bfc4ce;line-height:1.4}
+.kai{position:absolute;right:18px;top:calc(env(safe-area-inset-top) + 122px);width:54px;height:54px;border-radius:50%;display:grid;place-items:center;font-weight:900;background:#6d7cff;color:#fff}
+.kira{background:#e7d7ff;color:#241b32}.hint{position:absolute;bottom:calc(env(safe-area-inset-bottom) + 64px);left:18px;color:#6f7581;font-size:12px}
+.bottom{position:fixed;z-index:30;left:0;right:0;bottom:0;padding:8px 12px calc(env(safe-area-inset-bottom) + 8px);display:grid;grid-template-columns:repeat(5,1fr);background:rgba(8,9,13,.94);border-top:1px solid var(--line)}
+.bottom span,.bottom a{display:grid;place-items:center;gap:2px;font-size:11px;color:#7f8591;text-decoration:none}.bottom .active{color:#fff}.ico{font-size:20px}
+.detail{display:none;position:fixed;z-index:60;inset:0;background:rgba(7,8,12,.98);padding:calc(env(safe-area-inset-top) + 24px) 18px calc(env(safe-area-inset-bottom) + 24px);overflow:auto}
+.detail:target{display:block}.detail h2{font-size:30px;margin:40px 0 10px}.detail p{color:#bcc1cb;line-height:1.5}.close{display:inline-block;text-decoration:none;color:#fff;border:1px solid rgba(255,255,255,.16);padding:12px 16px;border-radius:999px}
+.option{display:block;text-decoration:none;color:inherit;padding:16px;border:1px solid rgba(255,255,255,.12);border-radius:14px;margin:10px 0;background:rgba(255,255,255,.04)}
+/* LIGHT */
+#light:checked ~ .phone{background:#f5f6f8;color:#111318}
+#light:checked ~ .phone .top{background:linear-gradient(180deg,rgba(249,250,252,.98),rgba(249,250,252,.7),transparent)}
+#light:checked ~ .phone .brand span,#light:checked ~ .phone .project{color:#626873}
+#light:checked ~ .phone .progress i{background:#d8dbe1}#light:checked ~ .phone .progress i.on{background:#2467ff}
+#light:checked ~ .phone .screen,#light:checked ~ .phone .screen:nth-child(even){background:linear-gradient(180deg,#fafbfc,#f2f4f7)}
+#light:checked ~ .phone .sub,#light:checked ~ .phone .card p{color:#666c77}
+#light:checked ~ .phone .card{background:#fff;border-color:#e4e6ea}
+#light:checked ~ .phone .chip{background:#eceff3;color:#363b44}
+#light:checked ~ .phone .ok{background:#e8f8f1;color:#217b58}#light:checked ~ .phone .warn{background:#fff4dc;color:#966413}
+#light:checked ~ .phone .ghost{background:#fff;color:#111;border-color:#d9dce2}
+#light:checked ~ .phone .bottom{background:rgba(250,251,253,.95);border-top-color:#e3e5e9}#light:checked ~ .phone .bottom span,#light:checked ~ .phone .bottom a{color:#808691}#light:checked ~ .phone .bottom .active{color:#111}
+#light:checked ~ .phone .skin{background:#fff;border-color:#ddd}#light:checked ~ .phone .skin label{color:#666}#light:checked ~ .phone .skin label[for=light]{background:#111;color:#fff}
+#light:checked ~ .phone .detail{background:#fff;color:#111}#light:checked ~ .phone .detail p{color:#666}#light:checked ~ .phone .close,#light:checked ~ .phone .option{color:#111;border-color:#ddd;background:#fff}
+/* PURE */
+#pure:checked ~ .phone{background:#fff;color:#000}
+#pure:checked ~ .phone .top{background:#fff}
+#pure:checked ~ .phone .brand span,#pure:checked ~ .phone .project{color:#555}
+#pure:checked ~ .phone .progress i{height:2px;background:#ddd}#pure:checked ~ .phone .progress i.on{background:#000}
+#pure:checked ~ .phone .screen,#pure:checked ~ .phone .screen:nth-child(even){background:#fff}
+#pure:checked ~ .phone .sub,#pure:checked ~ .phone .card p{color:#555}
+#pure:checked ~ .phone .card{background:#fff;border-color:#bbb;border-radius:8px}
+#pure:checked ~ .phone .chip,#pure:checked ~ .phone .ok,#pure:checked ~ .phone .warn{background:#fff;color:#000;border:1px solid #aaa}
+#pure:checked ~ .phone .action{background:#000;color:#fff;border-radius:8px}#pure:checked ~ .phone .ghost{background:#fff;color:#000;border:1px solid #aaa;border-radius:8px}
+#pure:checked ~ .phone .kai{background:#fff;color:#000;border:2px solid #000}#pure:checked ~ .phone .bottom{background:#fff;border-top:1px solid #ccc}#pure:checked ~ .phone .bottom span,#pure:checked ~ .phone .bottom a{color:#777}#pure:checked ~ .phone .bottom .active{color:#000}
+#pure:checked ~ .phone .skin{background:#fff;border-color:#ccc}#pure:checked ~ .phone .skin label{color:#555}#pure:checked ~ .phone .skin label[for=pure]{background:#000;color:#fff}
+#pure:checked ~ .phone .detail{background:#fff;color:#000}#pure:checked ~ .phone .detail p{color:#555}#pure:checked ~ .phone .close,#pure:checked ~ .phone .option{color:#000;border-color:#aaa;background:#fff}
+
+.task-meta{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0 14px}
+.meta-box{padding:12px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}
+.meta-box small{display:block;color:#8f95a1;font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.meta-box b{font-size:14px}
+.statusbar{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 12px}
+.status{padding:8px 10px;border-radius:999px;font-size:12px;font-weight:750;border:1px solid rgba(255,255,255,.10)}
+.status.blue{background:rgba(78,124,255,.14);color:#9eb8ff}
+.status.orange{background:rgba(242,184,75,.14);color:#ffd27e}
+.status.red{background:rgba(255,107,107,.14);color:#ff9b9b}
+.status.gray{background:rgba(255,255,255,.05);color:#b7bcc6}
+.blocker{padding:12px 14px;border-left:3px solid #ff6b6b;background:rgba(255,107,107,.08);border-radius:10px;margin:10px 0 14px;font-size:13px;line-height:1.4}
+.teamrow{display:flex;justify-content:space-between;gap:12px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.teamrow:last-child{border-bottom:0}
+.teamrow b{font-size:15px}.teamrow span{font-size:13px;color:#aeb3bf}
+.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0 16px}
+.kpi{padding:14px 10px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);text-align:center}
+.kpi strong{display:block;font-size:24px}.kpi small{color:#969ca8;font-size:11px}
+.detail .section-title{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:#8f95a1;margin:24px 0 8px}
+#light:checked ~ .phone .meta-box,#light:checked ~ .phone .kpi{background:#fff;border-color:#e4e6ea}
+#light:checked ~ .phone .teamrow{border-bottom-color:#e4e6ea}
+#light:checked ~ .phone .teamrow span{color:#69707b}
+#light:checked ~ .phone .status{border-color:#e4e6ea}
+#light:checked ~ .phone .status.gray{background:#f0f2f5;color:#555}
+#pure:checked ~ .phone .meta-box,#pure:checked ~ .phone .kpi{background:#fff;border:1px solid #aaa;border-radius:8px}
+#pure:checked ~ .phone .status{background:#fff!important;color:#000!important;border:1px solid #aaa;border-radius:999px}
+#pure:checked ~ .phone .blocker{background:#fff;border:1px solid #aaa;border-left:3px solid #000;border-radius:0}
+#pure:checked ~ .phone .teamrow{border-bottom-color:#ccc}
+
+
+.bottom{
+  padding-bottom:max(calc(env(safe-area-inset-bottom) + 10px),28px);
+  min-height:82px;
+}
+.bottom .primary-nav{
+  position:relative;
+  font-weight:800;
+  color:#fff;
+}
+.bottom .primary-nav .ico{
+  width:38px;height:38px;border-radius:12px;
+  display:grid;place-items:center;
+  background:rgba(255,255,255,.10);
+  border:1px solid rgba(255,255,255,.16);
+}
+#light:checked ~ .phone .bottom .primary-nav{color:#111}
+#light:checked ~ .phone .bottom .primary-nav .ico{background:#eef1f5;border-color:#d9dde4}
+#pure:checked ~ .phone .bottom .primary-nav{color:#000}
+#pure:checked ~ .phone .bottom .primary-nav .ico{background:#fff;border:1px solid #000}
+.screen{padding-bottom:max(calc(env(safe-area-inset-bottom) + 118px),138px)}
+
+
+details > summary{list-style:none;cursor:pointer}
+details > summary::-webkit-details-marker{display:none}
+details.card > summary{display:flex;flex-direction:column;gap:6px;position:relative;padding-right:28px}
+details.card > summary:after{content:"＋";position:absolute;right:2px;top:0;font-size:22px}
+details.card[open] > summary:after{content:"−"}
+details.card > summary span{font-size:13px;color:#9aa0ad;font-weight:500}
+details.option > summary{position:relative;padding-right:24px}
+details.option > summary:after{content:"＋";position:absolute;right:0}
+details.option[open] > summary:after{content:"−"}
+
+
+.live-auth{
+  position:fixed;z-index:500;inset:0;background:#0a0b10;color:#fff;
+  display:flex;align-items:center;justify-content:center;padding:24px
+}
+.live-auth.hidden{display:none}
+.auth-card{
+  width:min(430px,100%);background:#12141b;border:1px solid rgba(255,255,255,.10);
+  border-radius:24px;padding:24px
+}
+.auth-card h1{font-size:30px;margin:0 0 8px}
+.auth-card p{color:#aeb3bf;line-height:1.45}
+.auth-card input{
+  width:100%;padding:15px 16px;margin:7px 0;border-radius:14px;border:1px solid rgba(255,255,255,.12);
+  background:#0d0f15;color:#fff;font:inherit
+}
+.auth-card button{
+  width:100%;padding:16px;margin-top:10px;border:0;border-radius:14px;
+  background:#fff;color:#000;font-weight:800;font-size:16px
+}
+.auth-msg{font-size:13px;color:#ff9b9b;margin-top:10px;min-height:18px}
+.live-top-user{
+  position:fixed;z-index:40;left:16px;top:calc(env(safe-area-inset-top) + 82px);
+  display:none;align-items:center;gap:8px;padding:7px 10px;border-radius:999px;
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.10);font-size:11px
+}
+.live-top-user.show{display:flex}
+.live-signout{border:0;background:none;color:#aaa;font-size:11px;padding:0}
+.live-list{display:grid;gap:10px;margin-top:12px}
+.live-task{
+  padding:16px;border-radius:18px;background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.08)
+}
+.live-task h3{font-size:17px;margin:0 0 6px}
+.live-task p{margin:0;color:#b7bcc6;font-size:13px;line-height:1.4}
+.live-task-meta{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}
+.live-pill{font-size:11px;padding:6px 8px;border-radius:999px;background:rgba(255,255,255,.07)}
+.live-task select{
+  width:100%;padding:12px;border-radius:12px;background:#0d0f15;color:#fff;
+  border:1px solid rgba(255,255,255,.12);font:inherit
+}
+.live-empty{padding:20px;border:1px dashed rgba(255,255,255,.14);border-radius:16px;color:#9ba1ac}
+.live-team-row{
+  display:flex;justify-content:space-between;gap:12px;padding:14px 0;
+  border-bottom:1px solid rgba(255,255,255,.08)
+}
+.live-team-row:last-child{border-bottom:0}
+.live-refresh{margin-top:12px}
+.live-banner{
+  padding:12px 14px;border-radius:14px;background:rgba(109,124,255,.14);
+  border:1px solid rgba(109,124,255,.20);font-size:13px;line-height:1.4;margin:10px 0 14px
+}
+#light:checked ~ .phone .live-top-user{background:#fff;color:#111;border-color:#ddd}
+#light:checked ~ .phone .live-task{background:#fff;border-color:#e4e6ea}
+#light:checked ~ .phone .live-task p{color:#666}
+#light:checked ~ .phone .live-task select{background:#fff;color:#111;border-color:#ddd}
+#light:checked ~ .phone .live-team-row{border-bottom-color:#e4e6ea}
+#pure:checked ~ .phone .live-task{background:#fff;border:1px solid #aaa;border-radius:8px}
+#pure:checked ~ .phone .live-task select{background:#fff;color:#000;border:1px solid #aaa;border-radius:8px}
+
+
+.team-drill-button{
+  width:100%;
+  background:none;
+  border:0;
+  color:inherit;
+  text-align:left;
+  font:inherit;
+  cursor:pointer;
+}
+.team-drill-button:hover{
+  background:rgba(255,255,255,.03);
+}
+
+
+.admin-control{
+  width:100%;
+  padding:14px 15px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.12);
+  background:#0d0f15;
+  color:#fff;
+  font:inherit;
+  margin-bottom:4px;
+}
+.admin-check{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  padding:14px;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:14px;
+  background:rgba(255,255,255,.04);
+  margin-bottom:16px;
+}
+.admin-check input{width:20px;height:20px}
+.admin-task-button{
+  width:100%;
+  text-align:left;
+  border:0;
+  color:inherit;
+  font:inherit;
+  background:transparent;
+  padding:0;
+  cursor:pointer;
+}
+#light:checked ~ .phone .admin-control{
+  background:#fff;color:#111;border-color:#ddd;
+}
+#light:checked ~ .phone .admin-check{
+  background:#fff;color:#111;border-color:#ddd;
+}
+#pure:checked ~ .phone .admin-control{
+  background:#fff;color:#000;border:1px solid #aaa;border-radius:8px;
+}
+#pure:checked ~ .phone .admin-check{
+  background:#fff;color:#000;border:1px solid #aaa;border-radius:8px;
+}
+
+</style>
+<script>
+const SUPABASE_URL = 'https://svsupldyrrsuqdpdmbpb.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2c3VwbGR5cnJzdXFkcGRtYnBiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyMDY0NjEsImV4cCI6MjA5OTc4MjQ2MX0._MyGXIpoZgEANyPG9jQ9FsjLBvSVC_P0Goqc2cnzgRU';
+
+let currentUser = null;
+let accessToken = localStorage.getItem('kaikira_access_token') || '';
+let refreshToken = localStorage.getItem('kaikira_refresh_token') || '';
+
+function esc(v){
+  return String(v ?? '').replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+}
+
+async function apiFetch(path, options={}){
+  const headers = Object.assign({
+    'apikey': SUPABASE_ANON_KEY,
+    'Content-Type': 'application/json'
+  }, options.headers || {});
+
+  if(accessToken) headers['Authorization'] = 'Bearer ' + accessToken;
+
+  const res = await fetch(SUPABASE_URL + path, Object.assign({}, options, { headers }));
+  let body = null;
+  const text = await res.text();
+  try { body = text ? JSON.parse(text) : null; } catch { body = text; }
+  if(!res.ok) {
+    const msg = body?.msg || body?.message || body?.error_description || body?.error || ('HTTP ' + res.status);
+    throw new Error(msg);
+  }
+  return body;
+}
+
+async function liveLogin(){
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const msg = document.getElementById('authMsg');
+
+  if(!email || !password){
+    msg.textContent = 'Bitte E-Mail und Passwort eingeben.';
+    return;
+  }
+
+  msg.textContent = 'Anmeldung läuft…';
+
+  try {
+    const data = await apiFetch('/auth/v1/token?grant_type=password', {
+      method: 'POST',
+      body: JSON.stringify({ email, password })
+    });
+
+    accessToken = data.access_token;
+    refreshToken = data.refresh_token || '';
+    currentUser = data.user;
+
+    localStorage.setItem('kaikira_access_token', accessToken);
+    if(refreshToken) localStorage.setItem('kaikira_refresh_token', refreshToken);
+
+    msg.textContent = '';
+    await afterLogin();
+  } catch(err) {
+    msg.textContent = 'Login fehlgeschlagen: ' + err.message;
+  }
+}
+
+async function initLiveApp(){
+  if(!accessToken){
+    document.getElementById('liveAuth').classList.remove('hidden');
+    return;
+  }
+
+  try {
+    currentUser = await apiFetch('/auth/v1/user', { method: 'GET' });
+    await afterLogin();
+  } catch(err) {
+    localStorage.removeItem('kaikira_access_token');
+    localStorage.removeItem('kaikira_refresh_token');
+    accessToken = '';
+    refreshToken = '';
+    currentUser = null;
+    document.getElementById('liveAuth').classList.remove('hidden');
+  }
+}
+
+async function afterLogin(){
+  document.getElementById('liveAuth').classList.add('hidden');
+
+  let profile = null;
+  try {
+    const rows = await apiFetch('/rest/v1/profiles?id=eq.' + encodeURIComponent(currentUser.id) + '&select=display_name,email,global_role', {
+      method: 'GET',
+      headers: { 'Accept': 'application/json' }
+    });
+    profile = Array.isArray(rows) ? rows[0] : null;
+  } catch(err) {
+    console.warn('Profil konnte nicht geladen werden', err);
+  }
+
+  document.getElementById('liveUserName').textContent =
+    profile?.display_name || currentUser.email || 'Angemeldet';
+  document.getElementById('liveUser').classList.add('show');
+
+  const isAdmin = profile?.global_role === 'admin';
+  window.kaikiraIsAdmin = isAdmin;
+
+  const adminCard = document.getElementById('adminTeamCard');
+  if (adminCard) adminCard.style.display = isAdmin ? 'block' : 'none';
+
+  await loadMyDay();
+  if (isAdmin) {
+    await loadTeam();
+  } else {
+    const teamEl = document.getElementById('liveTeamList');
+    if (teamEl) teamEl.innerHTML = '<div class="live-empty">Das Team-Cockpit ist nur für Admins sichtbar.</div>';
+  }
+}
+
+async function liveLogout(){
+  try {
+    if(accessToken){
+      await apiFetch('/auth/v1/logout', { method: 'POST' });
+    }
+  } catch(err) {
+    console.warn(err);
+  }
+
+  localStorage.removeItem('kaikira_access_token');
+  localStorage.removeItem('kaikira_refresh_token');
+  accessToken = '';
+  refreshToken = '';
+  currentUser = null;
+
+  document.getElementById('liveUser').classList.remove('show');
+  document.getElementById('liveAuth').classList.remove('hidden');
+}
+
+async function loadMyDay(){
+  const el = document.getElementById('liveMyDayList');
+  if(!currentUser || !accessToken) return;
+
+  el.innerHTML = '<div class="live-empty">Lade Aufgaben…</div>';
+
+  try {
+    const data = await apiFetch('/rest/v1/my_day?select=*&order=due_date.asc', {
+      method: 'GET',
+      headers: { 'Accept': 'application/json' }
+    });
+
+    if(!data || !data.length){
+      el.innerHTML = '<div class="live-empty">Für dich sind aktuell keine offenen Aufgaben vorhanden.</div>';
+      return;
+    }
+
+    el.innerHTML = data.map(t => `
+      <div class="live-task">
+        <div class="eyebrow">Workflow ${esc(t.step_no ?? '')} · ${esc(t.workflow_step ?? '')}</div>
+        <h3>${esc(t.title)}</h3>
+        <p>${esc(t.description || '')}</p>
+        <div class="live-task-meta">
+          <span class="live-pill">Frist: ${esc(t.due_date || '—')}</span>
+          <span class="live-pill">Priorität: ${esc(t.priority)}</span>
+          ${t.blocks_release ? '<span class="live-pill">Blockiert Freigabe</span>' : ''}
+        </div>
+        <select onchange="updateTaskStatus('${esc(t.id)}', this.value)">
+          <option value="not_started" ${t.status==='not_started'?'selected':''}>Noch nicht gestartet</option>
+          <option value="in_progress" ${t.status==='in_progress'?'selected':''}>In Bearbeitung</option>
+          <option value="blocked" ${t.status==='blocked'?'selected':''}>Blockiert</option>
+          <option value="done">Erledigt</option>
+        </select>
+      </div>
+    `).join('');
+  } catch(err) {
+    el.innerHTML = '<div class="live-empty">Fehler: '+esc(err.message)+'</div>';
+  }
+}
+
+async function updateTaskStatus(taskId, status){
+  try {
+    await apiFetch('/rest/v1/tasks?id=eq.' + encodeURIComponent(taskId), {
+      method: 'PATCH',
+      headers: { 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ status })
+    });
+
+    await Promise.all([loadMyDay(), loadTeam()]);
+  } catch(err) {
+    alert('Status konnte nicht geändert werden: ' + err.message);
+    await loadMyDay();
+  }
+}
+
+async function loadTeam(){
+  const el = document.getElementById('liveTeamList');
+  if(!currentUser || !accessToken) return;
+
+  if(window.kaikiraIsAdmin === false){
+    el.innerHTML = '<div class="live-empty">Das Team-Cockpit ist nur für Admins sichtbar.</div>';
+    return;
+  }
+
+  el.innerHTML = '<div class="live-empty">Lade Teamstatus…</div>';
+
+  try {
+    const data = await apiFetch(
+      '/rest/v1/team_cockpit?select=project_id,user_id,display_name,open_tasks,overdue_tasks,blocked_tasks,completed_tasks&order=display_name.asc',
+      {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' }
+      }
+    );
+
+    if(!data || !data.length){
+      el.innerHTML = '<div class="live-empty">Noch keine Teamdaten verfügbar.</div>';
+      return;
+    }
+
+    const totals = data.reduce((a,r) => {
+      a.open += Number(r.open_tasks || 0);
+      a.overdue += Number(r.overdue_tasks || 0);
+      a.blocked += Number(r.blocked_tasks || 0);
+      return a;
+    }, {open:0, overdue:0, blocked:0});
+
+    const o = document.getElementById('teamOpenTotal');
+    const od = document.getElementById('teamOverdueTotal');
+    const b = document.getElementById('teamBlockedTotal');
+    if(o) o.textContent = totals.open;
+    if(od) od.textContent = totals.overdue;
+    if(b) b.textContent = totals.blocked;
+
+    el.innerHTML = '<div class="card">' + data.map(r => `
+      <button
+        type="button"
+        class="live-team-row team-drill-button"
+        onclick="openTeamMember('${esc(r.user_id)}','${esc(r.display_name)}')">
+        <div>
+          <b>${esc(r.display_name)}</b><br>
+          <span>${esc(r.open_tasks)} offen · ${esc(r.overdue_tasks)} überfällig · ${esc(r.blocked_tasks)} blockiert</span>
+        </div>
+        <div>
+          <b>${esc(r.completed_tasks)}</b><br>
+          <span>erledigt</span>
+        </div>
+      </button>
+    `).join('') + '</div>';
+
+  } catch(err) {
+    el.innerHTML = '<div class="live-empty">Fehler: '+esc(err.message)+'</div>';
+  }
+}
+
+
+window.openTeamMember = async function(userId, displayName){
+  window.location.hash = 'live-team-member';
+
+  const nameEl = document.getElementById('teamMemberName');
+  const summaryEl = document.getElementById('teamMemberSummary');
+  const listEl = document.getElementById('teamMemberTasks');
+
+  if(nameEl) nameEl.textContent = displayName || 'Teilnehmer';
+  if(summaryEl) summaryEl.textContent = 'Lade Aufgaben…';
+  if(listEl) listEl.innerHTML = '<div class="live-empty">Lade Aufgaben…</div>';
+
+  try {
+    const query =
+      '/rest/v1/tasks?assigned_to=eq.' + encodeURIComponent(userId) +
+      '&select=id,title,description,due_date,status,priority,blocks_release,workflow_step_id' +
+      '&order=due_date.asc';
+
+    const rows = await apiFetch(query, {
+      method: 'GET',
+      headers: { 'Accept': 'application/json' }
+    });
+
+    const stepIds = [...new Set(rows.map(r => r.workflow_step_id).filter(Boolean))];
+    let stepMap = {};
+
+    if(stepIds.length){
+      const inFilter = '(' + stepIds.join(',') + ')';
+      const steps = await apiFetch(
+        '/rest/v1/workflow_steps?id=in.' + encodeURIComponent(inFilter) +
+        '&select=id,step_no,title',
+        {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' }
+        }
+      );
+      stepMap = Object.fromEntries((steps || []).map(s => [s.id, s]));
+    }
+
+    const open = rows.filter(r => r.status !== 'done').length;
+    const done = rows.filter(r => r.status === 'done').length;
+    const blocked = rows.filter(r => r.status === 'blocked').length;
+
+    if(summaryEl){
+      summaryEl.innerHTML =
+        '<b>' + open + ' offen</b> · ' + done + ' erledigt · ' + blocked + ' blockiert';
+    }
+
+    if(!rows.length){
+      if(listEl) listEl.innerHTML =
+        '<div class="live-empty">Für diesen Teilnehmer sind keine Aufgaben vorhanden.</div>';
+      return;
+    }
+
+    const statusLabels = {
+      not_started: 'Noch nicht gestartet',
+      in_progress: 'In Bearbeitung',
+      blocked: 'Blockiert',
+      done: 'Erledigt'
+    };
+
+    if(listEl){
+      listEl.innerHTML = rows.map(t => {
+        const ws = stepMap[t.workflow_step_id] || {};
+        return `
+          <div class="live-task">
+            <button type="button" class="admin-task-button"
+              onclick="openAdminTask('${esc(t.id)}')">
+              <div class="eyebrow">
+                Workflow ${esc(ws.step_no ?? '')} · ${esc(ws.title ?? '')}
+              </div>
+              <h3>${esc(t.title)}</h3>
+              <p>${esc(t.description || '')}</p>
+              <div class="live-task-meta">
+                <span class="live-pill">Status: ${esc(statusLabels[t.status] || t.status)}</span>
+                <span class="live-pill">Frist: ${esc(t.due_date || '—')}</span>
+                <span class="live-pill">Priorität: ${esc(t.priority || '—')}</span>
+                ${t.blocks_release ? '<span class="live-pill">Blockiert Freigabe</span>' : ''}
+              </div>
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+  } catch(err) {
+    if(summaryEl) summaryEl.textContent = 'Fehler beim Laden';
+    if(listEl) listEl.innerHTML =
+      '<div class="live-empty">Fehler: ' + esc(err.message) + '</div>';
+  }
+};
+
+
+window.currentAdminTask = null;
+window.currentTeamMemberId = null;
+window.currentTeamMemberName = null;
+
+const _origOpenTeamMember = window.openTeamMember;
+window.openTeamMember = async function(userId, displayName){
+  window.currentTeamMemberId = userId;
+  window.currentTeamMemberName = displayName;
+  return _origOpenTeamMember(userId, displayName);
+};
+
+window.openAdminTask = async function(taskId){
+  window.location.hash = 'live-admin-task';
+
+  const titleEl = document.getElementById('adminTaskTitle');
+  const descEl = document.getElementById('adminTaskDescription');
+  const msgEl = document.getElementById('adminTaskMsg');
+
+  if(titleEl) titleEl.textContent = 'Aufgabe';
+  if(descEl) descEl.textContent = 'Lade Aufgabe…';
+  if(msgEl) msgEl.textContent = '';
+
+  try {
+    const rows = await apiFetch(
+      '/rest/v1/tasks?id=eq.' + encodeURIComponent(taskId) +
+      '&select=id,project_id,title,description,assigned_to,due_date,status,priority,blocks_release',
+      { method:'GET', headers:{'Accept':'application/json'} }
+    );
+
+    const task = rows && rows[0];
+    if(!task) throw new Error('Aufgabe wurde nicht gefunden.');
+    window.currentAdminTask = task;
+
+    titleEl.textContent = task.title;
+    descEl.textContent = task.description || '';
+
+    document.getElementById('adminTaskDueDate').value = task.due_date || '';
+    document.getElementById('adminTaskPriority').value = task.priority || 'normal';
+    document.getElementById('adminTaskStatus').value = task.status || 'not_started';
+    document.getElementById('adminTaskBlocksRelease').checked = !!task.blocks_release;
+
+    // Projektmitglieder laden
+    const members = await apiFetch(
+      '/rest/v1/project_members?project_id=eq.' + encodeURIComponent(task.project_id) +
+      '&select=user_id,project_role',
+      { method:'GET', headers:{'Accept':'application/json'} }
+    );
+
+    const userIds = [...new Set((members || []).map(m => m.user_id).filter(Boolean))];
+    let profiles = [];
+
+    if(userIds.length){
+      const inFilter = '(' + userIds.join(',') + ')';
+      profiles = await apiFetch(
+        '/rest/v1/profiles?id=in.' + encodeURIComponent(inFilter) +
+        '&select=id,display_name,email',
+        { method:'GET', headers:{'Accept':'application/json'} }
+      );
+    }
+
+    const profileMap = Object.fromEntries((profiles || []).map(p => [p.id, p]));
+    const assignee = document.getElementById('adminTaskAssignee');
+
+    assignee.innerHTML = (members || []).map(m => {
+      const p = profileMap[m.user_id] || {};
+      const label = p.display_name || p.email || m.user_id;
+      return `<option value="${esc(m.user_id)}">${esc(label)}</option>`;
+    }).join('');
+
+    assignee.value = task.assigned_to || '';
+
+  } catch(err) {
+    descEl.textContent = 'Fehler: ' + err.message;
+  }
+};
+
+window.saveAdminTask = async function(){
+  const task = window.currentAdminTask;
+  const msgEl = document.getElementById('adminTaskMsg');
+  if(!task) return;
+
+  msgEl.textContent = 'Speichere…';
+
+  const payload = {
+    assigned_to: document.getElementById('adminTaskAssignee').value || null,
+    due_date: document.getElementById('adminTaskDueDate').value || null,
+    priority: document.getElementById('adminTaskPriority').value,
+    status: document.getElementById('adminTaskStatus').value,
+    blocks_release: document.getElementById('adminTaskBlocksRelease').checked,
+    updated_at: new Date().toISOString()
+  };
+
+  try {
+    await apiFetch(
+      '/rest/v1/tasks?id=eq.' + encodeURIComponent(task.id),
+      {
+        method:'PATCH',
+        headers:{'Prefer':'return=minimal'},
+        body:JSON.stringify(payload)
+      }
+    );
+
+    msgEl.style.color = '#75e3b2';
+    msgEl.textContent = 'Gespeichert.';
+
+    window.currentAdminTask = Object.assign({}, task, payload);
+
+    await loadTeam();
+
+    if(window.currentTeamMemberId){
+      await window.openTeamMember(
+        window.currentTeamMemberId,
+        window.currentTeamMemberName || 'Teilnehmer'
+      );
+      window.location.hash = 'live-admin-task';
+    }
+
+  } catch(err) {
+    msgEl.style.color = '#ff9b9b';
+    msgEl.textContent = 'Fehler: ' + err.message;
+  }
+};
+
+window.escalateAdminTask = async function(){
+  document.getElementById('adminTaskPriority').value = 'critical';
+  document.getElementById('adminTaskStatus').value = 'blocked';
+  document.getElementById('adminTaskBlocksRelease').checked = true;
+  await window.saveAdminTask();
+};
+
+
+function goWorkflowHome(){
+  // Remove any open :target detail overlay.
+  if (window.location.hash) {
+    history.replaceState(null, '', window.location.pathname + window.location.search);
+  }
+
+  const feed = document.getElementById('workflow-feed');
+  const home = document.getElementById('workflow-home');
+
+  if (feed) {
+    feed.scrollTop = 0;
+  }
+
+  if (home) {
+    home.scrollIntoView({behavior:'auto', block:'start'});
+  }
+
+  // Second pass for mobile browsers / scroll-snap containers.
+  requestAnimationFrame(() => {
+    if (feed) feed.scrollTop = 0;
+  });
+}
+
+// Einfache Pilot-Synchronisation ohne externe Realtime-Bibliothek:
+// bei sichtbarer App alle 10 Sekunden neu laden.
+setInterval(() => {
+  if(currentUser && !document.hidden){
+    loadMyDay();
+    if(window.kaikiraIsAdmin) loadTeam();
+  }
+}, 10000);
+
+window.addEventListener('load', () => {
+  const loginButton = document.getElementById('loginButton');
+  if (loginButton) loginButton.addEventListener('click', liveLogin);
+
+  const workflowButton = document.getElementById('workflowNavButton');
+  if (workflowButton) {
+    workflowButton.addEventListener('click', (event) => {
+      event.preventDefault();
+      goWorkflowHome();
+    });
+  }
+
+  initLiveApp();
+});
+
+</script>
+</head>
+<body>
+<input class="theme" id="dark" type="radio" name="theme" checked>
+<input class="theme" id="light" type="radio" name="theme">
+<input class="theme" id="pure" type="radio" name="theme">
+<div class="phone">
+  <header class="top">
+    <div class="toprow"><div class="brand">KAI <span>& KIRA</span></div><div class="project">Muster GmbH · 2026</div></div>
+    <div class="progress"><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  </header>
+  <div class="skin"><label for="dark">Dunkel</label><label for="light">Hell</label><label for="pure">Pur</label></div>
+
+  <main class="feed" id="workflow-feed">
+    <section class="screen" id="workflow-home">
+      <div class="kai">KAI</div>
+      <div class="eyebrow">Workflow 1 von 9 · Daten</div>
+      <h1 class="title">Alles beginnt mit deiner SuSa.</h1>
+      <div class="sub">Am Handy sehen wir nur den Einstieg. Der echte Dateiimport läuft später in der produktiven Web-App.</div>
+      <a class="action" href="#upload">SuSa vorbereiten</a>
+      <div class="hint">Nach oben wischen</div>
+    </section>
+
+    <section class="screen">
+      <div class="eyebrow">Workflow 2 von 9 · Mapping</div>
+      <div class="stat">842 <small>Konten</small></div>
+      <h1 class="title">Nur 13 brauchen dich.</h1>
+      <div class="chips"><span class="chip ok">791 automatisch</span><span class="chip">38 KI-Vorschläge</span><span class="chip warn">13 offen</span></div>
+      <a class="action" href="#mapping">Nächstes Konto prüfen</a>
+      <div class="hint">Feed statt Tabelle</div>
+    </section>
+
+    <section class="screen">
+      <div class="eyebrow">Workflow 3 von 9 · Plausibilität</div>
+      <h1 class="title">Eine Auffälligkeit. Sonst sauber.</h1>
+      <div class="card"><b>Rückstellungen +47 %</b><p>KIRA markiert den Ausreißer. Du entscheidest, ob eine Erläuterung erforderlich ist.</p></div>
+      <a class="action" href="#plausi">Prüfen</a>
+    </section>
+
+    <section class="screen">
+      <div class="eyebrow">Workflow 4 von 9 · Aufgabensteuerung</div>
+      <h1 class="title">3 Themen offen.</h1>
+      <div class="task-meta">
+        <div class="meta-box"><small>Verantwortlich</small><b>Anna Becker</b></div>
+        <div class="meta-box"><small>Frist</small><b>18.07.2026</b></div>
+      </div>
+      <div class="statusbar"><span class="status orange">Noch 2 Tage</span><span class="status blue">In Bearbeitung</span></div>
+      <div class="blocker">Diese Aufgabe blockiert Workflow 6 · Anhang, solange die Abstimmung nicht abgeschlossen ist.</div>
+      <a class="action" href="#abstimmung">Aufgabe steuern</a>
+    </section>
+
+    <section class="screen">
+      <div class="eyebrow">Workflow 5 von 9 · Anhang</div>
+      <h1 class="title">86 % vorbereitet.</h1>
+      <div class="sub">Fehlende Angaben erscheinen als einzelne Entscheidungen statt als langes Formular.</div>
+      <a class="action" href="#financial-drilldown">Bilanz & GuV prüfen</a><a class="ghost" href="#report-review">Anhang & Lagebericht Review</a>
+    </section>
+
+    <section class="screen">
+      <div class="kai kira">KIRA</div>
+      <div class="eyebrow">Workflow 6 von 9 · Prüfung</div>
+      <h1 class="title">KIRA hat einen Hinweis.</h1>
+      <div class="card"><b>Beleg fehlt</b><p>Der Anstieg der Rückstellungen ist im Anhang noch nicht ausreichend erklärt.</p></div>
+      <a class="action" href="#kira">Jetzt klären</a>
+    </section>
+
+    <section class="screen">
+      <div class="eyebrow">Workflow 7 von 9 · Lagebericht</div>
+      <h1 class="title">2 Aussagen brauchen Beleg.</h1>
+      <div class="sub">KAI formuliert nur aus vorhandenen Informationen. Unbelegte Ursachen bleiben sichtbar markiert.</div>
+      <a class="action" href="#lagebericht">Aussage prüfen</a>
+    </section>
+
+    <section class="screen">
+      <div class="eyebrow">Workflow 8 von 9 · Review</div>
+      <div class="stat">96 <small>%</small></div>
+      <h1 class="title">Fast fertig.</h1>
+      <div class="chips"><span class="chip ok">0 kritische Fehler</span><span class="chip warn">4 offen</span><span class="chip warn">2 überfällig</span></div>
+      <a class="action" href="#review">Review öffnen</a>
+    </section>
+
+    <section class="screen">
+      <div class="eyebrow">Workflow 9 von 9 · Freigabe</div>
+      <h1 class="title">Bereit zur Freigabe.</h1>
+      <div class="sub">Bilanz, GuV, Anhang, Lagebericht, Prüfpfad und Freigaben sind vollständig.</div>
+      <a class="ghost" href="#financial-drilldown">Bilanz & GuV prüfen</a><a class="action" href="#freigabe">Freigabe ansehen</a>
+    </section>
+  </main>
+
+  <nav class="bottom">
+    <a href="#live-myday"><b class="ico">✓</b>Meine</a>
+    <a href="#" id="workflowNavButton" class="active"><b class="ico">▣</b>Workflow</a>
+    <a href="#financial-drilldown" class="primary-nav"><b class="ico">≡</b>Bilanz/GuV</a>
+    <a href="#kaifeed"><b class="ico">◉</b>KAI-Feed</a>
+    <a href="#report-review"><b class="ico">▤</b>Berichte</a>
+  </nav>
+
+  <section id="upload" class="detail"><a class="close" href="#">× Schließen</a><h2>SuSa vorbereiten</h2><p>Mobile Zielansicht: Datei auswählen, Unternehmen und Geschäftsjahr bestätigen, dann übernimmt KAI.</p><div class="option">Excel / CSV auswählen</div><div class="option">Spalten prüfen</div><div class="option">Import bestätigen</div></section>
+  <section id="mapping" class="detail"><a class="close" href="#">× Schließen</a><h2>Konto 4230</h2><p><b>Grundstücksaufwendungen</b></p><div class="option">✓ Sonstige betriebliche Aufwendungen · 94 %</div><div class="option">Alternative Position wählen</div><div class="option">KAI fragen</div></section>
+  <section id="plausi" class="detail"><a class="close" href="#">× Schließen</a><h2>Plausibilitätsprüfung</h2><p>Rückstellungen steigen um 47 % gegenüber dem Vorjahr.</p><div class="option">Erklärt und plausibel</div><div class="option">Weitere Analyse nötig</div><div class="option">KIRA prüfen lassen</div></section>
+  <section id="abstimmung" class="detail">
+    <a class="close" href="#">× Schließen</a>
+    <h2>Intercompany-Abstimmung</h2>
+    <p>Differenz zwischen Gesellschaft A und B: 12.450 €.</p>
+
+    <div class="section-title">Aufgabe</div>
+    <div class="task-meta">
+      <div class="meta-box"><small>Verantwortlich</small><b>Anna Becker</b></div>
+      <div class="meta-box"><small>Frist</small><b>18.07.2026</b></div>
+    </div>
+    <div class="statusbar">
+      <span class="status blue">In Bearbeitung</span>
+      <span class="status orange">Noch 2 Tage</span>
+    </div>
+
+    <div class="section-title">Verantwortlichen ändern</div>
+    <div class="option">○ Anna Becker</div>
+    <div class="option">○ Thomas Müller</div>
+    <div class="option">○ Volker Kusch</div>
+    <div class="option">○ Externer Berater</div>
+
+    <div class="section-title">Frist setzen</div>
+    <div class="option">Heute</div>
+    <div class="option">Morgen</div>
+    <div class="option">Diese Woche</div>
+    <div class="option">Datum wählen</div>
+
+    <div class="section-title">Status</div>
+    <div class="option">Noch nicht gestartet</div>
+    <div class="option">In Bearbeitung</div>
+    <div class="option">Erledigt</div>
+    <div class="option">Blockiert</div>
+
+    <div class="blocker">Blockiert aktuell: Workflow 6 · Anhang → Workflow 8 · Review → Workflow 9 · Freigabe</div>
+
+    <div class="section-title">Teamübersicht</div>
+    <div class="kpi-grid">
+      <div class="kpi"><strong>17</strong><small>Offen</small></div>
+      <div class="kpi"><strong>3</strong><small>Bald fällig</small></div>
+      <div class="kpi"><strong>2</strong><small>Überfällig</small></div>
+    </div>
+    <div class="card">
+      <div class="teamrow"><div><b>Anna Becker</b><span>6 offen · 1 überfällig</span></div><span>→</span></div>
+      <div class="teamrow"><div><b>Thomas Müller</b><span>8 offen · 0 überfällig</span></div><span>→</span></div>
+      <div class="teamrow"><div><b>Volker Kusch</b><span>3 offen · 1 kritisch</span></div><span>→</span></div>
+    </div>
+  </section>
+  <section id="anhang" class="detail"><a class="close" href="#">× Schließen</a><h2>Anhang</h2><p>Bilanzierungs- und Bewertungsmethode für Rückstellungen fehlt.</p><div class="option">Standardtext übernehmen</div><div class="option">Text anpassen</div><div class="option">KAI formulieren lassen</div></section>
+  <section id="kira" class="detail"><a class="close" href="#">× Schließen</a><h2>KIRA-Prüfung</h2><p>Die Begründung für den Rückstellungsanstieg ist noch nicht ausreichend belegt.</p><div class="option">Beleg ergänzen</div><div class="option">Text neutralisieren</div><div class="option">Hinweis offen lassen</div></section>
+  <section id="lagebericht" class="detail"><a class="close" href="#">× Schließen</a><h2>Lagebericht</h2><p>„Umsatzanstieg durch höhere Absatzmengen“ ist noch nicht belegt.</p><div class="option">Quelle hinzufügen</div><div class="option">Neutral formulieren</div><div class="option">Aussage entfernen</div></section>
+  <section id="review" class="detail"><a class="close" href="#">× Schließen</a><h2>Review</h2><p>4 offene Punkte, kein kritischer Fehler.</p><div class="option">Alle offenen Punkte</div><div class="option">Nur KIRA-Hinweise</div><div class="option">Freigabereife prüfen</div></section>
+  <section id="freigabe" class="detail"><a class="close" href="#">× Schließen</a><h2>Freigabe</h2><p>Alle Voraussetzungen sind erfüllt.</p><div class="option">Abschluss freigeben</div><div class="option">Audit Trail ansehen</div><div class="option">Export vorbereiten</div></section>
+
+  <section id="mytasks" class="detail">
+    <a class="close" href="#">× Schließen</a>
+    <h2>Meine Aufgaben</h2>
+    <p>Alles, was heute deine Aufmerksamkeit braucht.</p>
+    <div class="kpi-grid">
+      <div class="kpi"><strong>4</strong><small>Heute</small></div>
+      <div class="kpi"><strong>11</strong><small>Diese Woche</small></div>
+      <div class="kpi"><strong>2</strong><small>Überfällig</small></div>
+    </div>
+    <div class="section-title">Priorität</div>
+    <div class="card">
+      <b>Intercompany-Abstimmung</b>
+      <p>Frist 18.07.2026 · Noch 2 Tage</p>
+      <div class="statusbar"><span class="status orange">Bald fällig</span><span class="status blue">In Bearbeitung</span></div>
+    </div>
+    <div class="card">
+      <b>Rückstellungen erläutern</b>
+      <p>Frist 16.07.2026 · Heute</p>
+      <div class="statusbar"><span class="status red">Kritisch</span><span class="status gray">Nicht gestartet</span></div>
+    </div>
+    <div class="card">
+      <b>KIRA-Hinweis beantworten</b>
+      <p>Frist 15.07.2026 · Überfällig</p>
+      <div class="statusbar"><span class="status red">Überfällig</span></div>
+    </div>
+    <div class="section-title">KAI empfiehlt</div>
+    <div class="blocker">Bearbeite zuerst „KIRA-Hinweis beantworten“. Diese Aufgabe blockiert aktuell den Review.</div>
+  </section>
+
+  <section id="teamcockpit" class="detail">
+    <a class="close" href="#">× Schließen</a>
+    <h2>Team-Cockpit</h2>
+    <p>Abschlussstatus und Engpässe auf einen Blick.</p>
+    <div class="kpi-grid">
+      <div class="kpi"><strong>74%</strong><small>Fortschritt</small></div>
+      <div class="kpi"><strong>17</strong><small>Offen</small></div>
+      <div class="kpi"><strong>2</strong><small>Überfällig</small></div>
+    </div>
+    <div class="section-title">Team</div>
+    <div class="card">
+      <div class="teamrow"><div><b>Anna Becker</b><span>6 offen · 1 überfällig</span></div><span>→</span></div>
+      <div class="teamrow"><div><b>Thomas Müller</b><span>8 offen · 0 überfällig</span></div><span>→</span></div>
+      <div class="teamrow"><div><b>Volker Kusch</b><span>3 offen · 1 kritisch</span></div><span>→</span></div>
+    </div>
+    <div class="section-title">Kritischer Pfad</div>
+    <div class="blocker">Intercompany-Abstimmung → Anhang → Review → Freigabe. Aktuell gefährdete Ziel-Freigabe: 31.07.2026.</div>
+    <div class="section-title">KAI Management Brief</div>
+    <div class="card"><b>Handlungsbedarf</b><p>2 überfällige Aufgaben und 1 kritische Blockade benötigen heute Aufmerksamkeit. Alle übrigen Workflowbereiche liegen im Plan.</p></div>
+  </section>
+
+
+  <section id="myday" class="detail">
+    <a class="close" href="#">× Schließen</a>
+    <div class="eyebrow">Donnerstag · 16. Juli 2026</div>
+    <h2>Guten Morgen.</h2>
+    <p>Dein Abschluss ist zu <b>74 %</b> fertig. Heute brauchen fünf Dinge deine Aufmerksamkeit.</p>
+
+    <div class="kpi-grid">
+      <div class="kpi"><strong>1</strong><small>Überfällig</small></div>
+      <div class="kpi"><strong>2</strong><small>Entscheidungen</small></div>
+      <div class="kpi"><strong>2</strong><small>Review & Freigabe</small></div>
+    </div>
+
+    <div class="section-title">KAI priorisiert deinen Tag</div>
+    <div class="blocker">Beginne mit der überfälligen Prüfsachfrage. Sie blockiert aktuell den Review des Anhangs.</div>
+
+    <div class="card">
+      <div class="eyebrow">1 von 5 · Überfällig</div>
+      <b>Prüfsachfrage beantworten</b>
+      <p>„Bitte erläutern Sie den Anstieg der sonstigen Rückstellungen.“</p>
+      <div class="statusbar"><span class="status red">Seit 15.07. überfällig</span></div>
+      <a class="action" href="#day-question">Jetzt beantworten</a>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">2 von 5 · Entscheidung</div>
+      <b>Rückstellung Rechtsstreit</b>
+      <p>185.000 € · KAI empfiehlt die Bildung der Rückstellung.</p>
+      <div class="statusbar"><span class="status orange">Entscheidung erforderlich</span></div>
+      <a class="action" href="#day-decision">Entscheiden</a>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">3 von 5 · Mapping</div>
+      <b>Konto 4230 prüfen</b>
+      <p>Grundstücksaufwendungen → Sonstige betriebliche Aufwendungen · Confidence 94 %.</p>
+      <a class="action" href="#mapping">Mapping prüfen</a>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">4 von 5 · KIRA Review</div>
+      <b>Anhang gegenlesen</b>
+      <p>KIRA hat keine kritischen Fehler gefunden. Eine Erläuterung ist noch offen.</p>
+      <a class="action" href="#kira">Review öffnen</a>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">5 von 5 · Freigabe</div>
+      <b>Bilanz & GuV freigeben</b>
+      <p>Alle vorgelagerten Pflichtprüfungen sind abgeschlossen.</p>
+      <a class="action" href="#day-approval">Freigabe prüfen</a>
+    </div>
+
+    <div class="section-title">Berichtsprüfung</div><a class="action" href="#financial-drilldown">Bilanz & GuV öffnen</a><div class="section-title">Danach</div>
+    <div class="card"><b>Für heute erledigt</b><p>Wenn diese fünf Punkte abgeschlossen sind, gibt es aktuell keine weitere persönliche Aktion. KAI überwacht Fristen und neue Blockaden weiter.</p></div>
+  </section>
+
+  <section id="day-question" class="detail">
+    <a class="close" href="#myday">← Mein Tag</a>
+    <div class="eyebrow">Prüfsachfrage</div>
+    <h2>Rückstellungen</h2>
+    <p>„Bitte erläutern Sie den Anstieg der sonstigen Rückstellungen.“</p>
+    <div class="section-title">KAI Antwortentwurf</div>
+    <div class="card"><p>Der Anstieg resultiert im Wesentlichen aus neu gebildeten Rückstellungen. Vor Versand müssen die konkreten Ursachen und Beträge aus der Datenbasis ergänzt und belegt werden.</p></div>
+    <div class="option">Antwort bearbeiten</div>
+    <div class="option">Belege hinzufügen</div>
+    <div class="option">Verantwortlichen zuweisen</div>
+    <div class="option">Als beantwortet markieren</div>
+  </section>
+
+  <section id="day-decision" class="detail">
+    <a class="close" href="#myday">← Mein Tag</a>
+    <div class="eyebrow">Entscheidung</div>
+    <h2>Rückstellung Rechtsstreit</h2>
+    <div class="stat">185.000 <small>€</small></div>
+    <p>KAI empfiehlt die Bildung einer Rückstellung. KIRA verlangt vor Freigabe einen dokumentierten Nachweis für Ansatz und Bewertung.</p>
+    <div class="option">✓ Rückstellung bestätigen</div>
+    <div class="option">Betrag prüfen lassen</div>
+    <div class="option">An Verantwortlichen zurückgeben</div>
+    <div class="option">KIRA-Hinweis öffnen</div>
+  </section>
+
+  <section id="day-approval" class="detail">
+    <a class="close" href="#myday">← Mein Tag</a>
+    <div class="eyebrow">Freigabe</div>
+    <h2>Bilanz & GuV</h2>
+    <div class="statusbar"><span class="status blue">Review abgeschlossen</span><span class="status gray">Freigabe offen</span></div>
+    <p>Alle vorgelagerten Pflichtprüfungen sind abgeschlossen. Die Freigabe wird im Audit Trail dokumentiert.</p>
+    <div class="option">Bilanz ansehen</div>
+    <div class="option">GuV ansehen</div>
+    <div class="option">Prüfpfad ansehen</div>
+    <div class="option">✓ Freigabe erteilen</div>
+  </section>
+
+
+  <section id="kaifeed" class="detail">
+    <a class="close" href="#">× Schließen</a>
+    <div class="eyebrow">KAI Feed</div>
+    <h2>Was jetzt wichtig ist.</h2>
+    <p>KAI filtert Meldungen nach Relevanz. Du siehst nur Ereignisse, die eine Entscheidung, Reaktion oder Eskalation erfordern.</p>
+
+    <div class="kpi-grid">
+      <div class="kpi"><strong>2</strong><small>Kritisch</small></div>
+      <div class="kpi"><strong>3</strong><small>Heute</small></div>
+      <div class="kpi"><strong>5</strong><small>Info</small></div>
+    </div>
+
+    
+    <div id="adminTeamCard" class="card" style="display:none">
+      <div class="eyebrow">Admin · Live</div>
+      <b>Team-Cockpit</b>
+      <p>Offene, überfällige und blockierte Aufgaben aller Workflowteilnehmer.</p>
+      <div class="kpi-grid">
+        <div class="kpi"><strong id="teamOpenTotal">–</strong><small>Offen</small></div>
+        <div class="kpi"><strong id="teamOverdueTotal">–</strong><small>Überfällig</small></div>
+        <div class="kpi"><strong id="teamBlockedTotal">–</strong><small>Blockiert</small></div>
+      </div>
+      <a class="action" href="#live-team">Team-Cockpit öffnen</a>
+    </div>
+
+<div class="section-title">Kritisch</div>
+
+    <div class="card">
+      <div class="eyebrow">Eskalation · vor 18 Min.</div>
+      <b>Review des Anhangs blockiert</b>
+      <p>Die Prüfsachfrage zu den Rückstellungen ist seit 15.07.2026 überfällig. Ohne Antwort kann Workflow 8 nicht abgeschlossen werden.</p>
+      <div class="statusbar"><span class="status red">Überfällig</span><span class="status red">Blockiert Review</span></div>
+      <a class="action" href="#feed-escalation">Eskalation öffnen</a>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">Fristwarnung · vor 42 Min.</div>
+      <b>Offenlegung in 5 Tagen</b>
+      <p>Die Einreichung ist noch nicht als durchgeführt markiert. Zwei vorgelagerte Freigaben fehlen.</p>
+      <div class="statusbar"><span class="status orange">Frist 21.07.2026</span></div>
+      <a class="action" href="#feed-deadline">Frist prüfen</a>
+    </div>
+
+    <div class="section-title">Braucht dich heute</div>
+
+    <div class="card">
+      <div class="eyebrow">Neue Prüfsachfrage · vor 1 Std.</div>
+      <b>Entwicklung Forderungen</b>
+      <p>Der Prüfer bittet um eine kurze Erläuterung der Veränderung gegenüber dem Vorjahr.</p>
+      <a class="action" href="#feed-question">Antwort vorbereiten</a>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">Entscheidung · vor 2 Std.</div>
+      <b>Rückstellung Rechtsstreit</b>
+      <p>185.000 € · KAI empfiehlt Ansatz. KIRA verlangt noch einen Bewertungsnachweis.</p>
+      <a class="action" href="#day-decision">Entscheiden</a>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">Freigabe · vor 3 Std.</div>
+      <b>Bilanz & GuV bereit</b>
+      <p>Alle vorgelagerten Pflichtprüfungen sind abgeschlossen.</p>
+      <a class="action" href="#day-approval">Freigabe prüfen</a>
+    </div>
+
+    <div class="section-title">Erledigt & Information</div>
+
+    <div class="card">
+      <div class="eyebrow">Blockade gelöst · vor 4 Std.</div>
+      <b>Bankabstimmung abgeschlossen</b>
+      <p>Workflow 5 kann jetzt ohne Blockade fortgesetzt werden.</p>
+      <div class="statusbar"><span class="status blue">Erledigt</span></div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">Team-Update · heute 08:15</div>
+      <b>Thomas Müller hat 3 Aufgaben erledigt</b>
+      <p>Damit sind im Bereich Abschlussarbeiten nur noch zwei offene Punkte vorhanden.</p>
+    </div>
+
+    <div class="section-title">Benachrichtigungen</div>
+    <a class="ghost" href="#notification-settings">Push & Eskalationen einstellen</a>
+
+    <div class="section-title">KAI Zusammenfassung</div>
+    <div class="blocker">Heute solltest du zuerst die überfällige Prüfsachfrage lösen, danach die Offenlegungsfrist absichern. Alle übrigen Meldungen gefährden den Abschluss aktuell nicht.</div>
+  </section>
+
+  <section id="feed-escalation" class="detail">
+    <a class="close" href="#kaifeed">← KAI-Feed</a>
+    <div class="eyebrow">Eskalation</div>
+    <h2>Review blockiert</h2>
+    <p>Die Prüfsachfrage zu den Rückstellungen ist überfällig und blockiert aktuell den Anhang-Review.</p>
+
+    <div class="section-title">Auswirkung</div>
+    <div class="blocker">Prüfsachfrage → Anhang Review → Workflow 8 Review → Workflow 9 Freigabe</div>
+
+    <div class="section-title">Verantwortlich</div>
+    <div class="task-meta">
+      <div class="meta-box"><small>Owner</small><b>Volker Kusch</b></div>
+      <div class="meta-box"><small>Frist</small><b>15.07.2026</b></div>
+    </div>
+
+    <div class="option">Jetzt beantworten</div>
+    <div class="option">An Teammitglied eskalieren</div>
+    <div class="option">Neue Frist setzen</div>
+    <div class="option">Blockade begründen</div>
+  </section>
+
+  <section id="feed-deadline" class="detail">
+    <a class="close" href="#kaifeed">← KAI-Feed</a>
+    <div class="eyebrow">Fristwarnung</div>
+    <h2>Offenlegung</h2>
+    <div class="stat">5 <small>Tage</small></div>
+    <p>Bis zur geplanten Einreichung fehlen noch zwei Freigaben.</p>
+    <div class="section-title">Offene Voraussetzungen</div>
+    <div class="option">Anhang freigeben</div>
+    <div class="option">Gesamtabschluss freigeben</div>
+    <div class="option">Einreichung vorbereiten</div>
+  </section>
+
+  <section id="feed-question" class="detail">
+    <a class="close" href="#kaifeed">← KAI-Feed</a>
+    <div class="eyebrow">Neue Prüfsachfrage</div>
+    <h2>Entwicklung Forderungen</h2>
+    <p>„Bitte erläutern Sie die Veränderung der Forderungen gegenüber dem Vorjahr.“</p>
+
+    <div class="section-title">KAI Vorschlag</div>
+    <div class="card"><p>Die Forderungen haben sich gegenüber dem Vorjahr verändert. Vor Versand sind die maßgeblichen Treiber aus der Datenbasis zu ergänzen und mit den zugrunde liegenden Salden zu belegen.</p></div>
+
+    <div class="option">Antwort bearbeiten</div>
+    <div class="option">Beleg hinzufügen</div>
+    <div class="option">Verantwortlichen zuweisen</div>
+    <div class="option">Als beantwortet markieren</div>
+  </section>
+
+
+  <section id="audit-chat" class="detail">
+    <a class="close" href="#">× Schließen</a>
+    <div class="eyebrow">Prüfungsbegleitung</div>
+    <h2>Prüfchat</h2>
+    <p>Prüfsachfragen werden von KAI strukturiert, zugeordnet und bis zur Beantwortung verfolgt.</p>
+
+    <div class="kpi-grid">
+      <div class="kpi"><strong>3</strong><small>Offen</small></div>
+      <div class="kpi"><strong>1</strong><small>Überfällig</small></div>
+      <div class="kpi"><strong>12</strong><small>Beantwortet</small></div>
+    </div>
+
+    <div class="section-title">Neue Nachricht · Wirtschaftsprüfer</div>
+    <div class="card">
+      <b>Entwicklung sonstige Rückstellungen</b>
+      <p>„Bitte erläutern Sie den Anstieg der sonstigen Rückstellungen gegenüber dem Vorjahr und stellen Sie uns die wesentlichen Nachweise zur Verfügung.“</p>
+      <div class="statusbar"><span class="status red">Antwort fällig</span><span class="status gray">Workflow 6</span></div>
+    </div>
+
+    <div class="section-title">KAI hat vorbereitet</div>
+    <div class="card">
+      <b>Zuordnung</b>
+      <p>Workflow 6 · Prüfungsbegleitung → Rückstellungen</p>
+    </div>
+    <div class="task-meta">
+      <div class="meta-box"><small>Verantwortlich</small><b>Volker Kusch</b></div>
+      <div class="meta-box"><small>Frist</small><b>16.07.2026</b></div>
+    </div>
+
+    <div class="section-title">Antwortentwurf</div>
+    <div class="card">
+      <p>Der Anstieg der sonstigen Rückstellungen resultiert aus Veränderungen einzelner Rückstellungspositionen. Die konkreten Treiber und Beträge müssen vor Versand aus der freigegebenen Datenbasis ergänzt und mit den zugrunde liegenden Nachweisen belegt werden.</p>
+    </div>
+
+    <a class="action" href="#audit-answer">Antwort bearbeiten</a>
+    <a class="ghost" href="#audit-evidence">Nachweise verwalten</a>
+
+    <div class="section-title">Weitere offene Sachfragen</div>
+    <div class="card">
+      <b>Forderungen aus Lieferungen und Leistungen</b>
+      <p>Thomas Müller · Frist morgen</p>
+      <div class="statusbar"><span class="status orange">In Bearbeitung</span></div>
+    </div>
+    <div class="card">
+      <b>Werthaltigkeit Beteiligungen</b>
+      <p>Anna Becker · Frist 18.07.2026</p>
+      <div class="statusbar"><span class="status blue">Antwortentwurf</span></div>
+    </div>
+  </section>
+
+  <section id="audit-answer" class="detail">
+    <a class="close" href="#audit-chat">← Prüfchat</a>
+    <div class="eyebrow">Antwort vorbereiten</div>
+    <h2>Rückstellungen</h2>
+    <div class="section-title">Prüfsachfrage</div>
+    <div class="card"><p>Bitte erläutern Sie den Anstieg der sonstigen Rückstellungen gegenüber dem Vorjahr und stellen Sie die wesentlichen Nachweise zur Verfügung.</p></div>
+
+    <div class="section-title">KAI Entwurf</div>
+    <div class="card"><p>Der Anstieg der sonstigen Rückstellungen resultiert aus Veränderungen einzelner Rückstellungspositionen. [Konkrete Positionen und Beträge aus Datenbasis ergänzen.]</p></div>
+
+    <div class="option">Text bearbeiten</div>
+    <div class="option">KAI neu formulieren lassen</div>
+    <div class="option">An Teammitglied zur Ergänzung geben</div>
+    <div class="option">Interne Freigabe anfordern</div>
+
+    <div class="section-title">KIRA Prüfung</div>
+    <div class="blocker">Noch nicht versandbereit: Konkrete Ursachen und Beträge sind nicht belegt. KIRA verhindert eine scheinbar fertige Antwort ohne Datennachweis.</div>
+  </section>
+
+  <section id="audit-evidence" class="detail">
+    <a class="close" href="#audit-chat">← Prüfchat</a>
+    <div class="eyebrow">Nachweise</div>
+    <h2>Belege zur Sachfrage</h2>
+    <p>Mobile Ansicht für vorhandene Nachweise und fehlende Dokumente.</p>
+
+    <div class="card">
+      <b>✓ Rückstellungsspiegel 2026</b>
+      <p>Vorhanden · dem Prüfpunkt zugeordnet</p>
+    </div>
+    <div class="card">
+      <b>✓ Berechnung Rechtsstreit</b>
+      <p>Vorhanden · intern freigegeben</p>
+    </div>
+    <div class="card">
+      <b>! Management-Begründung</b>
+      <p>Noch nicht vorhanden</p>
+      <div class="statusbar"><span class="status red">Fehlt</span></div>
+    </div>
+
+    <div class="option">Nachweis anfordern</div>
+    <div class="option">Verantwortlichen zuweisen</div>
+    <div class="option">Frist setzen</div>
+  </section>
+
+
+  <section id="notification-settings" class="detail">
+    <a class="close" href="#kaifeed">← KAI-Feed</a>
+    <div class="eyebrow">Persönliche Einstellungen</div>
+    <h2>Wann darf KAI dich stören?</h2>
+    <p>Der Feed enthält weiterhin alle relevanten Ereignisse. Push-Mitteilungen werden auf die wirklich wichtigen Situationen begrenzt.</p>
+
+    <div class="section-title">Sofort benachrichtigen</div>
+    <div class="option">✓ Kritische Blockade</div>
+    <div class="option">✓ Aufgabe überfällig</div>
+    <div class="option">✓ Neue Prüfsachfrage</div>
+    <div class="option">✓ Freigabe erforderlich</div>
+
+    <div class="section-title">Nur im KAI-Feed zeigen</div>
+    <div class="option">○ Aufgabe bald fällig</div>
+    <div class="option">○ Teammitglied hat Aufgabe erledigt</div>
+    <div class="option">○ Blockade wurde gelöst</div>
+    <div class="option">○ Neuer KAI-Hinweis</div>
+
+    <div class="section-title">Eskalationslogik</div>
+    <div class="card">
+      <b>Stufe 1 · Verantwortlicher</b>
+      <p>24 Stunden vor Frist erinnert KAI den zuständigen Workflowteilnehmer.</p>
+    </div>
+    <div class="card">
+      <b>Stufe 2 · Teamleitung</b>
+      <p>Bei Fristüberschreitung oder kritischer Blockade informiert KAI zusätzlich die Teamleitung.</p>
+    </div>
+    <div class="card">
+      <b>Stufe 3 · Abschlussverantwortlicher</b>
+      <p>Gefährdet eine Blockade den kritischen Pfad oder die Abschlussfrist, wird der Abschlussverantwortliche informiert.</p>
+    </div>
+
+    <div class="section-title">Ruhezeiten</div>
+    <div class="task-meta">
+      <div class="meta-box"><small>Von</small><b>19:00 Uhr</b></div>
+      <div class="meta-box"><small>Bis</small><b>07:30 Uhr</b></div>
+    </div>
+    <div class="option">✓ Kritische Eskalationen trotzdem zustellen</div>
+
+    <div class="section-title">Tagesbriefing</div>
+    <div class="card">
+      <b>08:00 Uhr · Mein Tag</b>
+      <p>KAI fasst morgens offene Entscheidungen, Fristen, Prüfsachfragen, Freigaben und Blockaden zusammen.</p>
+    </div>
+
+    <div class="section-title">Beispiel Push</div>
+    <div class="card">
+      <div class="eyebrow">KAI · Kritische Blockade</div>
+      <b>Anhang-Review blockiert</b>
+      <p>Eine überfällige Prüfsachfrage gefährdet aktuell die Freigabe. Tippe, um die Ursache zu bearbeiten.</p>
+    </div>
+  </section>
+
+
+  
+  
+  <section id="financial-drilldown" class="detail">
+    <a class="close" href="#">× Schließen</a>
+    <div class="eyebrow">Muster GmbH · Geschäftsjahr 2026</div>
+    <h2>Musterbilanz & GuV</h2>
+    <p>Bilanz und GuV starten vollständig geschlossen. Öffne nur den Bereich, den du prüfen möchtest.</p><a class="action" href="#report-review">Anhang & Lagebericht Review öffnen</a>
+
+    <details class="card">
+      <summary><b>Bilanz · Aktiva</b><span>BJ 32.000.000 € · VJ 30.180.000 €</span></summary>
+      <details class="option"><summary>A. Anlagevermögen · 12.850.000 € / 12.420.000 €</summary>
+        <div class="option">I. Immaterielle Vermögensgegenstände · 650.000 € / 710.000 €</div>
+        <div class="option">II. Sachanlagen · 11.400.000 € / 10.910.000 €</div>
+        <div class="option">III. Finanzanlagen · 800.000 € / 800.000 €</div>
+      </details>
+      <details class="option"><summary>B. Umlaufvermögen · 18.950.000 € / 17.580.000 €</summary>
+        <div class="option">I. Vorräte · 5.200.000 € / 4.860.000 €</div>
+        <a class="option" href="#bs-receivables">II. Forderungen aus LuL · 8.450.000 € / 7.920.000 € →</a>
+        <div class="option">III. Sonstige Vermögensgegenstände · 1.300.000 € / 1.180.000 €</div>
+        <div class="option">IV. Flüssige Mittel · 4.000.000 € / 3.620.000 €</div>
+      </details>
+      <div class="option">C. Rechnungsabgrenzung · 200.000 € / 180.000 €</div>
+    </details>
+
+    <details class="card">
+      <summary><b>Bilanz · Passiva</b><span>BJ 32.000.000 € · VJ 30.180.000 €</span></summary>
+      <div class="option">A. Eigenkapital · 12.300.000 € / 11.650.000 €</div>
+      <details class="option"><summary>B. Rückstellungen · 3.420.000 € / 2.740.000 €</summary>
+        <a class="option" href="#bs-provisions">Sonstige Rückstellungen · 1.820.000 € / 1.240.000 € →</a>
+      </details>
+      <div class="option">C. Verbindlichkeiten · 15.980.000 € / 15.490.000 €</div>
+      <div class="option">D. Rechnungsabgrenzung · 300.000 € / 300.000 €</div>
+    </details>
+
+    <details class="card">
+      <summary><b>Gewinn- und Verlustrechnung</b><span>JÜ BJ 2.280.000 € · VJ 2.240.000 €</span></summary>
+      <a class="option" href="#pl-revenue">1. Umsatzerlöse · 42.600.000 € / 39.800.000 € →</a>
+      <div class="option">2. Bestandsveränderungen · 320.000 € / 180.000 €</div>
+      <div class="option">3. Sonstige betriebliche Erträge · 1.450.000 € / 1.320.000 €</div>
+      <div class="option">4. Materialaufwand · -18.700.000 € / -17.350.000 €</div>
+      <div class="option">5. Personalaufwand · -11.800.000 € / -11.120.000 €</div>
+      <div class="option">6. Abschreibungen · -1.420.000 € / -1.350.000 €</div>
+      <a class="option" href="#pl-opex">7. Sonstige betriebliche Aufwendungen · -8.940.000 € / -8.120.000 € →</a>
+      <div class="option">8. Finanzergebnis · -410.000 € / -360.000 €</div>
+      <div class="option">9. Steuern · -820.000 € / -760.000 €</div>
+      <div class="option"><b>Jahresüberschuss · 2.280.000 € / 2.240.000 €</b></div>
+    </details>
+  </section>
+
+<section id="bs-receivables" class="detail">
+    <a class="close" href="#financial-drilldown">← Bilanz & GuV</a>
+    <div class="eyebrow">Bilanzposition</div>
+    <h2>Forderungen aus LuL</h2>
+    <div class="task-meta">
+      <div class="meta-box"><small>BJ</small><b>8.450.000 €</b></div>
+      <div class="meta-box"><small>VJ</small><b>7.920.000 €</b></div>
+    </div>
+    <div class="section-title">Konten</div>
+    <div class="card">
+      <b>1400 Forderungen aus LuL</b>
+      <p>BJ 6.800.000 € · VJ 6.150.000 €</p>
+      <div class="statusbar"><span class="status red">Kritisches Konto</span></div>
+      <a class="action" href="#account-1400">Konto öffnen</a>
+    </div>
+    <div class="card">
+      <b>1410 Zweifelhafte Forderungen</b>
+      <p>BJ 920.000 € · VJ 1.050.000 €</p>
+      <a class="action" href="#account-1410">Konto öffnen</a>
+    </div>
+    <div class="card">
+      <b>1450 Sonstige Forderungen LuL</b>
+      <p>BJ 730.000 € · VJ 720.000 €</p>
+    </div>
+  </section>
+
+  <section id="account-1400" class="detail">
+    <a class="close" href="#bs-receivables">← Forderungen</a>
+    <div class="eyebrow">Konto 1400 · Kritisch</div>
+    <h2>Forderungen aus LuL</h2>
+    <div class="task-meta">
+      <div class="meta-box"><small>BJ</small><b>6.800.000 €</b></div>
+      <div class="meta-box"><small>VJ</small><b>6.150.000 €</b></div>
+    </div>
+    <div class="card">
+      <b>KAI Analyse</b>
+      <p>4.200 Einzelposten. 62 auffällige Posten identifiziert: 18 Posten über 100 T€, 27 Posten älter als 180 Tage und 12 negative Posten.</p>
+    </div>
+    <div class="section-title">Musterkontoauszug</div>
+    <div class="card">
+      <b>Debitor Müller GmbH</b>
+      <p>185.000 € · 214 Tage offen · Rechnung RE-2026-00481</p>
+      <div class="statusbar"><span class="status red">Wertberichtigung prüfen</span></div>
+      <a class="action" href="#item-mueller">Einzelposten prüfen</a>
+    </div>
+    <div class="card">
+      <b>Debitor Hansen AG</b>
+      <p>132.000 € · 193 Tage offen · Rechnung RE-2026-00377</p>
+      <div class="statusbar"><span class="status orange">Überfällig</span></div>
+    </div>
+    <div class="card">
+      <b>Debitor Nova GmbH</b>
+      <p>-42.500 € · negativer Posten · Gutschrift GU-2026-0019</p>
+      <div class="statusbar"><span class="status orange">Plausibilität prüfen</span></div>
+    </div>
+    <div class="section-title">Prüfstatus</div>
+    <div class="kpi-grid">
+      <div class="kpi"><strong>41</strong><small>Geprüft</small></div>
+      <div class="kpi"><strong>21</strong><small>Offen</small></div>
+      <div class="kpi"><strong>3</strong><small>Rückfragen</small></div>
+    </div>
+  </section>
+
+  <section id="item-mueller" class="detail">
+    <a class="close" href="#account-1400">← Konto 1400</a>
+    <div class="eyebrow">Einzelposten</div>
+    <h2>Müller GmbH</h2>
+    <div class="stat">185.000 <small>€</small></div>
+    <p>Rechnung RE-2026-00481 · 214 Tage offen.</p>
+    <div class="section-title">KAI Hinweis</div>
+    <div class="card"><p>Der Posten überschreitet sowohl die Betragsgrenze von 100 T€ als auch die Altersgrenze von 180 Tagen.</p></div>
+    <div class="section-title">KIRA Prüfanforderung</div>
+    <div class="blocker">Vor Abschluss der Prüfung ist eine dokumentierte Beurteilung der Werthaltigkeit erforderlich.</div>
+    <div class="option">Plausibel / werthaltig</div>
+    <div class="option">Wertberichtigung prüfen</div>
+    <div class="option">Rückfrage an Verantwortlichen</div>
+    <div class="option">Nachweis anfordern</div>
+  </section>
+
+  <section id="account-1410" class="detail">
+    <a class="close" href="#bs-receivables">← Forderungen</a>
+    <div class="eyebrow">Konto 1410</div>
+    <h2>Zweifelhafte Forderungen</h2>
+    <div class="task-meta">
+      <div class="meta-box"><small>BJ</small><b>920.000 €</b></div>
+      <div class="meta-box"><small>VJ</small><b>1.050.000 €</b></div>
+    </div>
+    <div class="card"><b>KAI Analyse</b><p>Saldo gegenüber Vorjahr um 12,4 % gesunken. Kein kritischer Einzelposten nach den hinterlegten Schwellenwerten.</p></div>
+  </section>
+
+  <section id="bs-provisions" class="detail">
+    <a class="close" href="#financial-drilldown">← Bilanz & GuV</a>
+    <div class="eyebrow">Bilanzposition · Kritisch</div>
+    <h2>Sonstige Rückstellungen</h2>
+    <div class="task-meta">
+      <div class="meta-box"><small>BJ</small><b>1.820.000 €</b></div>
+      <div class="meta-box"><small>VJ</small><b>1.240.000 €</b></div>
+    </div>
+    <div class="card">
+      <b>0960 Prozessrisiken</b>
+      <p>BJ 185.000 € · VJ 0 €</p>
+      <div class="statusbar"><span class="status red">Neu & wesentlich</span></div>
+      <a class="action" href="#provision-account">Konto öffnen</a>
+    </div>
+    <div class="card"><b>0970 Sonstige Rückstellungen</b><p>BJ 1.635.000 € · VJ 1.240.000 €</p></div>
+  </section>
+
+  <section id="provision-account" class="detail">
+    <a class="close" href="#bs-provisions">← Rückstellungen</a>
+    <div class="eyebrow">Konto 0960 · Kritisch</div>
+    <h2>Prozessrisiken</h2>
+    <div class="task-meta">
+      <div class="meta-box"><small>BJ</small><b>185.000 €</b></div>
+      <div class="meta-box"><small>VJ</small><b>0 €</b></div>
+    </div>
+    <div class="section-title">Musterkontoauszug</div>
+    <div class="card"><b>Rechtsstreit A</b><p>125.000 € · neu gebildet</p></div>
+    <div class="card"><b>Rechtsstreit B</b><p>60.000 € · neu gebildet</p></div>
+    <div class="blocker">KIRA: Ansatz und Bewertung müssen durch Rechtsanwaltskorrespondenz oder Management-Beurteilung belegt sein.</div>
+  </section>
+
+  <section id="pl-revenue" class="detail">
+    <a class="close" href="#financial-drilldown">← Bilanz & GuV</a>
+    <div class="eyebrow">GuV-Position</div>
+    <h2>Umsatzerlöse</h2>
+    <div class="task-meta">
+      <div class="meta-box"><small>BJ</small><b>42.600.000 €</b></div>
+      <div class="meta-box"><small>VJ</small><b>39.800.000 €</b></div>
+    </div>
+    <div class="card"><b>8400 Umsatzerlöse Inland</b><p>BJ 31.200.000 € · VJ 29.600.000 €</p></div>
+    <div class="card"><b>8336 Umsatzerlöse EU</b><p>BJ 11.400.000 € · VJ 10.200.000 €</p></div>
+  </section>
+
+  <section id="pl-opex" class="detail">
+    <a class="close" href="#financial-drilldown">← Bilanz & GuV</a>
+    <div class="eyebrow">GuV-Position · Auffällig</div>
+    <h2>Sonstige betriebliche Aufwendungen</h2>
+    <div class="task-meta">
+      <div class="meta-box"><small>BJ</small><b>8.940.000 €</b></div>
+      <div class="meta-box"><small>VJ</small><b>8.120.000 €</b></div>
+    </div>
+    <div class="card"><b>4230 Grundstücksaufwendungen</b><p>BJ 1.280.000 € · VJ 980.000 €</p><div class="statusbar"><span class="status orange">+30,6 %</span></div></div>
+    <div class="card"><b>4950 Rechts- und Beratungskosten</b><p>BJ 2.140.000 € · VJ 1.620.000 €</p><div class="statusbar"><span class="status red">Kritisches Konto</span></div></div>
+    <div class="card"><b>Sonstige Konten</b><p>BJ 5.520.000 € · VJ 5.520.000 €</p></div>
+  </section>
+
+
+  <section id="report-review" class="detail">
+    <a class="close" href="#">× Schließen</a>
+    <div class="eyebrow">Workflow 5 · Berichtsreview</div>
+    <h2>Anhang & Lagebericht</h2>
+    <p>Abschnittsweises Review statt langer Dokumentansicht. KAI zeigt Datenherkunft und offene Punkte, KIRA markiert unbelegte oder prüfungsrelevante Aussagen.</p>
+
+    <div class="kpi-grid">
+      <div class="kpi"><strong>18</strong><small>Abschnitte</small></div>
+      <div class="kpi"><strong>14</strong><small>Geprüft</small></div>
+      <div class="kpi"><strong>4</strong><small>Offen</small></div>
+    </div>
+
+    <details class="card">
+      <summary><b>Anhang</b><span>9 von 11 Abschnitten geprüft</span></summary>
+
+      <a class="option" href="#notes-accounting">✓ Allgemeine Angaben & Bilanzierungsgrundsätze</a>
+      <a class="option" href="#notes-fixedassets">✓ Anlagevermögen</a>
+      <a class="option" href="#notes-receivables">! Forderungen und Wertberichtigungen</a>
+      <a class="option" href="#notes-provisions">! Rückstellungen</a>
+      <div class="option">✓ Verbindlichkeiten</div>
+      <div class="option">✓ Sonstige Pflichtangaben</div>
+    </details>
+
+    <details class="card">
+      <summary><b>Lagebericht</b><span>5 von 7 Abschnitten geprüft</span></summary>
+
+      <a class="option" href="#mgmt-business">✓ Geschäftsverlauf & Rahmenbedingungen</a>
+      <a class="option" href="#mgmt-performance">! Ertrags-, Finanz- und Vermögenslage</a>
+      <a class="option" href="#mgmt-risks">! Chancen- und Risikobericht</a>
+      <div class="option">✓ Prognosebericht</div>
+      <div class="option">✓ Gesamtbeurteilung</div>
+    </details>
+
+    <div class="section-title">KIRA Reviewstatus</div>
+    <div class="blocker">2 Aussagen sind noch nicht ausreichend belegt. 1 Anhangangabe benötigt eine fachliche Klärung. Die Gesamtfreigabe bleibt bis zur Klärung offen.</div>
+  </section>
+
+  <section id="notes-accounting" class="detail">
+    <a class="close" href="#report-review">← Berichtsreview</a>
+    <div class="eyebrow">Anhang · Review</div>
+    <h2>Bilanzierungsgrundsätze</h2>
+    <div class="card">
+      <p>Der Jahresabschluss wurde nach den Vorschriften des Handelsgesetzbuches und den ergänzenden Vorschriften des GmbH-Gesetzes aufgestellt. Die angewandten Bilanzierungs- und Bewertungsmethoden wurden gegenüber dem Vorjahr grundsätzlich beibehalten.</p>
+    </div>
+    <div class="section-title">KAI Datenbasis</div>
+    <div class="card"><p>Quelle: Stammdaten Rechnungslegungsstandard · Rechtsform · hinterlegte Bilanzierungsparameter.</p></div>
+    <div class="statusbar"><span class="status blue">Geprüft</span><span class="status gray">Keine offene Feststellung</span></div>
+    <div class="option">✓ Als geprüft bestätigen</div>
+    <div class="option">Kommentar hinzufügen</div>
+  </section>
+
+  <section id="notes-fixedassets" class="detail">
+    <a class="close" href="#report-review">← Berichtsreview</a>
+    <div class="eyebrow">Anhang · Review</div>
+    <h2>Anlagevermögen</h2>
+    <div class="card"><p>Die Entwicklung des Anlagevermögens wird im Anlagenspiegel dargestellt. Die Abschreibungen erfolgen entsprechend der wirtschaftlichen Nutzungsdauer der Vermögensgegenstände.</p></div>
+    <div class="section-title">Verknüpfte Daten</div>
+    <div class="option">Anlagevermögen BJ 12.850.000 € · VJ 12.420.000 €</div>
+    <div class="option">Anlagenspiegel ansehen</div>
+    <div class="option">✓ Als geprüft bestätigen</div>
+  </section>
+
+  <section id="notes-receivables" class="detail">
+    <a class="close" href="#report-review">← Berichtsreview</a>
+    <div class="eyebrow">Anhang · Klärungsbedarf</div>
+    <h2>Forderungen</h2>
+    <div class="card"><p>Forderungen werden zum Nennwert angesetzt. Erkennbare Einzelrisiken werden durch Einzelwertberichtigungen berücksichtigt.</p></div>
+    <div class="section-title">KAI Verknüpfung</div>
+    <a class="option" href="#bs-receivables">Forderungen aus LuL · BJ 8.450.000 € / VJ 7.920.000 € →</a>
+    <div class="section-title">KIRA Hinweis</div>
+    <div class="blocker">Konto 1400 enthält noch offene Werthaltigkeitsprüfungen. Der Abschnitt kann gelesen, aber noch nicht final freigegeben werden.</div>
+    <div class="option">Offene Kontenprüfung ansehen</div>
+    <div class="option">Rückfrage erstellen</div>
+    <div class="option">An Verantwortlichen zuweisen</div>
+  </section>
+
+  <section id="notes-provisions" class="detail">
+    <a class="close" href="#report-review">← Berichtsreview</a>
+    <div class="eyebrow">Anhang · KIRA Feststellung</div>
+    <h2>Rückstellungen</h2>
+    <div class="card"><p>Die sonstigen Rückstellungen berücksichtigen alle erkennbaren Risiken und ungewissen Verpflichtungen.</p></div>
+    <div class="task-meta">
+      <div class="meta-box"><small>BJ</small><b>1.820.000 €</b></div>
+      <div class="meta-box"><small>VJ</small><b>1.240.000 €</b></div>
+    </div>
+    <div class="blocker">Anstieg +46,8 %. Eine Erläuterung der wesentlichen Veränderung fehlt noch.</div>
+    <a class="option" href="#bs-provisions">Kontodrilldown öffnen →</a>
+    <div class="option">Erläuterung anfordern</div>
+    <div class="option">KAI Textentwurf prüfen</div>
+  </section>
+
+  <section id="mgmt-business" class="detail">
+    <a class="close" href="#report-review">← Berichtsreview</a>
+    <div class="eyebrow">Lagebericht · Review</div>
+    <h2>Geschäftsverlauf</h2>
+    <div class="card"><p>Die Geschäftsentwicklung im Berichtsjahr war durch ein Umsatzwachstum gegenüber dem Vorjahr geprägt. Die Umsatzerlöse erhöhten sich von 39,8 Mio. € auf 42,6 Mio. €.</p></div>
+    <div class="section-title">KAI Zahlencheck</div>
+    <div class="statusbar"><span class="status blue">42,6 Mio. € belegt</span><span class="status blue">VJ 39,8 Mio. € belegt</span></div>
+    <div class="option">✓ Als geprüft bestätigen</div>
+    <div class="option">Kommentar hinzufügen</div>
+  </section>
+
+  <section id="mgmt-performance" class="detail">
+    <a class="close" href="#report-review">← Berichtsreview</a>
+    <div class="eyebrow">Lagebericht · Aussage prüfen</div>
+    <h2>Ertragslage</h2>
+    <div class="card"><p>Die Umsatzerlöse stiegen um 7,0 %. Der Anstieg ist insbesondere auf höhere Absatzmengen zurückzuführen.</p></div>
+    <div class="section-title">KAI Prüfung</div>
+    <div class="statusbar"><span class="status blue">+7,0 % rechnerisch belegt</span><span class="status red">Ursache unbelegt</span></div>
+    <div class="blocker">KIRA: Die Aussage „höhere Absatzmengen“ ist aus den hinterlegten Finanzdaten nicht ableitbar. Quelle ergänzen oder neutral formulieren.</div>
+    <div class="option">Quelle / Nachweis hinzufügen</div>
+    <div class="option">Neutral formulieren</div>
+    <div class="option">Aussage entfernen</div>
+  </section>
+
+  <section id="mgmt-risks" class="detail">
+    <a class="close" href="#report-review">← Berichtsreview</a>
+    <div class="eyebrow">Lagebericht · Risikobericht</div>
+    <h2>Chancen & Risiken</h2>
+    <div class="card"><p>Aus laufenden Rechtsstreitigkeiten können finanzielle Belastungen entstehen. Für erkennbare Risiken wurden nach Einschätzung der Geschäftsführung angemessene Rückstellungen gebildet.</p></div>
+    <div class="section-title">Verknüpfte Sachverhalte</div>
+    <a class="option" href="#provision-account">Konto 0960 Prozessrisiken · 185.000 € →</a>
+    <div class="section-title">KIRA Hinweis</div>
+    <div class="blocker">Die Aussage ist plausibel mit dem Rückstellungskonto verknüpft. Vor Freigabe muss die Management-Beurteilung bzw. Rechtsanwaltskorrespondenz als Nachweis vorliegen.</div>
+    <div class="option">Nachweisstatus prüfen</div>
+    <div class="option">Aufgabe erstellen</div>
+  </section>
+
+
+<div id="liveAuth" class="live-auth">
+  <div class="auth-card">
+    <div class="eyebrow">KAI & KIRA · Multi-User Pilot</div>
+    <h1>Anmelden</h1>
+    <p>Melde dich mit einem deiner drei Supabase-Testbenutzer an.</p>
+    <input id="loginEmail" type="email" placeholder="E-Mail-Adresse" autocomplete="username">
+    <input id="loginPassword" type="password" placeholder="Passwort" autocomplete="current-password">
+    <button id="loginButton" type="button">Anmelden</button>
+    <div id="authMsg" class="auth-msg"></div>
+  </div>
+</div>
+
+<div id="liveUser" class="live-top-user">
+  <span id="liveUserName">Angemeldet</span>
+  <button class="live-signout" onclick="liveLogout()">Abmelden</button>
+</div>
+
+<section id="live-myday" class="detail">
+  <a class="close" href="#">× Schließen</a>
+  <div class="eyebrow">Live aus Supabase</div>
+  <h2>Mein Tag</h2>
+  <div class="live-banner">Diese Aufgaben werden direkt aus der View <b>my_day</b> geladen. Statusänderungen werden in <b>tasks</b> gespeichert.</div>
+  <div id="liveMyDayList" class="live-list"><div class="live-empty">Lade Aufgaben…</div></div>
+  <button class="ghost live-refresh" onclick="loadMyDay()">Aktualisieren</button>
+</section>
+
+<section id="live-team" class="detail">
+  <a class="close" href="#">× Schließen</a>
+  <div class="eyebrow">Live aus Supabase</div>
+  <h2>Team-Cockpit</h2>
+  <div class="live-banner">Das Team-Cockpit wird aus der View <b>team_cockpit</b> geladen und bei Task-Änderungen automatisch aktualisiert.</div>
+  <div id="liveTeamList"><div class="live-empty">Lade Teamstatus…</div></div>
+  <button class="ghost live-refresh" onclick="loadTeam()">Aktualisieren</button>
+</section>
+
+
+<section id="live-team-member" class="detail">
+  <a class="close" href="#live-team">← Team-Cockpit</a>
+  <div class="eyebrow">Admin · Teilnehmerdetail</div>
+  <h2 id="teamMemberName">Teilnehmer</h2>
+  <div id="teamMemberSummary" class="live-banner">Lade Aufgaben…</div>
+  <div id="teamMemberTasks" class="live-list">
+    <div class="live-empty">Lade Aufgaben…</div>
+  </div>
+</section>
+
+
+<section id="live-admin-task" class="detail">
+  <a class="close" href="#live-team-member">← Teilnehmer</a>
+  <div class="eyebrow">Admin · Aufgabensteuerung</div>
+  <h2 id="adminTaskTitle">Aufgabe</h2>
+  <div id="adminTaskDescription" class="live-banner">Lade Aufgabe…</div>
+
+  <div class="section-title">Verantwortlich</div>
+  <select id="adminTaskAssignee" class="admin-control"></select>
+
+  <div class="section-title">Frist</div>
+  <input id="adminTaskDueDate" class="admin-control" type="date">
+
+  <div class="section-title">Priorität</div>
+  <select id="adminTaskPriority" class="admin-control">
+    <option value="normal">Normal</option>
+    <option value="high">Hoch</option>
+    <option value="critical">Kritisch</option>
+  </select>
+
+  <div class="section-title">Status</div>
+  <select id="adminTaskStatus" class="admin-control">
+    <option value="not_started">Noch nicht gestartet</option>
+    <option value="in_progress">In Bearbeitung</option>
+    <option value="blocked">Blockiert</option>
+    <option value="done">Erledigt</option>
+  </select>
+
+  <div class="section-title">Freigabewirkung</div>
+  <label class="admin-check">
+    <input id="adminTaskBlocksRelease" type="checkbox">
+    <span>Blockiert Freigabe</span>
+  </label>
+
+  <button class="action" type="button" onclick="saveAdminTask()">Änderungen speichern</button>
+  <button class="ghost" type="button" onclick="escalateAdminTask()">Als kritisch eskalieren</button>
+
+  <div id="adminTaskMsg" class="auth-msg"></div>
+</section>
+
+</div>
+</body>
+</html>
