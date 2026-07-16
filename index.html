@@ -1835,6 +1835,37 @@ window.addEventListener('load', () => {
     <div class="eyebrow">Workflow 5 · Berichtsreview</div>
     <h2>Anhang & Lagebericht</h2>
     <p>Abschnittsweises Review statt langer Dokumentansicht. KAI zeigt Datenherkunft und offene Punkte, KIRA markiert unbelegte oder prüfungsrelevante Aussagen.</p>
+
+    <div class="card report-parameter-entry">
+      <div class="statusbar"><span class="status blue">NEU · Parameter direkt bearbeiten</span><span class="status gray">gängige Antworten vorbelegt</span></div>
+      <h3 style="margin:10px 0 6px">Anhang & Lagebericht vorbereiten</h3>
+      <p style="margin-top:0">Die wichtigsten Auswahlfelder sind jetzt direkt hier sichtbar. Die Vorbelegung ist ein Vorschlag und muss vor der Freigabe bestätigt werden.</p>
+
+      <details class="param-group" open>
+        <summary><b>Anhang · Schnellparameter</b><span>vorbelegt</span></summary>
+        <div class="param-body">
+          <div class="param-row"><label>Aufstellungsgrundsatz</label><select data-quick-notes="goingConcern"><option selected>Unternehmensfortführung</option><option>Abweichung von Unternehmensfortführung</option><option>Noch zu prüfen</option></select></div>
+          <div class="param-row"><label>Methoden gegenüber Vorjahr</label><select data-quick-notes="consistency"><option selected>Unverändert</option><option>Geändert</option><option>Noch zu prüfen</option></select></div>
+          <div class="param-row"><label>Sachanlagen</label><select data-quick-notes="fixedAssetMethod"><option selected>Anschaffungs-/Herstellungskosten abzüglich planmäßiger Abschreibungen</option><option>Abweichende Bewertung</option><option>Noch zu prüfen</option></select></div>
+          <div class="param-row"><label>Ereignisse nach dem Abschlussstichtag</label><select data-quick-notes="subsequentEvents"><option selected>Keine wesentlichen Ereignisse</option><option>Wesentliche Ereignisse vorhanden</option><option>Noch nicht bestätigt</option></select><div class="prefill-note">Vorbelegt als häufigster Fall – vor Freigabe bestätigen.</div></div>
+          <a class="action" href="#notes-parameters">Alle Anhangparameter bearbeiten →</a>
+        </div>
+      </details>
+
+      <details class="param-group">
+        <summary><b>Lagebericht · Schnellparameter</b><span>vorbelegt</span></summary>
+        <div class="param-body">
+          <div class="param-row"><label>Geschäftsmodell</label><select data-quick-mgmt="businessModel"><option selected>Herstellung und Vertrieb von Produkten</option><option>Handel mit Waren</option><option>Erbringung von Dienstleistungen</option><option>Immobilienbewirtschaftung</option><option>Gesundheits-/Pflegeleistungen</option></select></div>
+          <div class="param-row"><label>Marktausrichtung</label><select data-quick-mgmt="marketType"><option selected>B2B</option><option>B2C</option><option>B2B und B2C</option><option>Öffentlicher Sektor</option></select></div>
+          <div class="param-row"><label>Gesamtbeurteilung der Lage</label><select data-quick-mgmt="assessment"><option>Sehr gut</option><option selected>Stabil</option><option>Gut</option><option>Angespannt</option><option>Kritisch</option><option>Noch zu formulieren</option></select></div>
+          <div class="param-row"><label>Geschäftsverlauf gegenüber Planung</label><select data-quick-mgmt="course"><option selected>Planmäßig</option><option>Über Plan</option><option>Unter Plan</option><option>Durch Sondereffekte geprägt</option><option>Noch zu beurteilen</option></select></div>
+          <div class="param-row"><label>Ursache der Umsatzveränderung</label><select data-quick-mgmt="revenueCause"><option selected>Noch nicht durch Management bestätigt</option><option>Preisveränderungen</option><option>Absatzmengen</option><option>Produkt-/Leistungsmix</option><option>Akquisitionen / Konsolidierungskreis</option><option>Mehrere Faktoren</option><option>Sonstige</option></select><div class="prefill-note">Keine Ursache wird automatisch erfunden.</div></div>
+          <div class="param-row"><label>Prognosehorizont</label><select data-quick-mgmt="forecastHorizon"><option selected>Ein Jahr</option><option>Zwei Jahre</option><option>Mehr als zwei Jahre</option></select></div>
+          <a class="action" href="#mgmt-parameters">Alle Lageberichtparameter bearbeiten →</a>
+        </div>
+      </details>
+    </div>
+
     <div class="report-start">
       <a class="action" href="#notes-parameters">Anhang erstellen</a>
       <a class="action" href="#mgmt-parameters">Lagebericht erstellen</a>
@@ -2173,6 +2204,16 @@ window.addEventListener('load', () => {
 (function(){
   function getVal(scope,key){var el=document.querySelector('[data-'+scope+'="'+key+'"]');return el?el.value:''}
   function checks(group){return Array.from(document.querySelectorAll('[data-mgmt-check="'+group+'"]:checked')).map(function(x){return x.value})}
+  function syncQuickField(el){
+    var isNotes=el.hasAttribute('data-quick-notes');
+    var key=el.getAttribute(isNotes?'data-quick-notes':'data-quick-mgmt');
+    var target=document.querySelector('['+(isNotes?'data-notes':'data-mgmt')+'="'+key+'"]');
+    if(target){target.value=el.value; target.dispatchEvent(new Event('change',{bubbles:false}));}
+  }
+  function syncQuickDefaults(){
+    document.querySelectorAll('[data-quick-notes]').forEach(function(el){var key=el.getAttribute('data-quick-notes'),t=document.querySelector('[data-notes="'+key+'"]');if(t)el.value=t.value});
+    document.querySelectorAll('[data-quick-mgmt]').forEach(function(el){var key=el.getAttribute('data-quick-mgmt'),t=document.querySelector('[data-mgmt="'+key+'"]');if(t)el.value=t.value});
+  }
   window.renderReportPreviews=function(){
     var np=document.getElementById('notesPreview');
     if(np){
@@ -2196,10 +2237,13 @@ window.addEventListener('load', () => {
     try{localStorage.setItem('kaikira_'+scope+'_prefill_confirmed',new Date().toISOString())}catch(e){}
     alert('Vorbelegte '+(scope==='notes'?'Anhang':'Lagebericht')+'-Parameter wurden als geprüft markiert. Sachverhaltsabhängige Angaben und Zahlen bleiben weiterhin KIRA-prüfpflichtig.');
   };
-  document.addEventListener('change',function(e){if(e.target.matches('[data-notes],[data-mgmt],[data-mgmt-check]'))renderReportPreviews()});
+  document.addEventListener('change',function(e){
+    if(e.target.matches('[data-quick-notes],[data-quick-mgmt]')){syncQuickField(e.target);renderReportPreviews();return;}
+    if(e.target.matches('[data-notes],[data-mgmt],[data-mgmt-check]'))renderReportPreviews();
+  });
   document.addEventListener('input',function(e){if(e.target.matches('[data-notes],[data-mgmt]'))renderReportPreviews()});
-  document.addEventListener('DOMContentLoaded',renderReportPreviews);
-  renderReportPreviews();
+  document.addEventListener('DOMContentLoaded',function(){syncQuickDefaults();renderReportPreviews()});
+  syncQuickDefaults();renderReportPreviews();
 })();
 </script>
 
