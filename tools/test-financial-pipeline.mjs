@@ -46,6 +46,7 @@ new vm.Script(scripts[0], { filename:"index.html#main" }).runInContext(context);
 
 const testDir = path.join(root, "Testdateien", "Test 2");
 const read = name => fs.readFileSync(path.join(testDir,name), "utf8");
+const readRootTestFile = name => fs.readFileSync(path.join(root,"Testdateien",name), "utf8");
 const readArrayBuffer = name => {
   const override = name.startsWith("02_") ? process.env.KAIKIRA_STRUCTURE_XLSX : process.env.KAIKIRA_MAPPING_XLSX;
   const buffer = fs.readFileSync(override || path.join(testDir,name));
@@ -55,6 +56,11 @@ const readArrayBuffer = name => {
 assert.equal(context.window.projectData.trialBalance.rows.length, 0, "empty state must contain no trial-balance rows");
 assert.equal(context.window.projectData.balanceSheet, null, "empty state must not synthesize a balance sheet");
 assert.equal(context.window.projectData.incomeStatement, null, "empty state must not synthesize an income statement");
+assert.equal(context.normalizeAccountIdentifier("0100"),"100","leading zeroes must not split the same numeric account");
+assert.equal(context.normalizeAccountIdentifier(100),"100");
+assert.equal(context.normalizeAccountIdentifier("AB-0100"),"AB-0100","alphanumeric account identifiers must remain intact");
+const migratedAccounts=context.migrateProjectData({trialBalance:{rows:[{account:"100"}]},mapping:{rows:[{account:"0100"}]}});
+assert.equal(migratedAccounts.mapping.rows[0].account,migratedAccounts.trialBalance.rows[0].account,"stored imports must be repaired on reload");
 
 assert.equal(context.importTrialBalance(read("01_KAIKIRA_Test_SuSa_Industrie_AG_2026.csv"), "susa.csv"), 86);
 assert.equal(context.window.projectData.balanceSheet, null, "financial release stays blocked before structure and mapping");
@@ -124,7 +130,7 @@ assert.deepEqual(Array.from(workbookTables,table=>table.name),["Mapping","Kontro
 await context.addImportFiles([{name:"03_KAIKIRA_Mapping_SuSa_zu_HGB.xlsx",arrayBuffer:async()=>readArrayBuffer("03_KAIKIRA_Mapping_SuSa_zu_HGB.xlsx")}]);
 assert.equal(context.window.importWorkspace.items.find(item=>item.target==="mapping").state,"WAITING","mapping must wait until its dependencies have been imported");
 await context.addImportFiles([{name:"02_KAIKIRA_HGB_Berichtsstruktur_Bilanz_GuV.xlsx",arrayBuffer:async()=>readArrayBuffer("02_KAIKIRA_HGB_Berichtsstruktur_Bilanz_GuV.xlsx")}]);
-await context.addImportFiles([{name:"01_KAIKIRA_Test_SuSa_Industrie_AG_2026.csv",text:async()=>read("01_KAIKIRA_Test_SuSa_Industrie_AG_2026.csv")}]);
+await context.addImportFiles([{name:"01_KAIKIRA_Test_SuSa_Industrie_AG_2026.csv",text:async()=>readRootTestFile("01_KAIKIRA_Test_SuSa_Industrie_AG_2026.csv")}]);
 assert.equal(context.window.importWorkspace.items.length,4,"one CSV table and three Excel worksheets must be staged");
 assert.equal(context.window.importWorkspace.items.find(item=>item.fileName.startsWith("01_")).target,"trialBalance");
 assert.equal(context.window.importWorkspace.items.find(item=>item.fileName.startsWith("02_")).target,"reportStructure");
@@ -186,7 +192,7 @@ const invalidMapping = read("03_KAIKIRA_Mapping_SuSa_zu_HGB.csv").replace(
 context.importConfirmedMapping(invalidMapping, "invalid-mapping.csv");
 assert.equal(context.window.projectData.mapping.validation.status, "BLOCKED");
 assert.equal(context.window.projectData.balanceSheet, null, "invalid mapping must block financial statement release");
-assert.ok(context.window.projectData.mapping.validation.errors.some(error => error.includes("Konto 0100") && error.includes("unbekannter 7L-Zielschlüssel")));
+assert.ok(context.window.projectData.mapping.validation.errors.some(error => error.includes("Konto 100") && error.includes("unbekannter 7L-Zielschlüssel")));
 
 console.log(JSON.stringify({
   accounts:pd.trialBalance.rows.length,

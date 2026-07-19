@@ -987,6 +987,8 @@ function migrateProjectData(parsed){
   });
   base.parameters = parsed.parameters || {};
   base.reports = Object.assign(base.reports, parsed.reports || {});
+  base.trialBalance.rows = (base.trialBalance.rows || []).map(row => Object.assign({},row,{ account:normalizeAccountIdentifier(row.account) }));
+  base.mapping.rows = (base.mapping.rows || []).map(row => Object.assign({},row,{ account:normalizeAccountIdentifier(row.account) }));
   return base;
 }
 
@@ -1000,6 +1002,13 @@ function loadProjectData(){
 function normalizeHeader(value){
   return String(value ?? '').replace(/^\uFEFF/,'').trim().toLowerCase()
     .normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'');
+}
+
+function normalizeAccountIdentifier(value){
+  const account=String(value ?? '').trim().replace(/^['’]/,'').replace(/\s+/g,'');
+  if(/^\d+$/.test(account))return account.replace(/^0+(?=\d)/,'');
+  if(/^\d+\.0+$/.test(account))return account.replace(/\.0+$/,'').replace(/^0+(?=\d)/,'');
+  return account.toUpperCase();
 }
 
 function parseDelimitedRows(text){
@@ -1187,7 +1196,7 @@ function parseTrialBalanceCSV(text){
   const missing = required.filter(header => !table.headers.includes(header));
   if(missing.length) throw new Error('Fehlende SuSa-Spalten: ' + missing.join(', '));
   return table.rows.map(record => ({
-    account:record.konto,
+    account:normalizeAccountIdentifier(record.konto),
     name:record.bezeichnung,
     balanceCurrent:parseGermanAmount(record.saldobj),
     balancePrior:record.saldovj === '' || record.saldovj == null ? null : parseGermanAmount(record.saldovj),
@@ -1282,7 +1291,7 @@ function parseConfirmedMappingCSV(text){
     for(let level=1;level<=7;level++) levels['ausweis'+level] = record['ausweis'+level] || '';
     const status = (record.mappingstatus || '').toLowerCase();
     return {
-      account:record.konto, name:record.bezeichnung,
+      account:normalizeAccountIdentifier(record.konto), name:record.bezeichnung,
       balanceCurrent:parseGermanAmount(record.saldobj), balancePrior:parseGermanAmount(record.saldovj),
       levels, target7:record.zielschluessel7l || '', appTargetId:record.appzielid || '',
       position:record.appzielid || '', statement:(record.rechenwerk || '').toUpperCase(),
