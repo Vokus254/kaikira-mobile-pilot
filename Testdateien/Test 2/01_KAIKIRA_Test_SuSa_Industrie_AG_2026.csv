@@ -1,0 +1,87 @@
+﻿Konto;Bezeichnung;Saldo BJ;Saldo VJ
+0100;Software und ERP-Lizenzen;12000000;9000000
+0190;Kumulierte Abschreibungen Software;-6000000;-4000000
+0200;Grundstücke;8000000;8000000
+0210;Betriebsgebäude;35000000;33000000
+0219;Kumulierte Abschreibungen Betriebsgebäude;-11000000;-9000000
+0300;Technische Anlagen und Maschinen;50000000;46000000
+0309;Kumulierte Abschreibungen Maschinen;-31000000;-27000000
+0400;Betriebs- und Geschäftsausstattung;14000000;13000000
+0409;Kumulierte Abschreibungen BGA;-9000000;-8000000
+0450;Anlagen im Bau;7000000;3000000
+0500;Fuhrpark;9000000;8000000
+0509;Kumulierte Abschreibungen Fuhrpark;-5000000;-4000000
+0600;Produktionswerkzeuge;12000000;11000000
+0609;Kumulierte Abschreibungen Produktionswerkzeuge;-7000000;-6000000
+0700;Beteiligungen an verbundenen Unternehmen;2500000;2500000
+0710;Langfristige Ausleihungen;1500000;1500000
+1000;Roh-, Hilfs- und Betriebsstoffe;14000000;13000000
+1100;Unfertige Erzeugnisse;8000000;6000000
+1200;Fertige Erzeugnisse und Waren;9000000;8000000
+1300;Geleistete Anzahlungen auf Vorräte;1000000;1000000
+1400;Forderungen aus Lieferungen und Leistungen Inland;21000000;20000000
+1410;Forderungen aus Lieferungen und Leistungen Ausland;3000000;2500000
+1420;Forderungen gegen verbundene Unternehmen;2000000;1300000
+1490;Pauschalwertberichtigung Forderungen;-1000000;-800000
+1500;Ertragsteuerforderungen;2000000;1500000
+1510;Vorsteuer und Umsatzsteuerforderungen;1500000;1200000
+1520;Forderungen gegen Mitarbeiter;500000;300000
+1530;Sonstige Vermögensgegenstände aus Versicherungsfällen;2000000;2000000
+1600;Kassenbestand;100000;100000
+1610;Bankguthaben laufende Konten;7900000;4900000
+1620;Kurzfristige Termingelder;4000000;2000000
+1700;Aktiver Rechnungsabgrenzungsposten;3000000;2000000
+2000;Gezeichnetes Kapital;-20000000;-20000000
+2010;Kapitalrücklage;-5000000;-5000000
+2020;Gesetzliche Gewinnrücklage;-3000000;-3000000
+2030;Gewinnvortrag;-19000000;-15000000
+2040;Jahresüberschuss;-9000000;-7000000
+3000;Pensionsrückstellungen;-8000000;-8000000
+3010;Steuerrückstellungen;-4000000;-3000000
+3020;Personalrückstellungen;-6000000;-5000000
+3030;Gewährleistungsrückstellungen;-5000000;-5000000
+3040;Sonstige Rückstellungen;-4000000;-4000000
+4000;Verbindlichkeiten gegenüber Kreditinstituten;-28000000;-25000000
+4010;Anleiheverbindlichkeiten;-10000000;-10000000
+4100;Verbindlichkeiten aus Lieferungen und Leistungen;-22000000;-18000000
+4110;Verbindlichkeiten gegenüber verbundenen Unternehmen;-3000000;-2000000
+4200;Steuerverbindlichkeiten;-4000000;-4000000
+4210;Verbindlichkeiten soziale Sicherheit;-3000000;-2000000
+4290;Sonstige Verbindlichkeiten;-4000000;-4000000
+4300;Passiver Rechnungsabgrenzungsposten;-3000000;-2000000
+5000;Umsatzerlöse Inland;-110000000;-102000000
+5010;Umsatzerlöse EU-Ausland;-45000000;-40000000
+5020;Umsatzerlöse Drittland;-30000000;-28000000
+5100;Bestandsveränderung unfertige Erzeugnisse;-800000;-400000
+5110;Bestandsveränderung fertige Erzeugnisse;-1200000;-600000
+5200;Sonstige betriebliche Erträge Zuschüsse;-500000;-400000
+5210;Sonstige betriebliche Erträge Anlagenabgänge;-300000;-200000
+5220;Sonstige betriebliche Erträge Kursgewinne;-400000;-300000
+5230;Sonstige betriebliche Erträge Rückstellungsauflösung;-800000;-700000
+5290;Sonstige betriebliche Erträge übrige;-1500000;-1200000
+6000;Materialaufwand Rohstoffe;60000000;56000000
+6010;Materialaufwand bezogene Teile;18000000;17000000
+6020;Materialaufwand Energie;8000000;7000000
+6030;Materialaufwand Fremdleistungen;6000000;5000000
+6100;Löhne Produktion;28000000;26000000
+6110;Gehälter Verwaltung und Vertrieb;10000000;9500000
+6120;Soziale Abgaben;7000000;6500000
+6130;Aufwendungen Altersversorgung;1000000;1000000
+6200;Abschreibungen immaterielle Vermögensgegenstände;2000000;1500000
+6210;Abschreibungen Sachanlagen;6000000;6000000
+6300;Miet- und Pachtaufwendungen;3000000;2800000
+6310;Instandhaltungsaufwendungen;5000000;4500000
+6320;Fracht- und Logistikaufwendungen;4000000;3700000
+6330;IT- und Softwareaufwendungen;2500000;2200000
+6340;Versicherungsaufwendungen;1500000;1400000
+6350;Reise- und Bewirtungsaufwendungen;1200000;1100000
+6360;Rechts- und Beratungsaufwendungen;1000000;900000
+6370;Marketing- und Messeaufwendungen;1800000;1700000
+6380;Forderungsverluste;1000000;800000
+6390;Kursverluste;600000;500000
+6399;Sonstige betriebliche Aufwendungen übrige;3400000;3400000
+7000;Zinserträge;-500000;-400000
+7010;Zinsaufwendungen;2700000;2900000
+7020;Finanzierungsgebühren;300000;300000
+8000;Körperschaftsteuer;4500000;3100000
+8010;Gewerbesteuer;3500000;2400000
