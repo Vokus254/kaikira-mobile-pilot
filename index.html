@@ -1641,19 +1641,96 @@ function toggleImportPreview(itemId){
   item.expanded=!item.expanded; renderImportWorkspace();
 }
 
-function importMappedTable(itemId){
+function hasCompleteColumnMapping(item){
+  const config=IMPORT_TARGETS[item?.target];
+  return Boolean(config&&config.fields.filter(field=>field.required).every(field=>Number.isInteger(item.mapping[field.key])));
+}
+
+function inferMasterDataFromTrialBalance(item){
+  const pd=window.projectData, fileName=String(item.fileName||''), base=fileName.replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ');
+  const year=Number(base.match(/\b(20\d{2})\b/)?.[1]);
+  if(!pd.masterData.financialYear&&year){pd.masterData.financialYear=year;pd.masterData.priorYear=year-1;}
+  if(!pd.masterData.companyName&&/susa/i.test(base)){
+    const company=base.replace(/^\s*\d+\s*/,'').replace(/\b(?:KAIKIRA|Test|Demo|SuSa|SKR\d+|20\d{2})\b/gi,' ').replace(/([a-zäöüß])([A-ZÄÖÜ])/g,'$1 $2').replace(/\s+/g,' ').trim();
+    if(company)pd.masterData.companyName=company;
+  }
+  if(!pd.masterData.legalForm){const legalForm=String(pd.masterData.companyName||'').match(/\b(AG|GmbH|UG|KG|OHG|SE)\b/i)?.[1];if(legalForm)pd.masterData.legalForm=legalForm;}
+  if(pd.masterData.companyName||pd.masterData.financialYear)pd.masterData._source=SRC.MASTER_DATA;
+  computeParameters(); saveProjectData();
+}
+
+function demoChange(current,prior){
+  if(!Number.isFinite(prior)||Math.abs(prior)<0.005)return 'ohne belastbaren Vorjahresvergleich';
+  const change=(current-prior)/Math.abs(prior)*100;
+  return `${change>=0?'+':''}${change.toLocaleString('de-DE',{minimumFractionDigits:1,maximumFractionDigits:1})} % gegenüber dem Vorjahr`;
+}
+
+function isDemoFinancialImport(){
+  return /(?:kaikira|test|demo)/i.test(String(window.projectData.trialBalance.fileName||''));
+}
+
+function fillDemoParametersFromFinancials(automatic=false){
+  const pd=window.projectData, status=document.getElementById('demoParameterStatus');
+  if(!hasFinancialData(pd)){
+    if(status)status.innerHTML='<div class="blocker" role="alert">Bitte zuerst SuSa, Berichtsstruktur und Mapping vollständig übernehmen.</div>';
+    return false;
+  }
+  if(automatic&&!isDemoFinancialImport())return false;
+  const revenue=pd.incomeStatement.positions.UMSATZERLOESE||{current:0,prior:0};
+  const netIncome={current:pd.incomeStatement.jahresueberschussCurrent,prior:pd.incomeStatement.jahresueberschussPrior};
+  const assets=sumPositions(pd.balanceSheet.aktiva,['AV_IMMATERIELL','AV_SACH','AV_FINANZ']);
+  const values={
+    revenue_change_reason:`Demoannahme: Die Umsatzerlöse betragen ${fmtEUR(revenue.current)} nach ${fmtEUR(revenue.prior)} (${demoChange(revenue.current,revenue.prior)}). Für den Testlauf wird die Veränderung mit Absatz- und Preiseffekten erläutert.`,
+    result_development_reason:`Demoannahme: Der Jahresüberschuss entwickelte sich von ${fmtEUR(netIncome.prior)} auf ${fmtEUR(netIncome.current)} (${demoChange(netIncome.current,netIncome.prior)}). Als Testbegründung dienen Umsatz-, Material- und Personalkosteneffekte.`,
+    management_assessment:`Demoannahme: Das Management beurteilt den Geschäftsverlauf bei einer Bilanzsumme von ${fmtEUR(pd.balanceSheet.sumAktivaCurrent)} und einem Jahresüberschuss von ${fmtEUR(netIncome.current)} als stabil.`,
+    opportunities:`Demoannahme: Chancen bestehen in weiterem Absatzwachstum, Effizienzsteigerungen und einer verbesserten Kapazitätsauslastung.`,
+    risks:`Demoannahme: Wesentliche Testrisiken sind Preissteigerungen bei Material und Energie, Lieferkettenstörungen sowie Forderungsausfälle.`,
+    forecast:`Demoannahme für ${Number(pd.masterData.financialYear||new Date().getFullYear())+1}: Fortsetzung einer stabilen Umsatz- und Ergebnisentwicklung bei unveränderter Finanzierungsstruktur.`,
+    significant_events:'Demoannahme: Für den Testdatensatz sind keine wesentlichen Ereignisse nach dem Bilanzstichtag hinterlegt.',
+    accounting_policies:'Demoannahme: Der Jahresabschluss wird nach HGB unter Beachtung der Grundsätze ordnungsmäßiger Buchführung aufgestellt.',
+    fixed_assets_development:`Demoauswertung: Das zugeordnete Anlagevermögen entwickelte sich von ${fmtEUR(assets.prior)} auf ${fmtEUR(assets.current)}. Bewegungsdaten bleiben separat nachzuweisen.`
+  };
+  Object.entries(values).forEach(([key,value])=>{
+    const existing=pd.parameters[key];
+    if(!existing?.value||existing.sourceDetail==='DEMO_TESTDATEN')pd.parameters[key]={label:(PARAMETER_CATALOG.find(parameter=>parameter.key===key)||{}).label,value,source:SRC.MANUAL,sourceDetail:'DEMO_TESTDATEN',open:false};
+  });
+  computeParameters(); saveProjectData();
+  if(status)status.innerHTML='<div class="asset-recon"><b>Demo-Parameter befüllt.</b><div>Die Texte verwenden die aktuell importierten Testzahlen und sind ausdrücklich als Demoannahmen gekennzeichnet.</div></div>';
+  if(!automatic)renderFinancialViews();
+  return true;
+}
+
+function importMappedTable(itemId,options={}){
   const item=window.importWorkspace.items.find(entry=>entry.id===itemId), config=IMPORT_TARGETS[item?.target];
-  if(!item || !config)return;
+  if(!item || !config)return false;
   const missing=config.fields.filter(field=>field.required&&!Number.isInteger(item.mapping[field.key]));
-  if(missing.length){item.state='ERROR';item.message='Bitte zuordnen: '+missing.map(field=>field.label).join(', ');renderImportWorkspace();return;}
+  if(missing.length){item.state='ERROR';item.message='Bitte zuordnen: '+missing.map(field=>field.label).join(', ');if(!options.silent)renderImportWorkspace();return false;}
+  if(item.target==='mapping'&&(!(window.projectData.trialBalance.rows||[]).length||!(window.projectData.reportStructure.rows||[]).length)){
+    item.state='WAITING';item.message='Wartet auf die Übernahme von SuSa und Berichtsstruktur.';if(!options.silent)renderImportWorkspace();return false;
+  }
   const rows=[config.fields.map(field=>field.key),...item.rows.slice((item.headerRow||0)+1).map(source=>config.fields.map(field=>Number.isInteger(item.mapping[field.key])?(source[item.mapping[field.key]]??''):''))];
   try{
     const sourceName=item.sheetName&&item.sheetName!=='Tabelle 1'?`${item.fileName} · ${item.sheetName}`:item.fileName;
     const count=config.handler(xlsxRowsToDelimited(rows),sourceName);
-    item.state='IMPORTED'; item.message=`${count} Zeilen als ${config.label} übernommen.`;
-    renderFinancialViews();
+    if(item.target==='trialBalance')inferMasterDataFromTrialBalance(item);
+    const meta=item.target==='trialBalance'?window.projectData.trialBalance:(item.target==='reportStructure'?window.projectData.reportStructure:window.projectData.mapping);
+    if(meta.status==='ERROR'){item.state='ERROR';item.message=`${count} Zeilen gelesen. ${meta.errors?.[0]||'Validierung fehlgeschlagen.'}`;}
+    else {item.state='IMPORTED';item.message=`${options.automatic?'Automatisch: ':''}${count} Zeilen als ${config.label} übernommen.`;}
+    if(!options.silent)renderFinancialViews();
   }catch(error){item.state='ERROR';item.message=error.message||'Import nicht möglich.';}
-  renderImportWorkspace();
+  if(!options.silent)renderImportWorkspace();
+  return item.state==='IMPORTED';
+}
+
+function autoImportRecognizedTables(){
+  const items=window.importWorkspace.items;
+  const latest=target=>[...items].reverse().find(item=>item.target===target&&hasCompleteColumnMapping(item));
+  const trialBalance=latest('trialBalance'), reportStructure=latest('reportStructure'), mapping=latest('mapping');
+  if(trialBalance)importMappedTable(trialBalance.id,{silent:true,automatic:true});
+  if(reportStructure)importMappedTable(reportStructure.id,{silent:true,automatic:true});
+  if(mapping)importMappedTable(mapping.id,{silent:true,automatic:true});
+  if(hasFinancialData(window.projectData))fillDemoParametersFromFinancials(true);
+  renderFinancialViews(); renderImportWorkspace();
 }
 
 function renderImportWorkspace(){
@@ -1672,7 +1749,7 @@ function renderImportWorkspace(){
       const options=headers.map((header,index)=>`<option value="${index}" ${item.mapping[field.key]===index?'selected':''}>${esc(header||`Spalte ${index+1}`)}</option>`).join('');
       return `<div class="import-map-field"><label>${esc(field.label)}${field.required?' *':''}</label><select class="admin-control" onchange="setImportColumn(${item.id},'${field.key}',this.value)"><option value="">— nicht zugeordnet —</option>${options}</select></div>`;
     }).join('')}</div><p class="sub">Eine erneute Übernahme derselben Zieltabelle ersetzt deren bisherigen Inhalt.</p><button class="action" type="button" onclick="importMappedTable(${item.id})">Zuordnung übernehmen</button>`:'';
-    const stateHtml=item.message?`<div class="${item.state==='ERROR'?'blocker':'asset-recon'}" ${item.state==='ERROR'?'role="alert"':''}><b>${item.state==='ERROR'?'Import nicht möglich':'Übernommen'}</b><div>${esc(item.message)}</div></div>`:'';
+    const stateHtml=item.message?`<div class="${item.state==='ERROR'?'blocker':(item.state==='WAITING'?'option':'asset-recon')}" ${item.state==='ERROR'?'role="alert"':''}><b>${item.state==='ERROR'?'Import nicht möglich':(item.state==='WAITING'?'Noch nicht übernommen':'Übernommen')}</b><div>${esc(item.message)}</div></div>`:'';
     return `<details class="card" open><summary class="import-file-head"><span><b>${esc(item.fileName)}</b><span class="sub">${esc(item.sheetName)} · ${dataRowCount} Datenzeilen · ${headers.length} Spalten</span></span><button class="ghost" type="button" onclick="event.preventDefault();removeImportItem(${item.id})">Entfernen</button></summary>
       ${stateHtml}<div class="section-title">Inhalt ansehen</div><div class="import-preview-meta"><span>${Math.min(previewRows.length-1,dataRowCount)} von ${dataRowCount} Datenzeilen</span>${dataRowCount>12?`<button class="ghost" type="button" onclick="toggleImportPreview(${item.id})">${item.expanded?'Weniger':'Bis zu 100 Zeilen'}</button>`:''}</div>
       <div class="asset-table-wrap"><table class="asset-table"><thead><tr>${headers.map(header=>`<th>${esc(header)}</th>`).join('')}</tr></thead><tbody>${previewRows.slice(1).map(row=>`<tr>${headers.map((_,index)=>`<td>${esc(row[index]??'')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
@@ -1694,7 +1771,7 @@ async function addImportFiles(files){
   }
   const errorBox=document.getElementById('importWorkspaceErrors');
   if(errorBox) errorBox.innerHTML=workspace.errors.map(message=>`<div class="blocker" role="alert">${esc(message)}</div>`).join('');
-  renderImportWorkspace();
+  autoImportRecognizedTables();
 }
 
 function initImportWorkspace(){
@@ -1736,6 +1813,11 @@ function renderImportStatuses(){
 }
 
 function renderFinancialViews(){
+  const masterData=window.projectData.masterData||{};
+  const companyInput=document.getElementById('mdCompanyName');
+  const yearInput=document.getElementById('mdFinancialYear');
+  if(companyInput&&document.activeElement!==companyInput)companyInput.value=masterData.companyName||'';
+  if(yearInput&&document.activeElement!==yearInput)yearInput.value=masterData.financialYear||'';
   renderImportStatuses(); renderMappingView(); renderBalanceSheetView(); renderAllMirrorSummaries();
   renderFixedAssetsView(); renderProvisionsView(); renderLiabilitiesView(); renderParameterCockpit();
   renderReportReviewViews(); refreshReportPlaceholders(); updateReportCounts();
@@ -2658,10 +2740,10 @@ window.addEventListener('load', () => {
   <section id="upload" class="detail">
     <a class="close" href="#">× Schließen</a>
     <h2>Tabellen importieren</h2>
-    <p>Lade beliebig viele Excel- oder CSV-Dateien. Du siehst zuerst den Inhalt und legst danach selbst fest, welche Tabelle und welche Spalten übernommen werden.</p>
+    <p>Lade beliebig viele Excel- oder CSV-Dateien. Erkannte SuSa-, Berichtsstruktur- und Mapping-Tabellen werden automatisch geprüft und in der richtigen Reihenfolge übernommen. Für andere Tabellen kannst du Ziel und Spalten selbst zuordnen.</p>
 
     <label class="action" for="flexibleFileInput" style="cursor:pointer"><span id="flexibleFileLabel">Excel-/CSV-Dateien hinzufügen</span><input id="flexibleFileInput" type="file" accept=".csv,.xlsx,.txt" multiple style="display:none"></label>
-    <p class="sub">Mehrfachauswahl ist möglich. Bei Excel-Dateien wird jedes Tabellenblatt einzeln angezeigt.</p>
+    <p class="sub">Mehrfachauswahl ist möglich. Bei Excel-Dateien wird jedes Tabellenblatt einzeln angezeigt. Alle Inhalte bleiben vor und nach der automatischen Übernahme einsehbar.</p>
     <div id="importWorkspaceErrors"></div>
 
     <div class="section-title">Geladene Tabellen</div>
@@ -3428,12 +3510,19 @@ window.addEventListener('load', () => {
   <section id="parameter-cockpit" class="detail">
     <a class="close" href="#integration-hub">× Schließen</a>
     <h2>Anhang &amp; Lagebericht · Offene Parameter</h2>
-    <p>Parameter werden automatisch aus SuSa, Mapping, Bilanz, GuV und Spiegeln befüllt. Ursachen, Einschätzungen, Chancen, Risiken und Prognosen werden nie aus Zahlen erfunden – sie bleiben offen, bis du sie einträgst.</p>
+    <p>Parameter werden automatisch aus SuSa, Mapping, Bilanz, GuV und Spiegeln befüllt. Für einen Testlauf können außerdem deutlich gekennzeichnete Demoannahmen passend zu den importierten Zahlen erzeugt werden.</p>
 
     <div class="section-title">Stammdaten</div>
     <div class="card">
       <input id="mdCompanyName" placeholder="Unternehmensname" class="admin-control">
       <input id="mdFinancialYear" type="number" placeholder="Geschäftsjahr" class="admin-control">
+    </div>
+
+    <div class="section-title">Demo-Testlauf</div>
+    <div class="card">
+      <p class="sub">Erzeugt nachvollziehbare Beispielangaben aus den aktuell importierten Kennzahlen. Jeder Text wird als Demoannahme markiert und kann anschließend geändert werden.</p>
+      <button class="ghost" type="button" onclick="fillDemoParametersFromFinancials()">Demo-Parameter passend zu importierten Testzahlen befüllen</button>
+      <div id="demoParameterStatus" class="sub"></div>
     </div>
 
     <div class="gate-grid">

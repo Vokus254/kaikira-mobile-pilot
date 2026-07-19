@@ -111,6 +111,7 @@ const flexibleInputTag = html.match(/<input id="flexibleFileInput"[^>]*>/)?.[0] 
 assert.match(flexibleInputTag,/accept="[^"]*\.csv[^"]*\.xlsx[^"]*"/);
 assert.match(flexibleInputTag,/\bmultiple\b/,"flexible import must allow multiple files");
 assert.match(html,/Bei Excel-Dateien wird jedes Tabellenblatt einzeln angezeigt/);
+assert.match(html,/Demo-Parameter passend zu importierten Testzahlen befüllen/);
 
 const importWorkspaceElement = { innerHTML:"" };
 const importErrorsElement = { innerHTML:"" };
@@ -120,24 +121,32 @@ context.window.importWorkspace = {items:[],nextId:1,errors:[]};
 context.resetProjectData();
 const workbookTables = await context.xlsxArrayBufferToTables(readArrayBuffer("03_KAIKIRA_Mapping_SuSa_zu_HGB.xlsx"));
 assert.deepEqual(Array.from(workbookTables,table=>table.name),["Mapping","Kontrollen"],"all Excel worksheets must be available");
-await context.addImportFiles([
-  {name:"susa.csv",text:async()=>read("01_KAIKIRA_Test_SuSa_Industrie_AG_2026.csv")},
-  {name:"structure.xlsx",arrayBuffer:async()=>readArrayBuffer("02_KAIKIRA_HGB_Berichtsstruktur_Bilanz_GuV.xlsx")},
-  {name:"mapping.xlsx",arrayBuffer:async()=>readArrayBuffer("03_KAIKIRA_Mapping_SuSa_zu_HGB.xlsx")},
-]);
+await context.addImportFiles([{name:"03_KAIKIRA_Mapping_SuSa_zu_HGB.xlsx",arrayBuffer:async()=>readArrayBuffer("03_KAIKIRA_Mapping_SuSa_zu_HGB.xlsx")}]);
+assert.equal(context.window.importWorkspace.items.find(item=>item.target==="mapping").state,"WAITING","mapping must wait until its dependencies have been imported");
+await context.addImportFiles([{name:"02_KAIKIRA_HGB_Berichtsstruktur_Bilanz_GuV.xlsx",arrayBuffer:async()=>readArrayBuffer("02_KAIKIRA_HGB_Berichtsstruktur_Bilanz_GuV.xlsx")}]);
+await context.addImportFiles([{name:"01_KAIKIRA_Test_SuSa_Industrie_AG_2026.csv",text:async()=>read("01_KAIKIRA_Test_SuSa_Industrie_AG_2026.csv")}]);
 assert.equal(context.window.importWorkspace.items.length,4,"one CSV table and three Excel worksheets must be staged");
-assert.equal(context.window.importWorkspace.items.find(item=>item.fileName==="susa.csv").target,"trialBalance");
-assert.equal(context.window.importWorkspace.items.find(item=>item.fileName==="structure.xlsx").target,"reportStructure");
+assert.equal(context.window.importWorkspace.items.find(item=>item.fileName.startsWith("01_")).target,"trialBalance");
+assert.equal(context.window.importWorkspace.items.find(item=>item.fileName.startsWith("02_")).target,"reportStructure");
 assert.equal(context.window.importWorkspace.items.find(item=>item.sheetName==="Mapping").target,"mapping");
 assert.match(importWorkspaceElement.innerHTML,/Inhalt ansehen/);
 assert.match(importWorkspaceElement.innerHTML,/Spalten zuordnen/);
 assert.match(importWorkspaceElement.innerHTML,/Spaltennamen stehen in/);
 for (const target of ["trialBalance","reportStructure","mapping"]) {
   const item=context.window.importWorkspace.items.find(entry=>entry.target===target);
-  context.importMappedTable(item.id);
-  assert.equal(item.state,"IMPORTED",item.message);
+  assert.equal(item.state,"IMPORTED",`recognized ${target} table should import automatically: ${item.message}`);
 }
 assert.equal(context.window.projectData.mapping.validation.status,"VALID",context.window.projectData.mapping.validation.errors.join("\n"));
+assert.equal(context.window.projectData.balanceSheet.sumAktivaCurrent,160_000_000,"automatic import must populate the balance sheet");
+assert.equal(context.window.projectData.incomeStatement.jahresueberschussCurrent,9_000_000,"automatic import must populate P&L");
+assert.ok(Object.values(context.window.projectData.mirrors).flatMap(mirror=>mirror.rows).length>0,"automatic import must populate mapped mirror rows");
+assert.equal(context.window.projectData.masterData.companyName,"Industrie AG");
+assert.equal(context.window.projectData.masterData.financialYear,2026);
+for (const key of ["revenue_change_reason","result_development_reason","management_assessment","opportunities","risks","forecast"]) {
+  assert.equal(context.window.projectData.parameters[key].sourceDetail,"DEMO_TESTDATEN",`${key} should be generated for the recognized demo dataset`);
+  assert.match(context.window.projectData.parameters[key].value,/Demoannahme/);
+  assert.equal(context.window.projectData.parameters[key].open,false);
+}
 
 const titledLayout=context.detectImportLayout({rows:[["SuSa Export 2026"],["Konto","Bezeichnung","Saldo BJ","Saldo VJ"],["1000","Bank","100","90"]],headerRow:0});
 assert.deepEqual({...titledLayout},{target:"trialBalance",headerRow:1,required:3},"header rows below spreadsheet titles must be detected");
