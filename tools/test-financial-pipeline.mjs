@@ -14,6 +14,13 @@ const context = {
   Intl,
   URL,
   URLSearchParams,
+  ArrayBuffer,
+  Blob,
+  DataView,
+  DecompressionStream,
+  Response,
+  TextDecoder,
+  Uint8Array,
   encodeURIComponent,
   decodeURIComponent,
   fetch:async () => { throw new Error("Network access is disabled in tests"); },
@@ -39,6 +46,11 @@ new vm.Script(scripts[0], { filename:"index.html#main" }).runInContext(context);
 
 const testDir = path.join(root, "Testdateien", "Test 2");
 const read = name => fs.readFileSync(path.join(testDir,name), "utf8");
+const readArrayBuffer = name => {
+  const override = name.startsWith("02_") ? process.env.KAIKIRA_STRUCTURE_XLSX : process.env.KAIKIRA_MAPPING_XLSX;
+  const buffer = fs.readFileSync(override || path.join(testDir,name));
+  return buffer.buffer.slice(buffer.byteOffset,buffer.byteOffset+buffer.byteLength);
+};
 
 assert.equal(context.window.projectData.trialBalance.rows.length, 0, "empty state must contain no trial-balance rows");
 assert.equal(context.window.projectData.balanceSheet, null, "empty state must not synthesize a balance sheet");
@@ -84,6 +96,21 @@ for (const key of ["revenue_change_reason","result_development_reason","manageme
   assert.equal(pd.parameters[key].open, true, `${key} must remain open`);
 }
 assert.equal(pd.parameters.fixed_assets_development.open, true, "asset movements cannot be derived from closing balances");
+
+context.resetProjectData();
+const mappingXlsx = await context.xlsxArrayBufferToDelimited(readArrayBuffer("03_KAIKIRA_Mapping_SuSa_zu_HGB.xlsx"));
+const structureXlsx = await context.xlsxArrayBufferToDelimited(readArrayBuffer("02_KAIKIRA_HGB_Berichtsstruktur_Bilanz_GuV.xlsx"));
+assert.equal(context.importTrialBalance(mappingXlsx, "susa.xlsx"), 86, "SuSa must support XLSX input");
+assert.equal(context.importReportStructure(structureXlsx, "structure.xlsx"), 72, "report structure must support XLSX input");
+assert.equal(context.importConfirmedMapping(mappingXlsx, "mapping.xlsx"), 86, "mapping must support XLSX input");
+assert.equal(context.window.projectData.mapping.validation.status, "VALID", context.window.projectData.mapping.validation.errors.join("\n"));
+assert.equal(context.window.projectData.balanceSheet.sumAktivaCurrent, 160_000_000);
+assert.equal(context.window.projectData.incomeStatement.jahresueberschussCurrent, 9_000_000);
+
+for (const inputId of ["susaFileInput","structureFileInput","mappingFileInput"]) {
+  const inputTag = html.match(new RegExp(`<input id="${inputId}"[^>]*>`))?.[0] || "";
+  assert.match(inputTag, /accept="[^"]*\.csv[^"]*\.xlsx[^"]*"/, `${inputId} must accept CSV and XLSX`);
+}
 
 const targetSections = ["report-review","notes-provisions","mgmt-business","mgmt-performance","mgmt-risks","bs-provisions","provision-account"];
 for (const id of targetSections) {

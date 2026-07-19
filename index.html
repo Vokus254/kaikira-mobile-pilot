@@ -1064,6 +1064,123 @@ function parseDelimitedText(text){
   };
 }
 
+function decodeXmlText(value){
+  return String(value ?? '')
+    .replace(/&#(\d+);/g,(_,code)=>String.fromCodePoint(Number(code)))
+    .replace(/&#x([0-9a-f]+);/gi,(_,code)=>String.fromCodePoint(parseInt(code,16)))
+    .replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"')
+    .replace(/&apos;/g,"'").replace(/&amp;/g,'&');
+}
+
+function xmlAttribute(tag,name){
+  const match=String(tag).match(new RegExp(`(?:^|\\s)${name.replace(':','\\:')}=(?:"([^"]*)"|'([^']*)')`));
+  return decodeXmlText(match?.[1] ?? match?.[2] ?? '');
+}
+
+function xlsxColumnIndex(reference){
+  const letters=String(reference || '').match(/^[A-Z]+/i)?.[0]?.toUpperCase() || '';
+  return [...letters].reduce((index,letter)=>index*26+letter.charCodeAt(0)-64,0)-1;
+}
+
+async function unzipXlsxEntries(arrayBuffer){
+  const bytes=new Uint8Array(arrayBuffer), view=new DataView(arrayBuffer);
+  if(bytes.length>25*1024*1024) throw new Error('Die XLSX-Datei ist größer als 25 MB. Bitte eine kleinere Datei verwenden.');
+  let eocd=-1;
+  for(let offset=Math.max(0,bytes.length-65557);offset<=bytes.length-22;offset++){
+    if(view.getUint32(offset,true)===0x06054b50) eocd=offset;
+  }
+  if(eocd<0) throw new Error('Die XLSX-Datei ist kein gültiges ZIP-Archiv.');
+  const entryCount=view.getUint16(eocd+10,true), centralOffset=view.getUint32(eocd+16,true);
+  const decoder=new TextDecoder('utf-8'), entries=new Map();
+  let offset=centralOffset, extractedSize=0;
+  for(let index=0;index<entryCount;index++){
+    if(view.getUint32(offset,true)!==0x02014b50) throw new Error('Die XLSX-Dateistruktur ist beschädigt.');
+    const method=view.getUint16(offset+10,true), compressedSize=view.getUint32(offset+20,true), uncompressedSize=view.getUint32(offset+24,true);
+    extractedSize+=uncompressedSize;
+    if(extractedSize>100*1024*1024) throw new Error('Die entpackten XLSX-Daten überschreiten 100 MB.');
+    const nameLength=view.getUint16(offset+28,true), extraLength=view.getUint16(offset+30,true), commentLength=view.getUint16(offset+32,true);
+    const localOffset=view.getUint32(offset+42,true);
+    const name=decoder.decode(bytes.slice(offset+46,offset+46+nameLength));
+    if(view.getUint32(localOffset,true)!==0x04034b50) throw new Error('Die XLSX-Dateistruktur ist beschädigt.');
+    const localNameLength=view.getUint16(localOffset+26,true), localExtraLength=view.getUint16(localOffset+28,true);
+    const dataStart=localOffset+30+localNameLength+localExtraLength;
+    const compressed=bytes.slice(dataStart,dataStart+compressedSize);
+    let content;
+    if(method===0) content=compressed;
+    else if(method===8){
+      if(typeof DecompressionStream!=='function') throw new Error('Dieser Browser unterstützt den XLSX-Import nicht. Bitte CSV verwenden oder den Browser aktualisieren.');
+      const stream=new Response(compressed).body.pipeThrough(new DecompressionStream('deflate-raw'));
+      content=new Uint8Array(await new Response(stream).arrayBuffer());
+    } else throw new Error(`Nicht unterstützte XLSX-Komprimierung (${method}).`);
+    entries.set(name.replace(/\\/g,'/'),content);
+    offset+=46+nameLength+extraLength+commentLength;
+  }
+  return entries;
+}
+
+function resolveXlsxPath(basePath,target){
+  if(target.startsWith('/')) return target.replace(/^\//,'');
+  const parts=(basePath.replace(/[^/]+$/,'')+target).split('/'), resolved=[];
+  parts.forEach(part=>{ if(part==='..') resolved.pop(); else if(part && part!=='.') resolved.push(part); });
+  return resolved.join('/');
+}
+
+function xlsxRowsToDelimited(rows){
+  const csvCell=value=>/[;"\r\n]/.test(String(value ?? '')) ? `"${String(value ?? '').replace(/"/g,'""')}"` : String(value ?? '');
+  return rows.map(row=>row.map(csvCell).join(';')).join('\r\n');
+}
+
+async function xlsxArrayBufferToDelimited(arrayBuffer){
+  const entries=await unzipXlsxEntries(arrayBuffer), decoder=new TextDecoder('utf-8');
+  const readXml=path=>entries.has(path)?decoder.decode(entries.get(path)):'';
+  const workbookPath='xl/workbook.xml', workbookXml=readXml(workbookPath);
+  const relationshipsXml=readXml('xl/_rels/workbook.xml.rels');
+  if(!workbookXml || !relationshipsXml) throw new Error('Die XLSX-Arbeitsmappe kann nicht gelesen werden.');
+  const firstSheetTag=workbookXml.match(/<(?:\w+:)?sheet\b[^>]*\br:id=(?:"[^"]*"|'[^']*')[^>]*\/?\s*>/i)?.[0];
+  const relationshipId=xmlAttribute(firstSheetTag,'r:id');
+  const relationshipTags=relationshipsXml.match(/<(?:\w+:)?Relationship\b[^>]*\/?\s*>/gi) || [];
+  const relationship=relationshipTags.find(tag=>xmlAttribute(tag,'Id')===relationshipId);
+  const sheetPath=resolveXlsxPath(workbookPath,xmlAttribute(relationship,'Target'));
+  const sheetXml=readXml(sheetPath);
+  if(!sheetXml) throw new Error('Das erste XLSX-Arbeitsblatt ist leer oder nicht lesbar.');
+
+  const sharedStrings=[];
+  const sharedXml=readXml('xl/sharedStrings.xml');
+  (sharedXml.match(/<(?:\w+:)?si\b[\s\S]*?<\/(?:\w+:)?si>/gi) || []).forEach(item=>{
+    const text=(item.match(/<(?:\w+:)?t(?:\s[^>]*)?>([\s\S]*?)<\/(?:\w+:)?t>/gi) || [])
+      .map(tag=>decodeXmlText(tag.replace(/^<(?:\w+:)?t(?:\s[^>]*)?>|<\/(?:\w+:)?t>$/gi,''))).join('');
+    sharedStrings.push(text);
+  });
+
+  const rows=[];
+  (sheetXml.match(/<(?:\w+:)?row\b[\s\S]*?<\/(?:\w+:)?row>/gi) || []).forEach(rowXml=>{
+    const row=[];
+    (rowXml.match(/<(?:\w+:)?c\b[^>]*\/>|<(?:\w+:)?c\b[\s\S]*?<\/(?:\w+:)?c>/gi) || []).forEach(cellXml=>{
+      const openTag=cellXml.match(/^<(?:\w+:)?c\b[^>]*\/?>/i)?.[0] || '';
+      const column=xlsxColumnIndex(xmlAttribute(openTag,'r'));
+      if(column<0) return;
+      const type=xmlAttribute(openTag,'t');
+      const raw=cellXml.match(/<(?:\w+:)?v(?:\s[^>]*)?>([\s\S]*?)<\/(?:\w+:)?v>/i)?.[1] ?? '';
+      let value=decodeXmlText(raw);
+      if(type==='s') value=sharedStrings[Number(value)] ?? '';
+      else if(type==='inlineStr') value=(cellXml.match(/<(?:\w+:)?t(?:\s[^>]*)?>([\s\S]*?)<\/(?:\w+:)?t>/gi) || [])
+        .map(tag=>decodeXmlText(tag.replace(/^<(?:\w+:)?t(?:\s[^>]*)?>|<\/(?:\w+:)?t>$/gi,''))).join('');
+      else if(type==='b') value=value==='1'?'WAHR':'FALSCH';
+      row[column]=value;
+    });
+    if(row.some(value=>String(value ?? '').trim()!=='')) rows.push(Array.from({length:row.length},(_,index)=>row[index] ?? ''));
+  });
+  if(!rows.length) throw new Error('Im ersten XLSX-Arbeitsblatt wurden keine Daten gefunden.');
+  return xlsxRowsToDelimited(rows);
+}
+
+async function readImportFile(file){
+  const extension=String(file?.name || '').toLowerCase().match(/\.[^.]+$/)?.[0];
+  if(extension==='.xlsx') return xlsxArrayBufferToDelimited(await file.arrayBuffer());
+  if(extension==='.csv' || extension==='.txt') return file.text();
+  throw new Error('Bitte eine CSV- oder XLSX-Datei auswählen.');
+}
+
 function importMeta(fileName, rowCount, validRows, errors, warnings=[]){
   return {
     importedAt:new Date().toISOString(), fileName:fileName || null, rowCount,
@@ -1427,26 +1544,23 @@ function computeParameters(){
   pd.parameters=result; return result;
 }
 
-function bindCSVImport(inputId, handler, statusId){
+function bindSpreadsheetImport(inputId, handler, statusId){
   const input=document.getElementById(inputId);
   if(!input || input.dataset.bound) return;
   input.dataset.bound='1';
-  input.addEventListener('change',event=>{
+  input.addEventListener('change',async event=>{
     const file=event.target.files[0]; if(!file) return;
-    const reader=new FileReader();
-    reader.onload=loadEvent=>{
-      try { handler(String(loadEvent.target.result),file.name); }
-      catch(error){ const el=document.getElementById(statusId); if(el) el.innerHTML=`<div class="blocker">${esc(error.message)}</div>`; }
-      renderFinancialViews();
-    };
-    reader.readAsText(file,'utf-8');
+    try { handler(await readImportFile(file),file.name); }
+    catch(error){ const el=document.getElementById(statusId); if(el) el.innerHTML=`<div class="blocker">${esc(error.message)}</div>`; }
+    renderFinancialViews();
+    event.target.value='';
   });
 }
 
 function initFinancialUI(){
-  bindCSVImport('susaFileInput',importTrialBalance,'susaUploadStatus');
-  bindCSVImport('structureFileInput',importReportStructure,'structureUploadStatus');
-  bindCSVImport('mappingFileInput',importConfirmedMapping,'mappingUploadStatus');
+  bindSpreadsheetImport('susaFileInput',importTrialBalance,'susaUploadStatus');
+  bindSpreadsheetImport('structureFileInput',importReportStructure,'structureUploadStatus');
+  bindSpreadsheetImport('mappingFileInput',importConfirmedMapping,'mappingUploadStatus');
   const nameInput=document.getElementById('mdCompanyName');
   if(nameInput&&!nameInput.dataset.bound){nameInput.dataset.bound='1';nameInput.addEventListener('change',event=>{window.projectData.masterData.companyName=event.target.value;window.projectData.masterData._source=SRC.MASTER_DATA;computeParameters();saveProjectData();renderFinancialViews();});}
   const yearInput=document.getElementById('mdFinancialYear');
@@ -2392,18 +2506,18 @@ window.addEventListener('load', () => {
   <section id="upload" class="detail">
     <a class="close" href="#">× Schließen</a>
     <h2>Finanzdaten importieren</h2>
-    <p>Die drei CSV-Dateien werden nacheinander in dieselbe zentrale Datenwelt importiert. XLSX-Testdateien liegen zusätzlich als vollständige Offline-CSV-Kopien in <b>Testdateien/Test 2</b> vor.</p>
+    <p>Alle drei Finanzdateien können wahlweise als CSV oder XLSX importiert werden. Die Dateien werden nacheinander in dieselbe zentrale Datenwelt übernommen.</p>
 
     <div class="section-title">1 · Summen- und Saldenliste</div>
-    <label class="option" for="susaFileInput" style="cursor:pointer">SuSa-CSV auswählen<input id="susaFileInput" type="file" accept=".csv,.txt" style="display:none"></label>
+    <label class="option" for="susaFileInput" style="cursor:pointer">SuSa (CSV oder XLSX) auswählen<input id="susaFileInput" type="file" accept=".csv,.xlsx,.txt" style="display:none"></label>
     <div id="susaUploadStatus" class="card"><p>Noch keine SuSa importiert.</p></div>
 
     <div class="section-title">2 · HGB-Berichtsstruktur</div>
-    <label class="option" for="structureFileInput" style="cursor:pointer">7L-Berichtsstruktur (CSV) auswählen<input id="structureFileInput" type="file" accept=".csv,.txt" style="display:none"></label>
+    <label class="option" for="structureFileInput" style="cursor:pointer">7L-Berichtsstruktur (CSV oder XLSX) auswählen<input id="structureFileInput" type="file" accept=".csv,.xlsx,.txt" style="display:none"></label>
     <div id="structureUploadStatus" class="card"><p>Noch keine Berichtsstruktur importiert.</p></div>
 
     <div class="section-title">3 · Bestätigtes Mapping</div>
-    <label class="option" for="mappingFileInput" style="cursor:pointer">Bestätigtes Mapping (CSV) auswählen<input id="mappingFileInput" type="file" accept=".csv,.txt" style="display:none"></label>
+    <label class="option" for="mappingFileInput" style="cursor:pointer">Bestätigtes Mapping (CSV oder XLSX) auswählen<input id="mappingFileInput" type="file" accept=".csv,.xlsx,.txt" style="display:none"></label>
     <div id="mappingUploadStatus" class="card"><p>Noch kein bestätigtes Mapping importiert.</p></div>
   </section>
   <section id="mapping" class="detail">
