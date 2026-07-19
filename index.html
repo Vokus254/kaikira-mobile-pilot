@@ -1550,10 +1550,18 @@ function bindSpreadsheetImport(inputId, handler, statusId){
   input.dataset.bound='1';
   input.addEventListener('change',async event=>{
     const file=event.target.files[0]; if(!file) return;
-    try { handler(await readImportFile(file),file.name); }
-    catch(error){ const el=document.getElementById(statusId); if(el) el.innerHTML=`<div class="blocker">${esc(error.message)}</div>`; }
-    renderFinancialViews();
-    event.target.value='';
+    const status=document.getElementById(statusId);
+    input.disabled=true;
+    if(status) status.innerHTML=`<p class="sub">${esc(file.name)} wird eingelesen und geprüft …</p>`;
+    try {
+      handler(await readImportFile(file),file.name);
+      renderFinancialViews();
+    } catch(error){
+      if(status) status.innerHTML=`<div class="blocker" role="alert"><b>Import nicht möglich.</b><div>${esc(error.message || 'Unbekannter Fehler beim Dateiimport.')}</div></div>`;
+    } finally {
+      input.disabled=false;
+      event.target.value='';
+    }
   });
 }
 

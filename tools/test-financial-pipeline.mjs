@@ -112,6 +112,37 @@ for (const inputId of ["susaFileInput","structureFileInput","mappingFileInput"])
   assert.match(inputTag, /accept="[^"]*\.csv[^"]*\.xlsx[^"]*"/, `${inputId} must accept CSV and XLSX`);
 }
 
+const uploadStatus = { innerHTML:"" };
+const uploadInput = {
+  dataset:{}, disabled:false, value:"selected", files:[],
+  addEventListener:(type,listener) => { if(type === "change") uploadInput.onChange = listener; },
+};
+const originalGetElementById = context.document.getElementById;
+context.document.getElementById = id => id === "testUploadInput" ? uploadInput : id === "testUploadStatus" ? uploadStatus : null;
+context.bindSpreadsheetImport("testUploadInput",() => { throw new Error("Fehlende SuSa-Spalten: konto"); },"testUploadStatus");
+uploadInput.files = [{ name:"ungueltige-susa.csv", text:async()=>"falsche;spalten" }];
+await uploadInput.onChange({ target:uploadInput });
+assert.match(uploadStatus.innerHTML,/Import nicht möglich/);
+assert.match(uploadStatus.innerHTML,/Fehlende SuSa-Spalten: konto/);
+assert.equal(uploadInput.disabled,false,"file input must be enabled after an import error");
+assert.equal(uploadInput.value,"","the same invalid file must be selectable again");
+
+const successStatus = { innerHTML:"" };
+const successInput = {
+  dataset:{}, disabled:false, value:"selected", files:[],
+  addEventListener:(type,listener) => { if(type === "change") successInput.onChange = listener; },
+};
+context.document.getElementById = id => id === "susaFileInput" ? successInput : id === "susaUploadStatus" ? successStatus : null;
+context.resetProjectData();
+context.bindSpreadsheetImport("susaFileInput",context.importTrialBalance,"susaUploadStatus");
+successInput.files = [{ name:"neue-susa.csv", text:async()=>read("01_KAIKIRA_Test_SuSa_Industrie_AG_2026.csv") }];
+await successInput.onChange({ target:successInput });
+assert.match(successStatus.innerHTML,/neue-susa\.csv/);
+assert.match(successStatus.innerHTML,/VALID/);
+assert.equal(successInput.value,"","the same file must be selectable again");
+assert.equal(successInput.disabled,false,"file input must be enabled after a successful import");
+context.document.getElementById = originalGetElementById;
+
 const targetSections = ["report-review","notes-provisions","mgmt-business","mgmt-performance","mgmt-risks","bs-provisions","provision-account"];
 for (const id of targetSections) {
   const section = html.match(new RegExp(`<section id="${id}"[\\s\\S]*?<\\/section>`))?.[0] || "";
