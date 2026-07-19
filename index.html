@@ -1443,7 +1443,7 @@ function recalcMirrors(){
 
 function recalcFinancialStatements(){
   const pd = window.projectData;
-  const hasSevenLevelInputs = (pd.reportStructure.rows||[]).length && pd.mapping.importedAt;
+  const hasSevenLevelInputs = Boolean((pd.reportStructure.rows||[]).length && (pd.mapping.rows||[]).length);
   if(!hasSevenLevelInputs){
     pd.balanceSheet = null; pd.incomeStatement = null;
     computeParameters(); saveProjectData(); renderFinancialViews(); return;
@@ -1836,7 +1836,7 @@ function renderMappingView(){
   const el=document.getElementById('mappingContainer'); if(!el)return;
   const pd=window.projectData, rows=pd.mapping.rows||[], validation=pd.mapping.validation;
   if(!rows.length){el.innerHTML='<p class="sub">Noch keine SuSa bzw. kein Mapping importiert.</p>';return;}
-  if(pd.mapping.importedAt){
+  if(pd.mapping.importedAt||validation){
     const counts=validation?.counts||{};
     el.innerHTML=`<div class="card"><div class="kpi-grid"><div class="kpi"><strong>${counts.mapping||rows.length}</strong><small>Mappingkonten</small></div><div class="kpi"><strong>${counts.confirmed||0}</strong><small>bestätigt</small></div><div class="kpi"><strong>${counts.targets||0}</strong><small>7L-Ziele</small></div></div>
       ${validation?.blocking?`<div class="blocker"><b>Bilanz-/GuV-Freigabe blockiert.</b>${validation.errors.slice(0,30).map(error=>`<div>${esc(error)}</div>`).join('')}</div>`:'<div class="asset-recon"><b>✓ Mapping vollständig validiert.</b> Keine Einzelbestätigungen erforderlich.</div>'}</div>

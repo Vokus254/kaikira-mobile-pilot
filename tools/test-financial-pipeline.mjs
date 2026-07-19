@@ -153,6 +153,14 @@ for (const key of ["revenue_change_reason","result_development_reason","manageme
   assert.match(context.window.projectData.parameters[key].value,/Demoannahme/);
   assert.equal(context.window.projectData.parameters[key].open,false);
 }
+context.window.projectData.mapping.importedAt=null;
+context.window.projectData.mapping.validation=null;
+context.window.projectData.balanceSheet=null;
+context.window.projectData.incomeStatement=null;
+context.recalcFinancialStatements();
+assert.equal(context.window.projectData.mapping.validation.status,"VALID","complete stored mapping rows must not depend on an import timestamp");
+assert.equal(context.window.projectData.balanceSheet.sumAktivaCurrent,160_000_000,"stored valid rows must rebuild the balance sheet after reload");
+assert.equal(context.window.projectData.incomeStatement.jahresueberschussCurrent,9_000_000,"stored valid rows must rebuild P&L after reload");
 
 const titledLayout=context.detectImportLayout({rows:[["SuSa Export 2026"],["Konto","Bezeichnung","Saldo BJ","Saldo VJ"],["1000","Bank","100","90"]],headerRow:0});
 assert.deepEqual({...titledLayout},{target:"trialBalance",headerRow:1,required:3},"header rows below spreadsheet titles must be detected");
