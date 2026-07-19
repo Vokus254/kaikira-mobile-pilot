@@ -266,6 +266,16 @@ details.option[open] > summary:after{content:"−"}
 .asset-table .total td{font-weight:850}
 .import-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
 .import-metrics span{padding:9px;border-radius:10px;background:rgba(255,255,255,.05);text-align:center;font-size:12px}
+.import-file-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.import-file-head .ghost{width:auto;padding:8px 12px;margin:0}
+.import-map-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px;margin:12px 0}
+.import-map-field{padding:10px;border-radius:12px;background:rgba(255,255,255,.035)}
+.import-map-field label{display:block;font-size:12px;color:#9aa0ad;margin-bottom:5px}
+.import-map-field .admin-control{padding:10px 11px;margin:0}
+.import-preview-meta{display:flex;justify-content:space-between;gap:12px;align-items:center;color:#9aa0ad;font-size:12px}
+.import-preview-meta button{width:auto;padding:7px 10px;margin:0}
+#light:checked ~ .phone .import-map-field{background:#f4f5f7}
+#pure:checked ~ .phone .import-map-field{background:#fff;border:1px solid #bbb}
 .hierarchy-head,.hierarchy-row,.hierarchy-total{display:grid;grid-template-columns:minmax(230px,2fr) repeat(4,minmax(100px,1fr));gap:8px;align-items:center;min-width:720px}
 .hierarchy-head{padding:10px 8px;color:#9aa0ad;font-size:11px;border-bottom:1px solid rgba(255,255,255,.12)}
 .hierarchy-row,.hierarchy-total{padding:9px 8px;border-bottom:1px solid rgba(255,255,255,.07);font-size:12px}
@@ -630,44 +640,6 @@ function setManualParameter(key, value){
   renderFinancialViews();
 }
 
-// -- Finanz-UI: Bindung der zentralen Datenbasis an die bestehenden Sections --
-function initFinancialUI(){
-  const fileInput = document.getElementById('susaFileInput');
-  if(fileInput && !fileInput.dataset.bound){
-    fileInput.dataset.bound = '1';
-    fileInput.addEventListener('change', e => {
-      const file = e.target.files[0];
-      if(!file) return;
-      const reader = new FileReader();
-      reader.onload = ev => {
-        try {
-          const count = importTrialBalance(String(ev.target.result), file.name);
-          setUploadStatus(`${count} SuSa-Zeilen importiert aus ${esc(file.name)}. Bitte Mapping prüfen.`, false);
-        } catch(err){ setUploadStatus(err.message, true); }
-      };
-      reader.readAsText(file, 'utf-8');
-    });
-  }
-  const nameInput = document.getElementById('mdCompanyName');
-  if(nameInput && !nameInput.dataset.bound){
-    nameInput.dataset.bound = '1';
-    nameInput.addEventListener('change', e => { window.projectData.masterData.companyName = e.target.value; window.projectData.masterData._source = SRC.MASTER_DATA; saveProjectData(); computeParameters(); saveProjectData(); renderFinancialViews(); });
-  }
-  const yearInput = document.getElementById('mdFinancialYear');
-  if(yearInput && !yearInput.dataset.bound){
-    yearInput.dataset.bound = '1';
-    yearInput.addEventListener('change', e => { window.projectData.masterData.financialYear = e.target.value ? parseInt(e.target.value,10) : null; saveProjectData(); computeParameters(); saveProjectData(); renderFinancialViews(); });
-  }
-  renderFinancialViews();
-}
-
-function setUploadStatus(msg, isError){
-  const el = document.getElementById('susaUploadStatus');
-  if(!el) return;
-  el.innerHTML = `<p>${esc(msg)}</p>`;
-  el.className = isError ? 'blocker' : 'asset-recon';
-}
-
 function renderFinancialViews(){
   renderMappingView();
   renderBalanceSheetView();
@@ -1030,7 +1002,7 @@ function normalizeHeader(value){
     .normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'');
 }
 
-function parseDelimitedText(text){
+function parseDelimitedRows(text){
   const source = String(text ?? '').replace(/^\uFEFF/,'');
   const firstLine = source.split(/\r?\n/,1)[0] || '';
   const candidates = [';', '\t', ','];
@@ -1052,6 +1024,11 @@ function parseDelimitedText(text){
   }
   row.push(cell);
   if(row.some(value => String(value).trim() !== '')) rows.push(row);
+  return rows;
+}
+
+function parseDelimitedText(text){
+  const rows=parseDelimitedRows(text);
   if(!rows.length) return { headers:[], rows:[] };
   const headers = rows[0].map(normalizeHeader);
   return {
@@ -1130,28 +1107,7 @@ function xlsxRowsToDelimited(rows){
   return rows.map(row=>row.map(csvCell).join(';')).join('\r\n');
 }
 
-async function xlsxArrayBufferToDelimited(arrayBuffer){
-  const entries=await unzipXlsxEntries(arrayBuffer), decoder=new TextDecoder('utf-8');
-  const readXml=path=>entries.has(path)?decoder.decode(entries.get(path)):'';
-  const workbookPath='xl/workbook.xml', workbookXml=readXml(workbookPath);
-  const relationshipsXml=readXml('xl/_rels/workbook.xml.rels');
-  if(!workbookXml || !relationshipsXml) throw new Error('Die XLSX-Arbeitsmappe kann nicht gelesen werden.');
-  const firstSheetTag=workbookXml.match(/<(?:\w+:)?sheet\b[^>]*\br:id=(?:"[^"]*"|'[^']*')[^>]*\/?\s*>/i)?.[0];
-  const relationshipId=xmlAttribute(firstSheetTag,'r:id');
-  const relationshipTags=relationshipsXml.match(/<(?:\w+:)?Relationship\b[^>]*\/?\s*>/gi) || [];
-  const relationship=relationshipTags.find(tag=>xmlAttribute(tag,'Id')===relationshipId);
-  const sheetPath=resolveXlsxPath(workbookPath,xmlAttribute(relationship,'Target'));
-  const sheetXml=readXml(sheetPath);
-  if(!sheetXml) throw new Error('Das erste XLSX-Arbeitsblatt ist leer oder nicht lesbar.');
-
-  const sharedStrings=[];
-  const sharedXml=readXml('xl/sharedStrings.xml');
-  (sharedXml.match(/<(?:\w+:)?si\b[\s\S]*?<\/(?:\w+:)?si>/gi) || []).forEach(item=>{
-    const text=(item.match(/<(?:\w+:)?t(?:\s[^>]*)?>([\s\S]*?)<\/(?:\w+:)?t>/gi) || [])
-      .map(tag=>decodeXmlText(tag.replace(/^<(?:\w+:)?t(?:\s[^>]*)?>|<\/(?:\w+:)?t>$/gi,''))).join('');
-    sharedStrings.push(text);
-  });
-
+function xlsxSheetRows(sheetXml,sharedStrings){
   const rows=[];
   (sheetXml.match(/<(?:\w+:)?row\b[\s\S]*?<\/(?:\w+:)?row>/gi) || []).forEach(rowXml=>{
     const row=[];
@@ -1170,15 +1126,50 @@ async function xlsxArrayBufferToDelimited(arrayBuffer){
     });
     if(row.some(value=>String(value ?? '').trim()!=='')) rows.push(Array.from({length:row.length},(_,index)=>row[index] ?? ''));
   });
-  if(!rows.length) throw new Error('Im ersten XLSX-Arbeitsblatt wurden keine Daten gefunden.');
-  return xlsxRowsToDelimited(rows);
+  return rows;
 }
 
-async function readImportFile(file){
+async function xlsxArrayBufferToTables(arrayBuffer){
+  const entries=await unzipXlsxEntries(arrayBuffer), decoder=new TextDecoder('utf-8');
+  const readXml=path=>entries.has(path)?decoder.decode(entries.get(path)):'';
+  const workbookPath='xl/workbook.xml', workbookXml=readXml(workbookPath);
+  const relationshipsXml=readXml('xl/_rels/workbook.xml.rels');
+  if(!workbookXml || !relationshipsXml) throw new Error('Die XLSX-Arbeitsmappe kann nicht gelesen werden.');
+  const sheetTags=workbookXml.match(/<(?:\w+:)?sheet\b[^>]*\br:id=(?:"[^"]*"|'[^']*')[^>]*\/?\s*>/gi) || [];
+  const relationshipTags=relationshipsXml.match(/<(?:\w+:)?Relationship\b[^>]*\/?\s*>/gi) || [];
+
+  const sharedStrings=[];
+  const sharedXml=readXml('xl/sharedStrings.xml');
+  (sharedXml.match(/<(?:\w+:)?si\b[\s\S]*?<\/(?:\w+:)?si>/gi) || []).forEach(item=>{
+    const text=(item.match(/<(?:\w+:)?t(?:\s[^>]*)?>([\s\S]*?)<\/(?:\w+:)?t>/gi) || [])
+      .map(tag=>decodeXmlText(tag.replace(/^<(?:\w+:)?t(?:\s[^>]*)?>|<\/(?:\w+:)?t>$/gi,''))).join('');
+    sharedStrings.push(text);
+  });
+
+  const tables=sheetTags.map((sheetTag,index)=>{
+    const relationshipId=xmlAttribute(sheetTag,'r:id');
+    const relationship=relationshipTags.find(tag=>xmlAttribute(tag,'Id')===relationshipId);
+    const sheetPath=resolveXlsxPath(workbookPath,xmlAttribute(relationship,'Target'));
+    return { name:xmlAttribute(sheetTag,'name') || `Tabelle ${index+1}`, rows:xlsxSheetRows(readXml(sheetPath),sharedStrings) };
+  }).filter(table=>table.rows.length);
+  if(!tables.length) throw new Error('In der XLSX-Arbeitsmappe wurden keine Daten gefunden.');
+  return tables;
+}
+
+async function xlsxArrayBufferToDelimited(arrayBuffer){
+  const tables=await xlsxArrayBufferToTables(arrayBuffer);
+  return xlsxRowsToDelimited(tables[0].rows);
+}
+
+async function readImportTables(file){
   const extension=String(file?.name || '').toLowerCase().match(/\.[^.]+$/)?.[0];
-  if(extension==='.xlsx') return xlsxArrayBufferToDelimited(await file.arrayBuffer());
-  if(extension==='.csv' || extension==='.txt') return file.text();
-  throw new Error('Bitte eine CSV- oder XLSX-Datei auswählen.');
+  if(extension==='.xlsx') return (await xlsxArrayBufferToTables(await file.arrayBuffer())).map(table=>Object.assign(table,{fileName:file.name}));
+  if(extension==='.csv' || extension==='.txt'){
+    const rows=parseDelimitedRows(await file.text());
+    if(!rows.length) throw new Error(`${file.name}: Keine Daten gefunden.`);
+    return [{name:'Tabelle 1',fileName:file.name,rows}];
+  }
+  throw new Error(`${file?.name || 'Datei'}: Bitte CSV oder XLSX verwenden.`);
 }
 
 function importMeta(fileName, rowCount, validRows, errors, warnings=[]){
@@ -1544,31 +1535,184 @@ function computeParameters(){
   pd.parameters=result; return result;
 }
 
-function bindSpreadsheetImport(inputId, handler, statusId){
-  const input=document.getElementById(inputId);
-  if(!input || input.dataset.bound) return;
-  input.dataset.bound='1';
-  input.addEventListener('change',async event=>{
-    const file=event.target.files[0]; if(!file) return;
-    const status=document.getElementById(statusId);
-    input.disabled=true;
-    if(status) status.innerHTML=`<p class="sub">${esc(file.name)} wird eingelesen und geprüft …</p>`;
-    try {
-      handler(await readImportFile(file),file.name);
-      renderFinancialViews();
-    } catch(error){
-      if(status) status.innerHTML=`<div class="blocker" role="alert"><b>Import nicht möglich.</b><div>${esc(error.message || 'Unbekannter Fehler beim Dateiimport.')}</div></div>`;
-    } finally {
-      input.disabled=false;
-      event.target.value='';
-    }
+const IMPORT_TARGETS={
+  trialBalance:{
+    label:'Summen- und Saldenliste', handler:importTrialBalance,
+    fields:[
+      {key:'konto',label:'Konto',required:true,aliases:['kontonummer','kontonr','sachkonto','account','accountnumber']},
+      {key:'bezeichnung',label:'Bezeichnung',required:true,aliases:['kontobezeichnung','beschreibung','name','accountname']},
+      {key:'saldobj',label:'Saldo BJ',required:true,aliases:['saldo','saldobuchungsjahr','balancecurrent','aktuellersaldo']},
+      {key:'saldovj',label:'Saldo VJ',required:false,aliases:['saldovorjahr','balanceprior','vorjahressaldo']}
+    ]
+  },
+  reportStructure:{
+    label:'HGB-Berichtsstruktur', handler:importReportStructure,
+    fields:[
+      ...[1,2,3,4,5,6,7].map(level=>({key:`ausweis${level}`,label:`Ausweis ${level}`,required:true,aliases:[`level${level}`,`ebene${level}`]})),
+      {key:'zielschluessel7l',label:'Zielschlüssel 7L',required:true,aliases:['zielschlussel7l','target7']},
+      {key:'appzielid',label:'App-Ziel-ID',required:true,aliases:['appziel','apptargetid']},
+      {key:'rechenwerk',label:'Rechenwerk',required:true,aliases:['abschlussbestandteil','statement']},
+      {key:'zeilentyp',label:'Zeilentyp',required:false,aliases:['rowtype']},
+      {key:'mappingzulaessig',label:'Mapping zulässig',required:false,aliases:['mappingallowed']},
+      {key:'spiegelbezug',label:'Spiegelbezug',required:false,aliases:['mirrorreference']},
+      {key:'ableitbareberichtsangaben',label:'Ableitbare Berichtsangaben',required:false,aliases:['reportfields']}
+    ]
+  },
+  mapping:{
+    label:'Bestätigtes Mapping', handler:importConfirmedMapping,
+    fields:[
+      {key:'konto',label:'Konto',required:true,aliases:['kontonummer','kontonr','sachkonto','account']},
+      {key:'bezeichnung',label:'Bezeichnung',required:true,aliases:['kontobezeichnung','beschreibung','name']},
+      {key:'saldobj',label:'Saldo BJ',required:true,aliases:['saldo','balancecurrent','aktuellersaldo']},
+      {key:'saldovj',label:'Saldo VJ',required:true,aliases:['saldovorjahr','balanceprior','vorjahressaldo']},
+      ...[1,2,3,4,5,6,7].map(level=>({key:`ausweis${level}`,label:`Ausweis ${level}`,required:true,aliases:[`level${level}`,`ebene${level}`]})),
+      {key:'zielschluessel7l',label:'Zielschlüssel 7L',required:true,aliases:['zielschlussel7l','target7']},
+      {key:'appzielid',label:'App-Ziel-ID',required:true,aliases:['appziel','apptargetid']},
+      {key:'rechenwerk',label:'Rechenwerk',required:false,aliases:['statement']},
+      {key:'spiegeltyp',label:'Spiegeltyp',required:false,aliases:['mirrortype']},
+      {key:'spiegelzeile',label:'Spiegelzeile',required:false,aliases:['mirrorline']},
+      {key:'mappingstatus',label:'Mapping-Status',required:true,aliases:['status','confirmed']},
+      {key:'hinweis',label:'Hinweis',required:false,aliases:['note']}
+    ]
+  }
+};
+
+window.importWorkspace=window.importWorkspace || {items:[],nextId:1,errors:[]};
+
+function guessImportColumn(headers,field){
+  const accepted=new Set([field.key,...(field.aliases||[])].map(normalizeHeader));
+  const exact=headers.findIndex(header=>accepted.has(normalizeHeader(header)));
+  if(exact>=0) return exact;
+  if(field.key==='saldobj') return headers.findIndex(header=>{const key=normalizeHeader(header);return key.includes('saldo')&&(key.includes('bj')||key.includes('aktuell')||key.includes('current'));});
+  if(field.key==='saldovj') return headers.findIndex(header=>{const key=normalizeHeader(header);return key.includes('saldo')&&(key.includes('vj')||key.includes('vorjahr')||key.includes('prior'));});
+  return -1;
+}
+
+function mappedColumnsFor(item,target){
+  const headers=item.rows[item.headerRow||0] || [], config=IMPORT_TARGETS[target], mapping={};
+  config.fields.forEach(field=>{const index=guessImportColumn(headers,field);if(index>=0)mapping[field.key]=index;});
+  return mapping;
+}
+
+function detectImportTarget(item){
+  const headers=item.rows[item.headerRow||0] || [];
+  const candidates=Object.entries(IMPORT_TARGETS).filter(([,config])=>config.fields.filter(field=>field.required).every(field=>guessImportColumn(headers,field)>=0));
+  candidates.sort((a,b)=>b[1].fields.filter(field=>field.required).length-a[1].fields.filter(field=>field.required).length);
+  return candidates[0]?.[0] || '';
+}
+
+function detectImportLayout(item){
+  let best={target:'',headerRow:0,required:0};
+  item.rows.slice(0,10).forEach((headers,rowIndex)=>{
+    Object.entries(IMPORT_TARGETS).forEach(([target,config])=>{
+      const required=config.fields.filter(field=>field.required);
+      if(required.length>best.required&&required.every(field=>guessImportColumn(headers,field)>=0)) best={target,headerRow:rowIndex,required:required.length};
+    });
   });
+  return best;
+}
+
+function setImportTarget(itemId,target){
+  const item=window.importWorkspace.items.find(entry=>entry.id===itemId); if(!item)return;
+  item.target=target; item.mapping=target?mappedColumnsFor(item,target):{}; item.state='READY'; item.message='';
+  renderImportWorkspace();
+}
+
+function setImportHeaderRow(itemId,rowIndex){
+  const item=window.importWorkspace.items.find(entry=>entry.id===itemId); if(!item)return;
+  item.headerRow=Number(rowIndex); item.target=item.target||detectImportTarget(item);
+  item.mapping=item.target?mappedColumnsFor(item,item.target):{}; item.state='READY'; item.message='';
+  renderImportWorkspace();
+}
+
+function setImportColumn(itemId,fieldKey,columnIndex){
+  const item=window.importWorkspace.items.find(entry=>entry.id===itemId); if(!item)return;
+  if(columnIndex==='') delete item.mapping[fieldKey]; else item.mapping[fieldKey]=Number(columnIndex);
+  item.state='READY'; item.message='';
+}
+
+function removeImportItem(itemId){
+  window.importWorkspace.items=window.importWorkspace.items.filter(item=>item.id!==itemId);
+  renderImportWorkspace();
+}
+
+function toggleImportPreview(itemId){
+  const item=window.importWorkspace.items.find(entry=>entry.id===itemId); if(!item)return;
+  item.expanded=!item.expanded; renderImportWorkspace();
+}
+
+function importMappedTable(itemId){
+  const item=window.importWorkspace.items.find(entry=>entry.id===itemId), config=IMPORT_TARGETS[item?.target];
+  if(!item || !config)return;
+  const missing=config.fields.filter(field=>field.required&&!Number.isInteger(item.mapping[field.key]));
+  if(missing.length){item.state='ERROR';item.message='Bitte zuordnen: '+missing.map(field=>field.label).join(', ');renderImportWorkspace();return;}
+  const rows=[config.fields.map(field=>field.key),...item.rows.slice((item.headerRow||0)+1).map(source=>config.fields.map(field=>Number.isInteger(item.mapping[field.key])?(source[item.mapping[field.key]]??''):''))];
+  try{
+    const sourceName=item.sheetName&&item.sheetName!=='Tabelle 1'?`${item.fileName} · ${item.sheetName}`:item.fileName;
+    const count=config.handler(xlsxRowsToDelimited(rows),sourceName);
+    item.state='IMPORTED'; item.message=`${count} Zeilen als ${config.label} übernommen.`;
+    renderFinancialViews();
+  }catch(error){item.state='ERROR';item.message=error.message||'Import nicht möglich.';}
+  renderImportWorkspace();
+}
+
+function renderImportWorkspace(){
+  const container=document.getElementById('importWorkspace'); if(!container)return;
+  const workspace=window.importWorkspace;
+  if(!workspace.items.length){
+    container.innerHTML='<div class="card"><p><b>Noch keine Tabellen geladen.</b></p><p class="sub">Wähle oben eine oder mehrere Dateien aus. Danach erscheinen Vorschau und Spaltenzuordnung hier.</p></div>';
+    return;
+  }
+  container.innerHTML=workspace.items.map(item=>{
+    const headerRow=item.headerRow||0, headers=item.rows[headerRow]||[], config=IMPORT_TARGETS[item.target], previewRows=item.rows.slice(headerRow,headerRow+(item.expanded?101:13));
+    const dataRowCount=Math.max(0,item.rows.length-headerRow-1);
+    const headerOptions=item.rows.slice(0,10).map((row,index)=>`<option value="${index}" ${headerRow===index?'selected':''}>Zeile ${index+1} · ${esc(row.filter(value=>String(value).trim()).slice(0,3).join(' | ')||'leer')}</option>`).join('');
+    const targetOptions=Object.entries(IMPORT_TARGETS).map(([key,value])=>`<option value="${key}" ${item.target===key?'selected':''}>${esc(value.label)}</option>`).join('');
+    const mappingHtml=config?`<div class="section-title">Spalten zuordnen</div><div class="import-map-grid">${config.fields.map(field=>{
+      const options=headers.map((header,index)=>`<option value="${index}" ${item.mapping[field.key]===index?'selected':''}>${esc(header||`Spalte ${index+1}`)}</option>`).join('');
+      return `<div class="import-map-field"><label>${esc(field.label)}${field.required?' *':''}</label><select class="admin-control" onchange="setImportColumn(${item.id},'${field.key}',this.value)"><option value="">— nicht zugeordnet —</option>${options}</select></div>`;
+    }).join('')}</div><p class="sub">Eine erneute Übernahme derselben Zieltabelle ersetzt deren bisherigen Inhalt.</p><button class="action" type="button" onclick="importMappedTable(${item.id})">Zuordnung übernehmen</button>`:'';
+    const stateHtml=item.message?`<div class="${item.state==='ERROR'?'blocker':'asset-recon'}" ${item.state==='ERROR'?'role="alert"':''}><b>${item.state==='ERROR'?'Import nicht möglich':'Übernommen'}</b><div>${esc(item.message)}</div></div>`:'';
+    return `<details class="card" open><summary class="import-file-head"><span><b>${esc(item.fileName)}</b><span class="sub">${esc(item.sheetName)} · ${dataRowCount} Datenzeilen · ${headers.length} Spalten</span></span><button class="ghost" type="button" onclick="event.preventDefault();removeImportItem(${item.id})">Entfernen</button></summary>
+      ${stateHtml}<div class="section-title">Inhalt ansehen</div><div class="import-preview-meta"><span>${Math.min(previewRows.length-1,dataRowCount)} von ${dataRowCount} Datenzeilen</span>${dataRowCount>12?`<button class="ghost" type="button" onclick="toggleImportPreview(${item.id})">${item.expanded?'Weniger':'Bis zu 100 Zeilen'}</button>`:''}</div>
+      <div class="asset-table-wrap"><table class="asset-table"><thead><tr>${headers.map(header=>`<th>${esc(header)}</th>`).join('')}</tr></thead><tbody>${previewRows.slice(1).map(row=>`<tr>${headers.map((_,index)=>`<td>${esc(row[index]??'')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+      <div class="section-title">Kopfzeile und Zieltabelle festlegen</div><label class="sub">Spaltennamen stehen in</label><select class="admin-control" onchange="setImportHeaderRow(${item.id},this.value)">${headerOptions}</select><label class="sub">Diese Daten gehören zu</label><select class="admin-control" onchange="setImportTarget(${item.id},this.value)"><option value="">— bitte auswählen —</option>${targetOptions}</select>${mappingHtml}</details>`;
+  }).join('');
+}
+
+async function addImportFiles(files){
+  const workspace=window.importWorkspace; workspace.errors=[];
+  for(const file of Array.from(files||[])){
+    try{
+      const tables=await readImportTables(file);
+      tables.forEach(table=>{
+        const item={id:workspace.nextId++,fileName:file.name,sheetName:table.name,rows:table.rows,headerRow:0,target:'',mapping:{},state:'READY',message:'',expanded:false};
+        const layout=detectImportLayout(item); item.headerRow=layout.headerRow; item.target=layout.target; if(item.target)item.mapping=mappedColumnsFor(item,item.target);
+        workspace.items.push(item);
+      });
+    }catch(error){workspace.errors.push(error.message||`${file.name}: Import nicht möglich.`);}
+  }
+  const errorBox=document.getElementById('importWorkspaceErrors');
+  if(errorBox) errorBox.innerHTML=workspace.errors.map(message=>`<div class="blocker" role="alert">${esc(message)}</div>`).join('');
+  renderImportWorkspace();
+}
+
+function initImportWorkspace(){
+  const input=document.getElementById('flexibleFileInput');
+  if(input&&!input.dataset.bound){
+    input.dataset.bound='1';
+    input.addEventListener('change',async event=>{
+      if(!event.target.files?.length)return;
+      input.disabled=true;
+      const label=document.getElementById('flexibleFileLabel'); if(label)label.textContent='Tabellen werden eingelesen …';
+      try{await addImportFiles(event.target.files);}finally{input.disabled=false;event.target.value='';if(label)label.textContent='Excel-/CSV-Dateien hinzufügen';}
+    });
+  }
+  renderImportWorkspace();
 }
 
 function initFinancialUI(){
-  bindSpreadsheetImport('susaFileInput',importTrialBalance,'susaUploadStatus');
-  bindSpreadsheetImport('structureFileInput',importReportStructure,'structureUploadStatus');
-  bindSpreadsheetImport('mappingFileInput',importConfirmedMapping,'mappingUploadStatus');
+  initImportWorkspace();
   const nameInput=document.getElementById('mdCompanyName');
   if(nameInput&&!nameInput.dataset.bound){nameInput.dataset.bound='1';nameInput.addEventListener('change',event=>{window.projectData.masterData.companyName=event.target.value;window.projectData.masterData._source=SRC.MASTER_DATA;computeParameters();saveProjectData();renderFinancialViews();});}
   const yearInput=document.getElementById('mdFinancialYear');
@@ -2513,20 +2657,20 @@ window.addEventListener('load', () => {
 
   <section id="upload" class="detail">
     <a class="close" href="#">× Schließen</a>
-    <h2>Finanzdaten importieren</h2>
-    <p>Alle drei Finanzdateien können wahlweise als CSV oder XLSX importiert werden. Die Dateien werden nacheinander in dieselbe zentrale Datenwelt übernommen.</p>
+    <h2>Tabellen importieren</h2>
+    <p>Lade beliebig viele Excel- oder CSV-Dateien. Du siehst zuerst den Inhalt und legst danach selbst fest, welche Tabelle und welche Spalten übernommen werden.</p>
 
-    <div class="section-title">1 · Summen- und Saldenliste</div>
-    <label class="option" for="susaFileInput" style="cursor:pointer">SuSa (CSV oder XLSX) auswählen<input id="susaFileInput" type="file" accept=".csv,.xlsx,.txt" style="display:none"></label>
-    <div id="susaUploadStatus" class="card"><p>Noch keine SuSa importiert.</p></div>
+    <label class="action" for="flexibleFileInput" style="cursor:pointer"><span id="flexibleFileLabel">Excel-/CSV-Dateien hinzufügen</span><input id="flexibleFileInput" type="file" accept=".csv,.xlsx,.txt" multiple style="display:none"></label>
+    <p class="sub">Mehrfachauswahl ist möglich. Bei Excel-Dateien wird jedes Tabellenblatt einzeln angezeigt.</p>
+    <div id="importWorkspaceErrors"></div>
 
-    <div class="section-title">2 · HGB-Berichtsstruktur</div>
-    <label class="option" for="structureFileInput" style="cursor:pointer">7L-Berichtsstruktur (CSV oder XLSX) auswählen<input id="structureFileInput" type="file" accept=".csv,.xlsx,.txt" style="display:none"></label>
-    <div id="structureUploadStatus" class="card"><p>Noch keine Berichtsstruktur importiert.</p></div>
+    <div class="section-title">Geladene Tabellen</div>
+    <div id="importWorkspace"></div>
 
-    <div class="section-title">3 · Bestätigtes Mapping</div>
-    <label class="option" for="mappingFileInput" style="cursor:pointer">Bestätigtes Mapping (CSV oder XLSX) auswählen<input id="mappingFileInput" type="file" accept=".csv,.xlsx,.txt" style="display:none"></label>
-    <div id="mappingUploadStatus" class="card"><p>Noch kein bestätigtes Mapping importiert.</p></div>
+    <div class="section-title">Bereits übernommene Zieldaten</div>
+    <div class="card"><b>Summen- und Saldenliste</b><div id="susaUploadStatus"><p>Noch keine SuSa importiert.</p></div></div>
+    <div class="card"><b>HGB-Berichtsstruktur</b><div id="structureUploadStatus"><p>Noch keine Berichtsstruktur importiert.</p></div></div>
+    <div class="card"><b>Bestätigtes Mapping</b><div id="mappingUploadStatus"><p>Noch kein bestätigtes Mapping importiert.</p></div></div>
   </section>
   <section id="mapping" class="detail">
     <a class="close" href="#">× Schließen</a>

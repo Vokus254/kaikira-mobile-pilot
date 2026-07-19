@@ -107,40 +107,51 @@ assert.equal(context.window.projectData.mapping.validation.status, "VALID", cont
 assert.equal(context.window.projectData.balanceSheet.sumAktivaCurrent, 160_000_000);
 assert.equal(context.window.projectData.incomeStatement.jahresueberschussCurrent, 9_000_000);
 
-for (const inputId of ["susaFileInput","structureFileInput","mappingFileInput"]) {
-  const inputTag = html.match(new RegExp(`<input id="${inputId}"[^>]*>`))?.[0] || "";
-  assert.match(inputTag, /accept="[^"]*\.csv[^"]*\.xlsx[^"]*"/, `${inputId} must accept CSV and XLSX`);
-}
+const flexibleInputTag = html.match(/<input id="flexibleFileInput"[^>]*>/)?.[0] || "";
+assert.match(flexibleInputTag,/accept="[^"]*\.csv[^"]*\.xlsx[^"]*"/);
+assert.match(flexibleInputTag,/\bmultiple\b/,"flexible import must allow multiple files");
+assert.match(html,/Bei Excel-Dateien wird jedes Tabellenblatt einzeln angezeigt/);
 
-const uploadStatus = { innerHTML:"" };
-const uploadInput = {
-  dataset:{}, disabled:false, value:"selected", files:[],
-  addEventListener:(type,listener) => { if(type === "change") uploadInput.onChange = listener; },
-};
+const importWorkspaceElement = { innerHTML:"" };
+const importErrorsElement = { innerHTML:"" };
 const originalGetElementById = context.document.getElementById;
-context.document.getElementById = id => id === "testUploadInput" ? uploadInput : id === "testUploadStatus" ? uploadStatus : null;
-context.bindSpreadsheetImport("testUploadInput",() => { throw new Error("Fehlende SuSa-Spalten: konto"); },"testUploadStatus");
-uploadInput.files = [{ name:"ungueltige-susa.csv", text:async()=>"falsche;spalten" }];
-await uploadInput.onChange({ target:uploadInput });
-assert.match(uploadStatus.innerHTML,/Import nicht möglich/);
-assert.match(uploadStatus.innerHTML,/Fehlende SuSa-Spalten: konto/);
-assert.equal(uploadInput.disabled,false,"file input must be enabled after an import error");
-assert.equal(uploadInput.value,"","the same invalid file must be selectable again");
-
-const successStatus = { innerHTML:"" };
-const successInput = {
-  dataset:{}, disabled:false, value:"selected", files:[],
-  addEventListener:(type,listener) => { if(type === "change") successInput.onChange = listener; },
-};
-context.document.getElementById = id => id === "susaFileInput" ? successInput : id === "susaUploadStatus" ? successStatus : null;
+context.document.getElementById = id => id === "importWorkspace" ? importWorkspaceElement : id === "importWorkspaceErrors" ? importErrorsElement : null;
+context.window.importWorkspace = {items:[],nextId:1,errors:[]};
 context.resetProjectData();
-context.bindSpreadsheetImport("susaFileInput",context.importTrialBalance,"susaUploadStatus");
-successInput.files = [{ name:"neue-susa.csv", text:async()=>read("01_KAIKIRA_Test_SuSa_Industrie_AG_2026.csv") }];
-await successInput.onChange({ target:successInput });
-assert.match(successStatus.innerHTML,/neue-susa\.csv/);
-assert.match(successStatus.innerHTML,/VALID/);
-assert.equal(successInput.value,"","the same file must be selectable again");
-assert.equal(successInput.disabled,false,"file input must be enabled after a successful import");
+const workbookTables = await context.xlsxArrayBufferToTables(readArrayBuffer("03_KAIKIRA_Mapping_SuSa_zu_HGB.xlsx"));
+assert.deepEqual(Array.from(workbookTables,table=>table.name),["Mapping","Kontrollen"],"all Excel worksheets must be available");
+await context.addImportFiles([
+  {name:"susa.csv",text:async()=>read("01_KAIKIRA_Test_SuSa_Industrie_AG_2026.csv")},
+  {name:"structure.xlsx",arrayBuffer:async()=>readArrayBuffer("02_KAIKIRA_HGB_Berichtsstruktur_Bilanz_GuV.xlsx")},
+  {name:"mapping.xlsx",arrayBuffer:async()=>readArrayBuffer("03_KAIKIRA_Mapping_SuSa_zu_HGB.xlsx")},
+]);
+assert.equal(context.window.importWorkspace.items.length,4,"one CSV table and three Excel worksheets must be staged");
+assert.equal(context.window.importWorkspace.items.find(item=>item.fileName==="susa.csv").target,"trialBalance");
+assert.equal(context.window.importWorkspace.items.find(item=>item.fileName==="structure.xlsx").target,"reportStructure");
+assert.equal(context.window.importWorkspace.items.find(item=>item.sheetName==="Mapping").target,"mapping");
+assert.match(importWorkspaceElement.innerHTML,/Inhalt ansehen/);
+assert.match(importWorkspaceElement.innerHTML,/Spalten zuordnen/);
+assert.match(importWorkspaceElement.innerHTML,/Spaltennamen stehen in/);
+for (const target of ["trialBalance","reportStructure","mapping"]) {
+  const item=context.window.importWorkspace.items.find(entry=>entry.target===target);
+  context.importMappedTable(item.id);
+  assert.equal(item.state,"IMPORTED",item.message);
+}
+assert.equal(context.window.projectData.mapping.validation.status,"VALID",context.window.projectData.mapping.validation.errors.join("\n"));
+
+const titledLayout=context.detectImportLayout({rows:[["SuSa Export 2026"],["Konto","Bezeichnung","Saldo BJ","Saldo VJ"],["1000","Bank","100","90"]],headerRow:0});
+assert.deepEqual({...titledLayout},{target:"trialBalance",headerRow:1,required:3},"header rows below spreadsheet titles must be detected");
+
+const manualItem={id:99,fileName:"freie-spalten.csv",sheetName:"Tabelle 1",rows:[["Kto","Text","Ist","Vorjahr"],["1000","Bank","100","90"]],target:"",mapping:{},state:"READY",message:"",expanded:false};
+context.window.importWorkspace.items.push(manualItem);
+context.setImportTarget(99,"trialBalance");
+context.setImportColumn(99,"konto","0");
+context.setImportColumn(99,"bezeichnung","1");
+context.setImportColumn(99,"saldobj","2");
+context.setImportColumn(99,"saldovj","3");
+context.importMappedTable(99);
+assert.equal(manualItem.state,"IMPORTED");
+assert.deepEqual({...context.window.projectData.trialBalance.rows[0]},{account:"1000",name:"Bank",balanceCurrent:100,balancePrior:90});
 context.document.getElementById = originalGetElementById;
 
 const targetSections = ["report-review","notes-provisions","mgmt-business","mgmt-performance","mgmt-risks","bs-provisions","provision-account"];
