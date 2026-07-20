@@ -3817,10 +3817,12 @@ function index39ParameterValue(key,standard){
   if(kindEntry&&REPORT_DERIVE[kindEntry[1]])return REPORT_DERIVE[kindEntry[1]](pd)?.value||'';
   const normalized=normalizeHeader(key);
   if(normalized.includes('unternehmen')||normalized.includes('konzernname'))return pd.masterData.companyName||'';
-  if(normalized.includes('geschaftsjahr'))return pd.masterData.financialYear||'';
+  if(normalized.includes('geschaftsjahr')||normalized.includes('geschaeftsjahr'))return pd.masterData.financialYear||'';
   if(normalized.includes('folgejahr'))return pd.masterData.financialYear?Number(pd.masterData.financialYear)+1:'';
   return '';
 }
+
+function index39LabelKey(label){return normalizeHeader(String(label||'').replace(/^\s*(?:[IVXLCDM]+|[A-Z]|\d+)[.)]?\s+/i,''));}
 
 function index39StatementAmounts(){
   const pd=window.projectData, tbByAccount=new Map((pd.trialBalance.rows||[]).map(row=>[row.account,row])), result=new Map();
@@ -3832,13 +3834,64 @@ function index39StatementAmounts(){
   const byLabel=new Map();
   result.forEach(amount=>{
     const labels=Object.values(amount.row.levels||{}).filter(Boolean),factor=displayFactor(amount.row);
-    labels.forEach(label=>{
-      const key=normalizeHeader(label).replace(/^\d+/,'');if(!key)return;
-      const aggregate=byLabel.get(key)||{current:0,prior:0};
-      aggregate.current+=amount.current*factor;aggregate.prior+=amount.prior*factor;byLabel.set(key,aggregate);
+    const uniqueLabels=new Map(labels.map(label=>[index39LabelKey(label),label]));
+    uniqueLabels.forEach((label,key)=>{
+      if(!key)return;const mapKey=`${amount.row.statement}::${key}`,aggregate=byLabel.get(mapKey)||{current:0,prior:0};
+      aggregate.current+=amount.current*factor;aggregate.prior+=amount.prior*factor;byLabel.set(mapKey,aggregate);
     });
   });
   return byLabel;
+}
+
+function index39AppAmounts(){
+  const pd=window.projectData,tb=new Map((pd.trialBalance.rows||[]).map(row=>[row.account,row])),structure=new Map((pd.reportStructure.rows||[]).map(row=>[row.target7,row])),result=new Map();
+  (pd.mapping.rows||[]).forEach(mapping=>{const account=tb.get(mapping.account),structureRow=structure.get(mapping.target7);if(!account||!structureRow)return;const key=mapping.appTargetId||'UNMAPPED',current=result.get(key)||{current:0,prior:0};current.current+=(account.balanceCurrent||0)*displayFactor(structureRow);current.prior+=(account.balancePrior||0)*displayFactor(structureRow);result.set(key,current);});
+  return result;
+}
+
+function index39PairAdd(...pairs){return pairs.reduce((sum,pair)=>({current:sum.current+(pair?.current||0),prior:sum.prior+(pair?.prior||0)}),{current:0,prior:0});}
+function index39PairSub(left,right){return {current:(left?.current||0)-(right?.current||0),prior:(left?.prior||0)-(right?.prior||0)};}
+function index39Amount(amounts,statement,label){
+  const wanted=index39LabelKey(label);
+  return amounts.get(`${statement}::${wanted}`)||{current:0,prior:0};
+}
+
+function index39FinancialModel(){
+  const pd=window.projectData,amounts=index39StatementAmounts(),apps=index39AppAmounts(),zero={current:0,prior:0};
+  const bs=label=>index39Amount(amounts,'BS',label),pl=label=>index39Amount(amounts,'PL',label),app=id=>apps.get(id)||zero;
+  const balance={
+    immat_self:zero,immat_acquired:bs('Entgeltlich erworbene Rechte und Werte'),goodwill:zero,immat_prepay:zero,
+    land_buildings:bs('Grundstücke und Bauten'),machinery:bs('Technische Anlagen und Maschinen'),bga:bs('Andere Anlagen, Betriebs- und Geschäftsausstattung'),cip:bs('Geleistete Anzahlungen und Anlagen im Bau'),
+    shares_affiliates_fa:zero,loans_affiliates:bs('Ausleihungen'),participations:bs('Beteiligungen'),loans_participations:zero,securities_fa:zero,other_loans:zero,
+    inventories_raw:bs('Roh-, Hilfs- und Betriebsstoffe'),inventories_wip:bs('Unfertige Erzeugnisse'),inventories_finished:bs('Fertige Erzeugnisse und Waren'),inventories_prepay:bs('Geleistete Anzahlungen'),
+    trade_receivables:index39PairSub(app('UV_FORDERUNGEN'),bs('Forderungen gegen verbundene Unternehmen')),receivables_affiliates:bs('Forderungen gegen verbundene Unternehmen'),receivables_participations:zero,
+    other_assets:index39PairAdd(bs('Steuerforderungen'),bs('Übrige sonstige Vermögensgegenstände')),shares_affiliates_ca:zero,other_securities:zero,cash:app('UV_LIQUIDE'),
+    prepaid_expenses_asset:app('RAP_AKTIV'),deferred_tax_asset:zero,asset_offset_difference:zero,
+    share_capital:bs('Gezeichnetes Kapital'),capital_reserve:bs('Kapitalrücklage'),legal_reserve:bs('Gewinnrücklagen'),reserve_parent_shares:zero,statutory_reserves:zero,other_revenue_reserves:zero,
+    retained_earnings:bs('Gewinnvortrag'),net_income:bs('Jahresüberschuss'),pension_provisions:bs('Rückstellungen für Pensionen'),tax_provisions:bs('Steuerrückstellungen'),
+    other_provisions:index39PairAdd(bs('Personalrückstellungen'),bs('Gewährleistungsrückstellungen'),bs('Sonstige Rückstellungen')),
+    bonds:bs('Anleihen'),bank_liabilities:bs('Verbindlichkeiten gegenüber Kreditinstituten'),customer_advances:zero,trade_payables:bs('Verbindlichkeiten aus Lieferungen und Leistungen'),bill_liabilities:zero,
+    liabilities_affiliates:bs('Verbindlichkeiten gegenüber verbundenen Unternehmen'),liabilities_participations:zero,
+    other_liabilities:index39PairAdd(bs('Steuerverbindlichkeiten'),bs('Verbindlichkeiten im Rahmen der sozialen Sicherheit'),bs('Sonstige Verbindlichkeiten')),
+    deferred_income:app('RAP_PASSIV'),deferred_tax_liability:zero
+  };
+  const plInputs={
+    '1. Umsatzerlöse':app('UMSATZERLOESE'),'2. Erhöhung oder Verminderung des Bestands an fertigen und unfertigen Erzeugnissen':app('BESTANDSVERAENDERUNGEN'),
+    '3. Andere aktivierte Eigenleistungen':zero,'4. Sonstige betriebliche Erträge':app('SONSTIGE_ERTRAEGE'),
+    'a) Aufwendungen für Roh-, Hilfs- und Betriebsstoffe und für bezogene Waren':pl('Roh-, Hilfs- und Betriebsstoffe'),'b) Aufwendungen für bezogene Leistungen':index39PairSub(app('MATERIALAUFWAND'),pl('Roh-, Hilfs- und Betriebsstoffe')),
+    'a) Löhne und Gehälter':pl('Löhne und Gehälter'),'b) Soziale Abgaben und Aufwendungen für Altersversorgung und für Unterstützung':index39PairSub(app('PERSONALAUFWAND'),pl('Löhne und Gehälter')),
+    'a) Auf immaterielle Vermögensgegenstände des Anlagevermögens und Sachanlagen':app('ABSCHREIBUNGEN'),'b) Auf Vermögensgegenstände des Umlaufvermögens, soweit diese die üblichen Abschreibungen überschreiten':zero,
+    '8. Sonstige betriebliche Aufwendungen':app('SONSTIGE_AUFWENDUNGEN'),'9. Erträge aus Beteiligungen':zero,'10. Erträge aus anderen Wertpapieren und Ausleihungen des Finanzanlagevermögens':zero,
+    '11. Sonstige Zinsen und ähnliche Erträge':pl('Zinserträge'),'12. Abschreibungen auf Finanzanlagen und auf Wertpapiere des Umlaufvermögens':zero,
+    '13. Zinsen und ähnliche Aufwendungen':index39PairSub(app('FINANZERGEBNIS'),pl('Zinserträge')),'14. Steuern vom Einkommen und vom Ertrag':app('STEUERN'),'16. Sonstige Steuern':zero
+  };
+  const plResult=Object.values(plInputs).reduce((sum,pair)=>index39PairAdd(sum,pair),zero);
+  if(!balance.net_income.current&&plResult.current)balance.net_income={current:plResult.current,prior:plResult.prior};
+  const fixedAssets=index39PairAdd(balance.immat_self,balance.immat_acquired,balance.goodwill,balance.immat_prepay,balance.land_buildings,balance.machinery,balance.bga,balance.cip,balance.shares_affiliates_fa,balance.loans_affiliates,balance.participations,balance.loans_participations,balance.securities_fa,balance.other_loans);
+  const inventories=index39PairAdd(balance.inventories_raw,balance.inventories_wip,balance.inventories_finished,balance.inventories_prepay),receivables=index39PairAdd(balance.trade_receivables,balance.receivables_affiliates,balance.receivables_participations,balance.other_assets);
+  const provisions=index39PairAdd(balance.pension_provisions,balance.tax_provisions,balance.other_provisions),financialLiabilities=index39PairAdd(balance.bonds,balance.bank_liabilities,balance.customer_advances,balance.trade_payables,balance.bill_liabilities,balance.liabilities_affiliates,balance.liabilities_participations,balance.other_liabilities),liabilities=index39PairAdd(financialLiabilities,balance.deferred_income,balance.deferred_tax_liability);
+  const equity=index39PairAdd(balance.share_capital,balance.capital_reserve,balance.legal_reserve,balance.reserve_parent_shares,balance.statutory_reserves,balance.other_revenue_reserves,balance.retained_earnings,balance.net_income);
+  return {amounts,apps,balance,plInputs,plResult,fixedAssets,inventories,receivables,provisions,financialLiabilities,liabilities,equity};
 }
 
 function index39Number(value){
@@ -3879,18 +3932,146 @@ function index39RenderDataTables(root){
   if(aggregateBody)aggregateBody.innerHTML=[...aggregates.values()].sort((a,b)=>Math.abs(b.current)-Math.abs(a.current)).map((item,index)=>`<tr><td>${index+1}</td><td>${esc(item.area)}</td><td>${esc(item.label)}</td><td>${index39Number(item.current)}</td><td>${index39Number(item.prior)}</td><td>${index39Number(item.current-item.prior)}</td><td>${item.count}</td></tr>`).join('')||'<tr><td colspan="7">Noch keine aggregierten Gruppierungen vorhanden.</td></tr>';
 }
 
+function index39SetInput(input,value,automatic=true){
+  if(!input)return;input.value=index39Number(value);input.readOnly=automatic;input.title=automatic?'Automatisch aus SuSa, Mapping oder einer geprüften Überleitung':'';
+}
+function index39Read(row,col){return parseGermanAmount(row?.querySelector(`[data-col="${col}"]`)?.value||0);}
+function index39SetOutput(root,selector,label,col,value){root.querySelectorAll(`${selector}[data-label="${CSS.escape(label)}"][data-col="${col}"]`).forEach(node=>{node.textContent=index39Number(value);node.title='Berechnete Summe';});}
+
+function index39RefreshStatements(root,model){
+  root.querySelectorAll('.balance-input[data-key]').forEach(input=>{const pair=model.balance[input.dataset.key]||{current:0,prior:0};index39SetInput(input,Number(input.dataset.col)===0?pair.current:pair.prior);});
+  root.querySelectorAll('.pl-input[data-label]').forEach(input=>{const pair=model.plInputs[input.dataset.label]||{current:0,prior:0};index39SetInput(input,Number(input.dataset.col)===0?pair.current:pair.prior);});
+  [0,1].forEach(col=>{
+    const current=col===0?'current':'prior',b=key=>model.balance[key]?.[current]||0;
+    const imm=b('immat_self')+b('immat_acquired')+b('goodwill')+b('immat_prepay'),sach=b('land_buildings')+b('machinery')+b('bga')+b('cip');
+    const finanz=b('shares_affiliates_fa')+b('loans_affiliates')+b('participations')+b('loans_participations')+b('securities_fa')+b('other_loans'),anlage=imm+sach+finanz;
+    const inventories=b('inventories_raw')+b('inventories_wip')+b('inventories_finished')+b('inventories_prepay'),receivables=b('trade_receivables')+b('receivables_affiliates')+b('receivables_participations')+b('other_assets');
+    const securities=b('shares_affiliates_ca')+b('other_securities'),currentAssets=inventories+receivables+securities+b('cash');
+    const assets=anlage+currentAssets+b('prepaid_expenses_asset')+b('deferred_tax_asset')+b('asset_offset_difference');
+    const reserves=b('legal_reserve')+b('reserve_parent_shares')+b('statutory_reserves')+b('other_revenue_reserves');
+    const equity=b('share_capital')+b('capital_reserve')+reserves+b('retained_earnings')+b('net_income');
+    const provisions=b('pension_provisions')+b('tax_provisions')+b('other_provisions');
+    const liabilities=b('bonds')+b('bank_liabilities')+b('customer_advances')+b('trade_payables')+b('bill_liabilities')+b('liabilities_affiliates')+b('liabilities_participations')+b('other_liabilities');
+    const passiva=equity+provisions+liabilities+b('deferred_income')+b('deferred_tax_liability');
+    [['A. Anlagevermögen',anlage],['I. Immaterielle Vermögensgegenstände',imm],['Summe immaterielle Vermögensgegenstände',imm],['II. Sachanlagen',sach],['Summe Sachanlagen',sach],['III. Finanzanlagen',finanz],['Summe Finanzanlagen',finanz],['Summe Anlagevermögen',anlage],['B. Umlaufvermögen',currentAssets],['I. Vorräte',inventories],['Summe Vorräte',inventories],['II. Forderungen und sonstige Vermögensgegenstände',receivables],['Summe Forderungen und sonstige Vermögensgegenstände',receivables],['III. Wertpapiere',securities],['Summe Wertpapiere',securities],['Summe Umlaufvermögen',currentAssets],['Bilanzsumme Aktiva',assets],['A. Eigenkapital',equity],['III. Gewinnrücklagen',reserves],['Summe Gewinnrücklagen',reserves],['Summe Eigenkapital',equity],['Summe Rückstellungen',provisions],['C. Verbindlichkeiten',liabilities],['Summe Verbindlichkeiten',liabilities],['Bilanzsumme Passiva',passiva]].forEach(([label,value])=>index39SetOutput(root,'.balance-output',label,col,value));
+    const values=Object.fromEntries(Object.entries(model.plInputs).map(([label,pair])=>[label,pair[current]||0]));
+    const material=values['a) Aufwendungen für Roh-, Hilfs- und Betriebsstoffe und für bezogene Waren']+values['b) Aufwendungen für bezogene Leistungen'];
+    const personnel=values['a) Löhne und Gehälter']+values['b) Soziale Abgaben und Aufwendungen für Altersversorgung und für Unterstützung'];
+    const depreciation=values['a) Auf immaterielle Vermögensgegenstände des Anlagevermögens und Sachanlagen']+values['b) Auf Vermögensgegenstände des Umlaufvermögens, soweit diese die üblichen Abschreibungen überschreiten'];
+    const afterTax=Object.entries(values).filter(([label])=>!label.startsWith('16.')).reduce((sum,[,value])=>sum+value,0),netIncome=afterTax+(values['16. Sonstige Steuern']||0);
+    index39SetOutput(root,'.pl-output','Summe Materialaufwand',col,material);index39SetOutput(root,'.pl-output','Summe Personalaufwand',col,personnel);index39SetOutput(root,'.pl-output','Summe Abschreibungen',col,depreciation);index39SetOutput(root,'.pl-output','15. Ergebnis nach Steuern',col,afterTax);index39SetOutput(root,'.pl-output','17. Jahresüberschuss/Jahresfehlbetrag',col,netIncome);
+  });
+  const page=root.getElementById('page7');if(page&&!root.getElementById('index39-bs-check')){const note=document.createElement('div');note.id='index39-bs-check';note.className='hint';page.querySelector('.paper')?.insertBefore(note,page.querySelector('.statement-table-wrap'));}
+  const note=root.getElementById('index39-bs-check'),balanceDiff=(window.projectData.balanceSheet?.sumAktivaCurrent||0)-(window.projectData.balanceSheet?.sumPassivaCurrent||0),earningsDiff=(model.balance.net_income.current||0)-(model.plResult.current||0);if(note){note.textContent=Math.abs(balanceDiff)<.01&&Math.abs(earningsDiff)<.01?'KIRA-Prüfung bestanden: Bilanz ist ausgeglichen und der Jahresüberschuss stimmt mit der GuV überein.':`KIRA-Abstimmung offen: Bilanzdifferenz ${index39Number(balanceDiff)} · Differenz Jahresüberschuss Bilanz/GuV ${index39Number(earningsDiff)}.`;note.style.borderColor=Math.abs(balanceDiff)<.01&&Math.abs(earningsDiff)<.01?'#16a34a':'#dc2626';}
+}
+
+function index39FixedAssetFacts(){
+  const pd=window.projectData,tb=new Map((pd.trialBalance.rows||[]).map(row=>[row.account,row])),facts=new Map();
+  const fact=name=>{if(!facts.has(name))facts.set(name,{name,grossCurrent:0,grossPrior:0,depCurrent:0,depPrior:0,depreciationCurrent:0,depreciationPrior:0});return facts.get(name);};
+  (pd.mapping.rows||[]).filter(row=>normalizeHeader(row.mirrorType).includes('anlagenspiegel')).forEach(mapping=>{const account=tb.get(mapping.account);if(!account)return;const item=fact(mapping.mirrorLine||mapping.target7),isPL=mapping.statement==='PL',isDep=normalizeHeader(account.name).includes('kumulierteabschreibung');if(isPL){item.depreciationCurrent+=account.balanceCurrent||0;item.depreciationPrior+=account.balancePrior||0;}else if(isDep){item.depCurrent-=account.balanceCurrent||0;item.depPrior-=account.balancePrior||0;}else{item.grossCurrent+=account.balanceCurrent||0;item.grossPrior+=account.balancePrior||0;}});
+  const physical=[...facts.values()].filter(item=>!normalizeHeader(item.name).includes('immaterielle')&&item.grossCurrent);const physicalExpense=[...facts.values()].find(item=>normalizeHeader(item.name)==='sachanlagen');
+  if(physicalExpense?.depreciationCurrent){const base=physical.reduce((sum,item)=>sum+item.depCurrent,0)||1;physical.forEach(item=>{item.depreciationCurrent+=physicalExpense.depreciationCurrent*item.depCurrent/base;item.depreciationPrior+=physicalExpense.depreciationPrior*item.depPrior/(physical.reduce((sum,row)=>sum+row.depPrior,0)||1);});}
+  return [...facts.values()].filter(item=>item.grossCurrent||item.grossPrior);
+}
+
+function index39AssetSources(label,facts){
+  const key=normalizeHeader(label),matches=pattern=>facts.filter(item=>pattern.test(normalizeHeader(item.name)));
+  if(key.includes('entgeltlicherworbene'))return matches(/immaterielle/);if(key.includes('grundstuck'))return matches(/grundstuck/);if(key.includes('technischeanlagen'))return matches(/technischeanlagen/);
+  if(key.includes('andereanlagen'))return matches(/andereanlagen|fuhrpark|produktionswerkzeug/);if(key.includes('anlagenimbau'))return matches(/anlagenimbau/);
+  if(key.includes('beteiligungen'))return matches(/beteiligung/);if(key.includes('ausleihungen'))return matches(/ausleihung/);return [];
+}
+
+function index39RefreshAssets(root){
+  const table=root.getElementById('assetTable'),facts=index39FixedAssetFacts();if(!table)return;
+  const stored=window.projectData.reports?.index39Inputs||{},movementCols=[1,2,3,4,7,8,9];
+  table.querySelectorAll('tr.asset-item').forEach(row=>{const label=row.cells[0]?.textContent||'',sources=index39AssetSources(label,facts);if(!sources.length)return;
+    const data=sources.reduce((sum,item)=>({grossCurrent:sum.grossCurrent+item.grossCurrent,grossPrior:sum.grossPrior+item.grossPrior,depCurrent:sum.depCurrent+item.depCurrent,depPrior:sum.depPrior+item.depPrior,depreciationCurrent:sum.depreciationCurrent+item.depreciationCurrent}),{grossCurrent:0,grossPrior:0,depCurrent:0,depPrior:0,depreciationCurrent:0});
+    const rowId=row.querySelector('[data-row]')?.dataset.row,bases={0:data.grossPrior,1:Math.max(data.grossCurrent-data.grossPrior,0),2:Math.max(data.grossPrior-data.grossCurrent,0),3:0,4:0,6:data.depPrior,7:data.depreciationCurrent,8:data.depPrior+data.depreciationCurrent-data.depCurrent,9:0};
+    Object.entries(bases).forEach(([col,value])=>{const input=row.querySelector(`.asset-input[data-col="${col}"]`),saved=stored[`page5::${rowId}::${col}`];index39SetInput(input,saved!==undefined&&movementCols.includes(Number(col))?parseGermanAmount(saved):value,!movementCols.includes(Number(col)));});index39RecalculateMirrorRow(row.querySelector('.asset-input'));
+  });
+  const rows=[...table.querySelectorAll('tbody tr')],rowId=row=>row.querySelector('[data-row]')?.dataset.row;
+  let details=[];rows.forEach(row=>{if(row.classList.contains('asset-group2'))details=[];else if(row.classList.contains('asset-item'))details.push(row);else if(row.classList.contains('asset-subtotal')){[0,1,2,3,4,6,7,8,9].forEach(col=>index39SetInput(row.querySelector(`.asset-input[data-col="${col}"]`),details.reduce((sum,item)=>sum+index39Read(item,col),0)));index39RecalculateMirrorRow(row.querySelector('.asset-input'));details=[];}});
+  const subtotalRows=rows.filter(row=>row.classList.contains('asset-subtotal')),total=rows.find(row=>row.classList.contains('asset-total'));if(total){[0,1,2,3,4,6,7,8,9].forEach(col=>index39SetInput(total.querySelector(`.asset-input[data-col="${col}"]`),subtotalRows.reduce((sum,row)=>sum+index39Read(row,col),0)));index39RecalculateMirrorRow(total.querySelector('.asset-input'));}
+}
+
+function index39ProvisionSource(label,rows){const key=normalizeHeader(label),aliases=key.includes('pension')?/pension/:key.includes('steuer')?/steuer/:key.includes('personal')?/personal/:key.includes('gewahrleistung')?/gewahrleistung/:key==='sonstigeruckstellungen'?/sonstige/:null;return aliases?rows.filter(row=>aliases.test(normalizeHeader(row.name))):[];}
+function index39RefreshProvisions(root){
+  const table=root.getElementById('provisionTable');if(!table)return;const rows=(window.projectData.mirrors.provisions.rows||[]).filter(row=>row.source===SRC.MAPPING),stored=window.projectData.reports?.index39Inputs||{},totals=[0,0,0,0,0,0];
+  table.querySelectorAll('tr.provision-item').forEach(row=>{const sources=index39ProvisionSource(row.cells[0]?.textContent||'',rows);if(!sources.length)return;const opening=sources.reduce((sum,item)=>sum+(item.balanceStart||0),0),closing=sources.reduce((sum,item)=>sum+(item.balanceEnd||0),0),rowId=row.querySelector('[data-row]')?.dataset.row,bases=[opening,Math.max(opening-closing,0),0,Math.max(closing-opening,0),0];bases.forEach((value,col)=>{const saved=stored[`page6::${rowId}::${col}`];index39SetInput(row.querySelector(`.provision-input[data-col="${col}"]`),saved!==undefined&&col>0?parseGermanAmount(saved):value,col===0);});index39RecalculateMirrorRow(row.querySelector('.provision-input'));for(let col=0;col<5;col++)totals[col]+=index39Read(row,col);totals[5]+=opening-index39Read(row,1)-index39Read(row,2)+index39Read(row,3)+index39Read(row,4);});
+  totals.forEach((value,col)=>{const output=table.querySelector(`.provision-total-output[data-col="${col}"]`);if(output)output.textContent=index39Number(value);});
+}
+
+function index39RefreshCashFlow(root,model){
+  const table=root.getElementById('cfTable');if(!table)return {operating:{current:0,prior:0},investing:{current:0,prior:0},financing:{current:0,prior:0},fundEnd:model.balance.cash};
+  const fixed=index39FixedAssetFacts();
+  const grossPair=predicate=>({current:fixed.filter(predicate).reduce((sum,row)=>sum+row.grossCurrent,0),prior:fixed.filter(predicate).reduce((sum,row)=>sum+row.grossPrior,0)}),kind=row=>normalizeHeader(row.name);
+  const immaterialGross=grossPair(row=>kind(row).includes('immaterielle')),financialGross=grossPair(row=>/beteiligung|ausleihung|wertpapier/.test(kind(row))),tangibleGross=grossPair(row=>!kind(row).includes('immaterielle')&&!/beteiligung|ausleihung|wertpapier/.test(kind(row)));
+  const grossChange=pair=>pair.current-pair.prior,shareChange=model.balance.share_capital.current-model.balance.share_capital.prior,capitalReserveChange=model.balance.capital_reserve.current-model.balance.capital_reserve.prior;
+  const reserveChange=model.balance.legal_reserve.current-model.balance.legal_reserve.prior,retainedChange=model.balance.retained_earnings.current-model.balance.retained_earnings.prior;
+  const dividend=Math.max(0,model.balance.net_income.prior-Math.max(0,reserveChange)-Math.max(0,retainedChange));
+  const bankChange=model.balance.bank_liabilities.current-model.balance.bank_liabilities.prior;
+  const pair=(current,prior=0)=>({current,prior});
+  const inputs={
+    'Periodenergebnis':model.plResult,'+ Abschreibungen auf Gegenstände des Anlagevermögens':{current:-(model.apps.get('ABSCHREIBUNGEN')?.current||0),prior:-(model.apps.get('ABSCHREIBUNGEN')?.prior||0)},
+    '- Zuschreibungen auf Gegenstände des Anlagevermögens':pair(0,0),'+/- Zunahme/Abnahme der Rückstellungen':pair(model.provisions.current-model.provisions.prior,0),
+    '-/+ Gewinn/Verlust aus dem Abgang von Anlagevermögen':pair(0,0),'-/+ Zunahme/Abnahme der Vorräte':pair(model.inventories.current-model.inventories.prior,0),
+    '-/+ Zunahme/Abnahme der Forderungen und sonstigen Vermögensgegenstände':pair(model.receivables.current-model.receivables.prior,0),
+    '+/- Zunahme/Abnahme der Verbindlichkeiten und sonstigen Passiva':pair((model.liabilities.current-model.liabilities.prior)-bankChange,0),
+    '+/- Sonstige zahlungsunwirksame Aufwendungen/Erträge':pair(0,0),'+ Einzahlungen aus Abgängen von Sachanlagen':pair(Math.max(-grossChange(tangibleGross),0),0),
+    '- Auszahlungen für Investitionen in Sachanlagen':pair(Math.max(grossChange(tangibleGross),0),0),'+ Einzahlungen aus Abgängen von immateriellen Vermögenswerten':pair(Math.max(-grossChange(immaterialGross),0),0),
+    '- Auszahlungen für Investitionen in immaterielle Vermögenswerte':pair(Math.max(grossChange(immaterialGross),0),0),'+ Einzahlungen aus Abgängen von Finanzanlagen':pair(Math.max(-grossChange(financialGross),0),0),'- Auszahlungen für Investitionen in Finanzanlagen':pair(Math.max(grossChange(financialGross),0),0),
+    '+ Einzahlungen aus dem Verkauf konsolidierter Unternehmen':pair(0,0),'- Auszahlungen aus dem Erwerb konsolidierter Unternehmen':pair(0,0),
+    '+ Einzahlungen aus Eigenkapitalzuführungen':pair(Math.max(shareChange+capitalReserveChange,0),0),'- Auszahlungen an Gesellschafter / Dividenden':pair(dividend,0),
+    '+ Einzahlungen aus der Aufnahme von Finanzkrediten':pair(Math.max(bankChange,0),0),'- Auszahlungen aus der Tilgung von Finanzkrediten':pair(Math.max(-bankChange,0),0),
+    '- Tilgungsanteile aus Leasingverbindlichkeiten':pair(0,0),'+/- Wechselkurs-, konsolidierungs- und sonstige Änderungen des Finanzmittelfonds':pair(0,0),
+    '+ Finanzmittelfonds am Anfang der Periode':pair(model.balance.cash.prior,0)
+  };
+  const calculate=period=>{const v=label=>inputs[label]?.[period]||0;
+    const operating=v('Periodenergebnis')+v('+ Abschreibungen auf Gegenstände des Anlagevermögens')-v('- Zuschreibungen auf Gegenstände des Anlagevermögens')+v('+/- Zunahme/Abnahme der Rückstellungen')-v('-/+ Gewinn/Verlust aus dem Abgang von Anlagevermögen')-v('-/+ Zunahme/Abnahme der Vorräte')-v('-/+ Zunahme/Abnahme der Forderungen und sonstigen Vermögensgegenstände')+v('+/- Zunahme/Abnahme der Verbindlichkeiten und sonstigen Passiva')+v('+/- Sonstige zahlungsunwirksame Aufwendungen/Erträge');
+    const investing=v('+ Einzahlungen aus Abgängen von Sachanlagen')-v('- Auszahlungen für Investitionen in Sachanlagen')+v('+ Einzahlungen aus Abgängen von immateriellen Vermögenswerten')-v('- Auszahlungen für Investitionen in immaterielle Vermögenswerte')+v('+ Einzahlungen aus Abgängen von Finanzanlagen')-v('- Auszahlungen für Investitionen in Finanzanlagen')+v('+ Einzahlungen aus dem Verkauf konsolidierter Unternehmen')-v('- Auszahlungen aus dem Erwerb konsolidierter Unternehmen');
+    const financing=v('+ Einzahlungen aus Eigenkapitalzuführungen')-v('- Auszahlungen an Gesellschafter / Dividenden')+v('+ Einzahlungen aus der Aufnahme von Finanzkrediten')-v('- Auszahlungen aus der Tilgung von Finanzkrediten')-v('- Tilgungsanteile aus Leasingverbindlichkeiten');return {operating,investing,financing,change:operating+investing+financing};};
+  const preCurrent=calculate('current'),prePrior=calculate('prior');inputs['+/- Wechselkurs-, konsolidierungs- und sonstige Änderungen des Finanzmittelfonds'].current=model.balance.cash.current-model.balance.cash.prior-preCurrent.change;inputs['+/- Wechselkurs-, konsolidierungs- und sonstige Änderungen des Finanzmittelfonds'].prior=model.balance.cash.prior-prePrior.change;
+  table.querySelectorAll('.cf-input[data-label]').forEach(input=>{const value=inputs[input.dataset.label]?.[Number(input.dataset.col)===0?'current':'prior']||0;index39SetInput(input,value);});
+  const current=calculate('current'),prior=calculate('prior'),otherChanges=inputs['+/- Wechselkurs-, konsolidierungs- und sonstige Änderungen des Finanzmittelfonds'],fundStart=inputs['+ Finanzmittelfonds am Anfang der Periode'];
+  const result={operating:{current:current.operating,prior:prior.operating},investing:{current:current.investing,prior:prior.investing},financing:{current:current.financing,prior:prior.financing},change:{current:current.change,prior:prior.change},otherChanges,fundStart,fundEnd:{current:current.change+otherChanges.current+fundStart.current,prior:prior.change+otherChanges.prior+fundStart.prior}};
+  [0,1].forEach(col=>{const period=col===0?'current':'prior';index39SetOutput(root,'.cf-output','Cashflow aus laufender Geschäftstätigkeit',col,result.operating[period]);index39SetOutput(root,'.cf-output','Cashflow aus Investitionstätigkeit',col,result.investing[period]);index39SetOutput(root,'.cf-output','Cashflow aus Finanzierungstätigkeit',col,result.financing[period]);index39SetOutput(root,'.cf-output','Zahlungswirksame Veränderung des Finanzmittelfonds',col,result.change[period]);index39SetOutput(root,'.cf-output','Finanzmittelfonds am Ende der Periode',col,result.fundEnd[period]);});
+  const page=root.getElementById('page9'),noticeId='index39-cf-notice';if(page&&!root.getElementById(noticeId)){const notice=document.createElement('div');notice.id=noticeId;notice.className='hint';notice.textContent='KIRA-Überleitung: Ableitbare Werte stammen aus Bilanz, GuV und Spiegeln. Der verbleibende Abstimmungsbetrag wird transparent in „sonstige Änderungen des Finanzmittelfonds“ ausgewiesen; für eine originäre KFR sind zusätzliche Zahlungsstromdaten erforderlich.';page.querySelector('.paper')?.insertBefore(notice,page.querySelector('.statement-table-wrap'));}
+  return result;
+}
+
+function index39RefreshEquity(root,model){
+  const table=root.getElementById('eqTable');if(!table)return;const b=model.balance,pair=key=>b[key]||{current:0,prior:0};
+  const opening=[pair('share_capital').prior,pair('capital_reserve').prior,pair('legal_reserve').prior,pair('retained_earnings').prior,pair('net_income').prior,0];
+  const reserveChange=pair('legal_reserve').current-pair('legal_reserve').prior,retainedChange=pair('retained_earnings').current-pair('retained_earnings').prior,dividend=Math.max(0,pair('net_income').prior-Math.max(0,reserveChange)-Math.max(0,retainedChange));
+  const rows={1:opening,2:[pair('share_capital').current-pair('share_capital').prior,0,0,0,0,0],3:[0,pair('capital_reserve').current-pair('capital_reserve').prior,0,0,0,0],4:[0,0,reserveChange,0,-reserveChange,0],5:[0,0,0,0,-dividend,0],6:[0,0,0,retainedChange,-retainedChange,0],7:[0,0,0,0,pair('net_income').current,0],8:[0,0,0,0,0,0]};
+  for(let row=1;row<=8;row++){let total=0;for(let col=0;col<6;col++){const value=rows[row][col]||0;index39SetInput(table.querySelector(`.eq-input[data-row="${row}"][data-col="${col}"]`),value);total+=value;}const out=table.querySelector(`.eq-total-output[data-row="${row}"]`);if(out)out.textContent=index39Number(total);}
+  let closingTotal=0;for(let col=0;col<6;col++){const value=Object.values(rows).reduce((sum,row)=>sum+(row[col]||0),0),out=table.querySelector(`.eq-output[data-row="9"][data-col="${col}"]`);if(out)out.textContent=index39Number(value);closingTotal+=value;}const total=table.querySelector('.eq-total-output[data-row="9"]');if(total)total.textContent=index39Number(closingTotal);
+}
+
+function index39FinancialFacts(model,cashflow){return {revenueCurrent:model.plInputs['1. Umsatzerlöse'].current,revenuePrior:model.plInputs['1. Umsatzerlöse'].prior,netIncomeCurrent:model.plResult.current,netIncomePrior:model.plResult.prior,balanceCurrent:window.projectData.balanceSheet?.sumAktivaCurrent||0,balancePrior:window.projectData.balanceSheet?.sumAktivaPrior||0,equityCurrent:model.equity.current,equityPrior:model.equity.prior,provisionsCurrent:model.provisions.current,provisionsPrior:model.provisions.prior,liabilitiesCurrent:model.financialLiabilities.current,liabilitiesPrior:model.financialLiabilities.prior,fixedAssetsCurrent:model.fixedAssets.current,fixedAssetsPrior:model.fixedAssets.prior,cashCurrent:model.balance.cash.current,cashPrior:model.balance.cash.prior,depreciationCurrent:-(model.apps.get('ABSCHREIBUNGEN')?.current||0),operatingCashflow:cashflow.operating.current,investingCashflow:cashflow.investing.current,financingCashflow:cashflow.financing.current,fundEnd:cashflow.fundEnd.current};}
+
+function index39FinancialPlaceholder(node,facts){
+  const label=normalizeHeader(node.dataset.placeholder||node.dataset.key||''),context=normalizeHeader(node.closest('p')?.textContent||'');const prior=label.includes('vorjahr');
+  if(context.includes('dasergebnis')&&label.includes('umsatzerlosevorjahr'))return facts.netIncomeCurrent;
+  if(label.includes('umsatzerlose'))return prior?facts.revenuePrior:facts.revenueCurrent;if(label.includes('jahresuberschuss')||label.includes('jahresfehlbetrag')||label.includes('periodenergebnis'))return prior?facts.netIncomePrior:facts.netIncomeCurrent;
+  if(label.includes('bilanzsumme'))return prior?facts.balancePrior:facts.balanceCurrent;if(context.includes('eigenkapital')&&/betrag|wert/.test(label))return prior?facts.equityPrior:facts.equityCurrent;
+  if(context.includes('ruckstellungen')&&/betrag|wert/.test(label))return prior?facts.provisionsPrior:facts.provisionsCurrent;if(context.includes('verbindlichkeiten')&&/betrag|wert/.test(label))return prior?facts.liabilitiesPrior:facts.liabilitiesCurrent;
+  if(context.includes('anlagevermogen')&&context.includes('buchwert')&&/betrag|wert/.test(label))return prior?facts.fixedAssetsPrior:facts.fixedAssetsCurrent;if(context.includes('abschreibungen')&&/betrag|wert/.test(label))return facts.depreciationCurrent;
+  if(context.includes('cashflowauslaufender')||context.includes('cashflowausbetrieblicher'))return facts.operatingCashflow;if(context.includes('cashflowausinvestition'))return facts.investingCashflow;if(context.includes('cashflowausfinanzierung'))return facts.financingCashflow;
+  if(context.includes('finanzmittelfonds')||context.includes('zahlungsmittelundzahlungsmittelaquivalente'))return facts.fundEnd;return null;
+}
+
 function bindIndex39Factory(root){
   root.querySelector('.factory-close').addEventListener('click',closeReportingFactory);
   root.querySelectorAll('.tab').forEach(button=>button.addEventListener('click',()=>showIndex39Page(button.dataset.page)));
-  root.querySelectorAll('#assetDemo,#assetClear,#provisionDemo,#provisionClear,#susaDemo,#susaClear').forEach(button=>{button.hidden=true;});
+  root.querySelectorAll('#assetDemo,#assetClear,#provisionDemo,#provisionClear,#balanceDemo,#balanceClear,#plDemo,#plClear,#cfDemo,#cfClear,#eqDemo,#eqClear,#susaDemo,#susaClear').forEach(button=>{button.hidden=true;});
   root.querySelectorAll('.asset-input,.provision-input').forEach(input=>{
     input.value=index39StoredInput(input);
     input.addEventListener('change',()=>{
       window.projectData.reports.index39Inputs ||= {};
       window.projectData.reports.index39Inputs[`${input.closest('.page').id}::${input.dataset.row}::${input.dataset.col}`]=input.value;
-      saveProjectData();index39RecalculateMirrorRow(input);
+      saveProjectData();if(input.classList.contains('asset-input'))index39RefreshAssets(root);else index39RefreshProvisions(root);refreshIndex39Factory();
     });
-    index39RecalculateMirrorRow(input);
   });
   root.getElementById('susaSearch')?.addEventListener('input',()=>index39RenderDataTables(root));
   root.getElementById('mappingSearch')?.addEventListener('input',()=>index39RenderDataTables(root));
@@ -3918,14 +4099,9 @@ function refreshIndex39Factory(){
     if(!value)return; const matching=[...select.options].find(option=>option.value===String(value));
     if(matching)select.value=matching.value;else{const custom=root.querySelector(`.custom-input[data-id="${select.dataset.id}"]`);if(custom){custom.hidden=false;custom.value=value;}}
   });
-  const amounts=index39StatementAmounts();
-  root.querySelectorAll('.balance-input[data-label],.pl-input[data-label],.balance-output[data-label],.pl-output[data-label]').forEach(node=>{
-    const key=normalizeHeader(node.dataset.label).replace(/^\d+/,'');
-    const amount=amounts.get(key)||[...amounts.entries()].find(([label])=>label.endsWith(key)||key.endsWith(label))?.[1];
-    if(!amount)return;const value=Number(node.dataset.col)==0?amount.current:amount.prior;
-    if(node.matches('input')){node.value=value;node.readOnly=true;}else node.textContent=index39Number(value);
-    node.title='Automatisch aus SuSa und bestätigtem Mapping';
-  });
+  const model=index39FinancialModel();index39RefreshStatements(root,model);index39RefreshAssets(root);index39RefreshProvisions(root);const cashflow=index39RefreshCashFlow(root,model);index39RefreshEquity(root,model);const facts=index39FinancialFacts(model,cashflow);
+  root.querySelectorAll('#page1 .placeholder[data-placeholder],#page3 .placeholder[data-placeholder]').forEach(node=>{const value=index39FinancialPlaceholder(node,facts);if(value===null)return;node.textContent=index39Number(value);node.classList.add('filled');node.title='Automatisch aus Bilanz, GuV, Spiegel oder Kapitalflussrechnung';});
+  window.projectData.reports.index39Calculated=facts;
   index39RenderDataTables(root);
 }
 
