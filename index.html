@@ -161,6 +161,13 @@ details.option[open] > summary:after{content:"−"}
   width:100%;padding:12px;border-radius:12px;background:#0d0f15;color:#fff;
   border:1px solid rgba(255,255,255,.12);font:inherit
 }
+.task-workspace-grid{display:grid;gap:12px}
+.task-entry{padding:13px;border-radius:14px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08)}
+.task-entry-head{display:flex;justify-content:space-between;gap:10px;margin-bottom:6px}.task-entry-head span{color:#9aa0ad;font-size:11px}
+.task-entry-value{white-space:pre-wrap;line-height:1.45}.task-workspace-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.task-workspace-actions .action,.task-workspace-actions .ghost{margin:0}.workspace-monitor{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:560px){.task-workspace-actions,.workspace-monitor{grid-template-columns:1fr}}
+#index39Factory{padding-top:0}
 .live-empty{padding:20px;border:1px dashed rgba(255,255,255,.14);border-radius:16px;color:#9ba1ac}
 .live-team-row{
   display:flex;justify-content:space-between;gap:12px;padding:14px 0;
@@ -969,7 +976,7 @@ function defaultProjectData(){
     incomeStatement:null,
     mirrors:defaultMirrors(),
     parameters:{},
-    reports:{ hgb:{}, ifrs:{} }
+    reports:{ hgb:{}, ifrs:{}, index39Inputs:{}, index39Parameters:{} }
   };
 }
 
@@ -2075,6 +2082,7 @@ async function loadMyDay(){
           <span class="live-pill">Priorität: ${esc(t.priority)}</span>
           ${t.blocks_release ? '<span class="live-pill">Blockiert Freigabe</span>' : ''}
         </div>
+        <button class="action" type="button" onclick="openTaskWorkspace('${esc(t.id)}')">Aufgabe bearbeiten</button>
         <select onchange="updateTaskStatus('${esc(t.id)}', this.value)">
           <option value="not_started" ${t.status==='not_started'?'selected':''}>Noch nicht gestartet</option>
           <option value="in_progress" ${t.status==='in_progress'?'selected':''}>In Bearbeitung</option>
@@ -2090,6 +2098,7 @@ async function loadMyDay(){
 
 async function updateTaskStatus(taskId, status){
   try {
+    if(status==='done')await validateTaskCompletion(taskId);
     await apiFetch('/rest/v1/tasks?id=eq.' + encodeURIComponent(taskId), {
       method: 'PATCH',
       headers: { 'Prefer': 'return=minimal' },
@@ -2101,6 +2110,24 @@ async function updateTaskStatus(taskId, status){
     alert('Status konnte nicht geändert werden: ' + err.message);
     await loadMyDay();
   }
+}
+
+window.setWorkspaceTaskStatus=async function(status){
+  const task=window.currentTaskWorkspace?.task;if(!task)return;
+  await updateTaskStatus(task.id,status);
+  await openTaskWorkspace(task.id);
+};
+
+async function validateTaskCompletion(taskId){
+  const [entries,subtasks]=await Promise.all([
+    apiFetch('/rest/v1/task_entries?task_id=eq.'+encodeURIComponent(taskId)+'&select=entry_type',{method:'GET',headers:{'Accept':'application/json'}}),
+    apiFetch('/rest/v1/tasks?parent_task_id=eq.'+encodeURIComponent(taskId)+'&select=id,status',{method:'GET',headers:{'Accept':'application/json'}})
+  ]);
+  const hasResult=(entries||[]).some(entry=>['answer','number','evidence'].includes(entry.entry_type));
+  const openSubtasks=(subtasks||[]).filter(task=>task.status!=='done').length;
+  if(!hasResult)throw new Error('KIRA: Vor dem Abschluss muss mindestens eine Antwort, Zahl oder ein Nachweis gespeichert werden.');
+  if(openSubtasks)throw new Error(`KIRA: ${openSubtasks} Unteraufgabe(n) sind noch nicht erledigt.`);
+  return true;
 }
 
 async function loadTeam(){
@@ -2349,6 +2376,7 @@ window.saveAdminTask = async function(){
   };
 
   try {
+    if(payload.status==='done')await validateTaskCompletion(task.id);
     await apiFetch(
       '/rest/v1/tasks?id=eq.' + encodeURIComponent(task.id),
       {
@@ -2528,8 +2556,8 @@ window.openWorkflowStep = async function(stepId, stepNo, stepTitle){
           ? `<a class="action" href="#workpaper-anlagenspiegel">Anlagenspiegel-Workpaper öffnen</a><button class="ghost" type="button" onclick="openIntegratedReport('page5')">Zugehörigen Berichtsteil öffnen</button>`
           : ''}
         ${window.kaikiraIsAdmin
-          ? `<button type="button" class="ghost" onclick="openAdminTask('${esc(t.id)}')">Aufgabe steuern</button>`
-          : `<select onchange="updateTaskStatus('${esc(t.id)}', this.value)">
+          ? `<button type="button" class="action" onclick="openTaskWorkspace('${esc(t.id)}')">Arbeitsergebnisse ansehen</button><button type="button" class="ghost" onclick="openAdminTask('${esc(t.id)}')">Aufgabe steuern</button>`
+          : `<button type="button" class="action" onclick="openTaskWorkspace('${esc(t.id)}')">Aufgabe bearbeiten</button><select onchange="updateTaskStatus('${esc(t.id)}', this.value)">
               <option value="not_started" ${t.status==='not_started'?'selected':''}>Noch nicht gestartet</option>
               <option value="in_progress" ${t.status==='in_progress'?'selected':''}>In Bearbeitung</option>
               <option value="blocked" ${t.status==='blocked'?'selected':''}>Blockiert</option>
@@ -2543,6 +2571,109 @@ window.openWorkflowStep = async function(stepId, stepNo, stepTitle){
     summaryEl.textContent = 'Fehler beim Laden';
     listEl.innerHTML = '<div class="live-empty">Fehler: ' + esc(err.message) + '</div>';
   }
+};
+
+window.currentTaskWorkspace = null;
+
+function taskEntryTypeLabel(type){
+  return {answer:'Antwort',comment:'Kommentar',number:'Zahl',evidence:'Nachweis'}[type] || type;
+}
+
+function taskWorkspaceMonitor(task,entries,subtasks){
+  const resultCount=entries.filter(entry=>['answer','number','evidence'].includes(entry.entry_type)).length;
+  const comments=entries.filter(entry=>entry.entry_type==='comment').length;
+  const openSubtasks=subtasks.filter(subtask=>subtask.status!=='done').length;
+  const overdue=task.status!=='done'&&task.due_date&&task.due_date<new Date().toISOString().slice(0,10);
+  return `<div class="workspace-monitor">
+    <div class="card"><div class="eyebrow">KAI · Workflow-Monitor</div><b>${overdue?'Frist überschritten':(task.due_date?'Frist '+esc(task.due_date):'Keine Frist')}</b><p>${subtasks.length} Unteraufgaben · ${openSubtasks} offen · ${comments} Kommentare</p></div>
+    <div class="card"><div class="eyebrow">KIRA · Vollständigkeitsprüfung</div><b>${resultCount?'Arbeitsergebnis vorhanden':'Arbeitsergebnis fehlt'}</b><p>${resultCount} Antworten/Zahlen/Nachweise${openSubtasks?' · Abschluss wegen offener Unteraufgaben gesperrt':' · Unteraufgaben abgeschlossen'}</p></div>
+  </div>`;
+}
+
+window.openTaskWorkspace = async function(taskId){
+  window.location.hash='task-workspace';
+  const title=document.getElementById('taskWorkspaceTitle'), meta=document.getElementById('taskWorkspaceMeta');
+  const monitor=document.getElementById('taskWorkspaceMonitor'), entriesEl=document.getElementById('taskWorkspaceEntries');
+  const subtasksEl=document.getElementById('taskWorkspaceSubtasks'), message=document.getElementById('taskWorkspaceMessage');
+  title.textContent='Aufgabe wird geladen …'; meta.innerHTML=''; monitor.innerHTML=''; entriesEl.innerHTML='<div class="live-empty">Lade Arbeitsergebnisse …</div>';
+  subtasksEl.innerHTML='<div class="live-empty">Lade Unteraufgaben …</div>'; message.textContent='';
+  try{
+    const taskRows=await apiFetch('/rest/v1/tasks?id=eq.'+encodeURIComponent(taskId)+'&select=id,project_id,workflow_step_id,parent_task_id,measure_no,title,description,assigned_to,due_date,status,priority,blocks_release,created_by',{method:'GET',headers:{'Accept':'application/json'}});
+    const task=taskRows?.[0]; if(!task)throw new Error('Aufgabe wurde nicht gefunden.');
+    const [entries,subtasks]=await Promise.all([
+      apiFetch('/rest/v1/task_entries?task_id=eq.'+encodeURIComponent(taskId)+'&select=id,entry_type,label,text_value,numeric_value,unit,object_path,file_name,mime_type,created_by,created_at&order=created_at.desc',{method:'GET',headers:{'Accept':'application/json'}}),
+      apiFetch('/rest/v1/tasks?parent_task_id=eq.'+encodeURIComponent(taskId)+'&select=id,title,description,due_date,status,priority,measure_no,assigned_to&order=created_at.asc',{method:'GET',headers:{'Accept':'application/json'}})
+    ]);
+    window.currentTaskWorkspace={task,entries:entries||[],subtasks:subtasks||[]};
+    title.textContent=task.title; meta.innerHTML=`<p>${esc(task.description||'')}</p><div class="live-task-meta"><span class="live-pill">Maßnahme ${esc(task.measure_no||'—')}</span><span class="live-pill">Status ${esc(task.status)}</span><span class="live-pill">Frist ${esc(task.due_date||'—')}</span>${task.blocks_release?'<span class="live-pill">Blockiert Freigabe</span>':''}</div>`;
+    monitor.innerHTML=taskWorkspaceMonitor(task,entries||[],subtasks||[]);
+    const canEdit=!window.kaikiraIsAdmin&&task.assigned_to===currentUser.id;
+    document.getElementById('taskWorkspaceEditor').style.display=canEdit?'block':'none';
+    document.getElementById('taskWorkspaceSubtaskForm').style.display=canEdit?'block':'none';
+    entriesEl.innerHTML=(entries||[]).length?(entries||[]).map(entry=>`<div class="task-entry"><div class="task-entry-head"><b>${esc(taskEntryTypeLabel(entry.entry_type))}${entry.label?' · '+esc(entry.label):''}</b><span>${esc(new Date(entry.created_at).toLocaleString('de-DE'))}</span></div><div class="task-entry-value">${entry.entry_type==='number'?esc(Number(entry.numeric_value).toLocaleString('de-DE')+(entry.unit?' '+entry.unit:'')):(entry.entry_type==='evidence'?`<button class="ghost" type="button" onclick="downloadTaskEvidence('${esc(entry.object_path)}')">${esc(entry.file_name||'Nachweis öffnen')}</button>${entry.text_value?'<div>'+esc(entry.text_value)+'</div>':''}`:esc(entry.text_value||''))}</div></div>`).join(''):'<div class="live-empty">Noch keine Antworten, Zahlen, Kommentare oder Nachweise.</div>';
+    subtasksEl.innerHTML=(subtasks||[]).length?(subtasks||[]).map(subtask=>`<div class="live-task"><div class="eyebrow">Unteraufgabe ${esc(subtask.measure_no||'')}</div><h3>${esc(subtask.title)}</h3><p>${esc(subtask.description||'')}</p><div class="live-task-meta"><span class="live-pill">${esc(subtask.status)}</span><span class="live-pill">Frist ${esc(subtask.due_date||'—')}</span></div><button class="ghost" type="button" onclick="openTaskWorkspace('${esc(subtask.id)}')">Unteraufgabe öffnen</button></div>`).join(''):'<div class="live-empty">Keine Unteraufgaben angelegt.</div>';
+  }catch(error){
+    message.innerHTML='<div class="blocker"><b>Arbeitsraum nicht verfügbar.</b><div>'+esc(error.message)+'</div></div>';
+    entriesEl.innerHTML='';subtasksEl.innerHTML='';
+  }
+};
+
+async function ensureTaskInProgress(task){
+  if(task.status==='not_started'){
+    await apiFetch('/rest/v1/tasks?id=eq.'+encodeURIComponent(task.id),{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({status:'in_progress',updated_at:new Date().toISOString()})});
+  }
+}
+
+window.saveTaskEntry = async function(entryType){
+  const workspace=window.currentTaskWorkspace, message=document.getElementById('taskWorkspaceMessage'); if(!workspace)return;
+  const payload={task_id:workspace.task.id,entry_type:entryType,created_by:currentUser.id};
+  if(entryType==='answer'||entryType==='comment'){
+    const input=document.getElementById(entryType==='answer'?'taskAnswerInput':'taskCommentInput');
+    if(!input.value.trim())return; payload.text_value=input.value.trim(); input.value='';
+  }else{
+    const label=document.getElementById('taskNumberLabel').value.trim(), value=document.getElementById('taskNumberValue').value;
+    if(!label||value===''){message.textContent='Bitte Bezeichnung und Zahlenwert eingeben.';return;}
+    payload.label=label;payload.numeric_value=Number(value);payload.unit=document.getElementById('taskNumberUnit').value.trim()||null;
+    document.getElementById('taskNumberLabel').value='';document.getElementById('taskNumberValue').value='';
+  }
+  try{
+    message.textContent='Speichere …';
+    await apiFetch('/rest/v1/task_entries',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(payload)});
+    await ensureTaskInProgress(workspace.task); await openTaskWorkspace(workspace.task.id); message.textContent='Gespeichert.';
+  }catch(error){message.textContent='Fehler: '+error.message;}
+};
+
+window.createTaskSubtask = async function(){
+  const workspace=window.currentTaskWorkspace, message=document.getElementById('taskWorkspaceMessage'); if(!workspace)return;
+  const title=document.getElementById('subtaskTitle').value.trim(); if(!title){message.textContent='Bitte einen Titel für die Unteraufgabe eingeben.';return;}
+  const sequence=workspace.subtasks.length+1, parent=workspace.task;
+  const payload={project_id:parent.project_id,workflow_step_id:parent.workflow_step_id,parent_task_id:parent.id,measure_no:(parent.measure_no||'')+'.U'+sequence,title,description:document.getElementById('subtaskDescription').value.trim()||null,assigned_to:currentUser.id,due_date:document.getElementById('subtaskDueDate').value||parent.due_date||null,status:'not_started',priority:'normal',blocks_release:false,created_by:currentUser.id};
+  try{
+    message.textContent='Unteraufgabe wird angelegt …';
+    await apiFetch('/rest/v1/tasks',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify(payload)});
+    document.getElementById('subtaskTitle').value='';document.getElementById('subtaskDescription').value='';document.getElementById('subtaskDueDate').value='';
+    await openTaskWorkspace(parent.id);
+  }catch(error){message.textContent='Fehler: '+error.message;}
+};
+
+window.uploadTaskEvidence = async function(){
+  const workspace=window.currentTaskWorkspace, input=document.getElementById('taskEvidenceFile'), message=document.getElementById('taskWorkspaceMessage');
+  const file=input.files?.[0]; if(!workspace||!file)return;
+  const safeName=file.name.replace(/[^a-zA-Z0-9._-]/g,'_'), objectPath=workspace.task.id+'/'+crypto.randomUUID()+'-'+safeName;
+  try{
+    message.textContent='Nachweis wird hochgeladen …';
+    const response=await fetch(SUPABASE_URL+'/storage/v1/object/task-evidence/'+objectPath,{method:'POST',headers:{apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+accessToken,'Content-Type':file.type||'application/octet-stream','x-upsert':'false'},body:file});
+    if(!response.ok)throw new Error((await response.json()).message||'Upload fehlgeschlagen.');
+    await apiFetch('/rest/v1/task_entries',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({task_id:workspace.task.id,entry_type:'evidence',text_value:document.getElementById('taskEvidenceNote').value.trim()||null,object_path:objectPath,file_name:file.name,mime_type:file.type||null,created_by:currentUser.id})});
+    await ensureTaskInProgress(workspace.task); input.value='';document.getElementById('taskEvidenceNote').value='';await openTaskWorkspace(workspace.task.id);
+  }catch(error){message.textContent='Fehler: '+error.message;}
+};
+
+window.downloadTaskEvidence = async function(objectPath){
+  try{
+    const signed=await apiFetch('/storage/v1/object/sign/task-evidence/'+objectPath,{method:'POST',body:JSON.stringify({expiresIn:60})});
+    window.open(SUPABASE_URL+'/storage/v1'+signed.signedURL,'_blank','noopener');
+  }catch(error){alert('Nachweis konnte nicht geöffnet werden: '+error.message);}
 };
 
 
@@ -2686,6 +2817,61 @@ window.addEventListener('load', () => {
     <div id="workflowStepTasks" class="live-list">
       <div class="live-empty">Lade Aufgaben…</div>
     </div>
+  </section>
+
+  <section id="task-workspace" class="detail">
+    <a class="close" href="#workflow-overview">← Workflow</a>
+    <div class="eyebrow">Maßnahme · Anwender-Arbeitsraum</div>
+    <h2 id="taskWorkspaceTitle">Aufgabe</h2>
+    <div id="taskWorkspaceMeta" class="card"></div>
+    <div id="taskWorkspaceMonitor"></div>
+    <div id="taskWorkspaceMessage" class="sub"></div>
+
+    <div id="taskWorkspaceEditor">
+      <div class="section-title">Aufgabe bearbeiten</div>
+      <div class="card task-workspace-actions">
+        <button class="ghost" type="button" onclick="setWorkspaceTaskStatus('in_progress')">In Bearbeitung</button>
+        <button class="ghost" type="button" onclick="setWorkspaceTaskStatus('blocked')">Als blockiert melden</button>
+        <button class="action" type="button" onclick="setWorkspaceTaskStatus('done')">Aufgabe abschließen</button>
+      </div>
+      <div class="section-title">Arbeitsergebnis erfassen</div>
+      <div class="card task-workspace-grid">
+        <label for="taskAnswerInput"><b>Antwort oder fachliche Erläuterung</b></label>
+        <textarea id="taskAnswerInput" class="admin-control" rows="5" placeholder="Antwort, Berechnung oder fachliche Begründung"></textarea>
+        <button class="action" type="button" onclick="saveTaskEntry('answer')">Antwort speichern</button>
+      </div>
+      <div class="card task-workspace-grid">
+        <label><b>Zahl liefern</b></label>
+        <input id="taskNumberLabel" class="admin-control" placeholder="Bezeichnung der Zahl">
+        <input id="taskNumberValue" class="admin-control" type="number" step="any" placeholder="Wert">
+        <input id="taskNumberUnit" class="admin-control" placeholder="Einheit, z. B. EUR, %, Stück">
+        <button class="action" type="button" onclick="saveTaskEntry('number')">Zahl speichern</button>
+      </div>
+      <div class="card task-workspace-grid">
+        <label for="taskCommentInput"><b>Kommentar</b></label>
+        <textarea id="taskCommentInput" class="admin-control" rows="3" placeholder="Kommentar, Rückfrage oder Zwischenstand"></textarea>
+        <button class="ghost" type="button" onclick="saveTaskEntry('comment')">Kommentar hinzufügen</button>
+      </div>
+      <div class="card task-workspace-grid">
+        <label for="taskEvidenceFile"><b>Nachweis hochladen</b></label>
+        <input id="taskEvidenceFile" class="admin-control" type="file">
+        <input id="taskEvidenceNote" class="admin-control" placeholder="Beschreibung des Nachweises">
+        <button class="action" type="button" onclick="uploadTaskEvidence()">Nachweis speichern</button>
+      </div>
+    </div>
+
+    <div class="section-title">Gespeicherte Arbeitsergebnisse</div>
+    <div id="taskWorkspaceEntries" class="task-workspace-grid"></div>
+
+    <div class="section-title">Unteraufgaben</div>
+    <div id="taskWorkspaceSubtaskForm" class="card task-workspace-grid">
+      <p class="sub">Lege eine Unteraufgabe an, wenn die zugewiesene Maßnahme zusätzliche Arbeitsschritte benötigt. Sie bleibt mit dieser Hauptaufgabe verbunden.</p>
+      <input id="subtaskTitle" class="admin-control" placeholder="Titel der Unteraufgabe">
+      <textarea id="subtaskDescription" class="admin-control" rows="3" placeholder="Erwartetes Ergebnis oder Arbeitsanweisung"></textarea>
+      <input id="subtaskDueDate" class="admin-control" type="date">
+      <button class="action" type="button" onclick="createTaskSubtask()">Unteraufgabe erstellen</button>
+    </div>
+    <div id="taskWorkspaceSubtasks" class="task-workspace-grid"></div>
   </section>
 
 
@@ -3261,7 +3447,7 @@ window.addEventListener('load', () => {
     <div class="eyebrow" id="financialDrilldownEyebrow">Geschäftsjahr —</div>
     <h2>Bilanz & GuV</h2>
     <p>Direkt aus SuSa und bestätigtem Mapping berechnet – einzige Datenquelle der App.</p>
-    <a class="action" href="#report-review">Anhang & Lagebericht Review öffnen</a>
+    <button class="action" type="button" onclick="openIntegratedReport('page1')">Anhang & Lagebericht in Originaldarstellung öffnen</button>
     <div id="balanceSheetContainer"><div class="card"><p>Noch keine SuSa importiert. <a href="#upload">Jetzt importieren</a>.</p></div></div>
     <div class="section-title">Aus dem Mapping abgeleitete Spiegelbezüge</div>
     <div id="importedMirrorsContainer"><div class="card"><p>Noch keine Spiegelzuordnungen importiert.</p></div></div>
@@ -3450,6 +3636,7 @@ window.addEventListener('load', () => {
 
   <button class="action" type="button" onclick="saveAdminTask()">Änderungen speichern</button>
   <button class="ghost" type="button" onclick="escalateAdminTask()">Als kritisch eskalieren</button>
+  <button class="ghost" type="button" onclick="currentAdminTask&&openTaskWorkspace(currentAdminTask.id)">Antworten, Zahlen und Unteraufgaben ansehen</button>
 
   <div id="adminTaskMsg" class="auth-msg"></div>
 </section>
@@ -3470,13 +3657,13 @@ window.addEventListener('load', () => {
 
     <div class="section-title">Berichtsbestandteile</div>
     <div class="report-module-grid">
-      <a class="report-module" href="#financial-drilldown"><small>HGB</small><b>Bilanz</b><span>Direkt aus SuSa und Mapping berechnet</span><em class="report-status ok">Zentrale Datenbasis</em></a>
-      <a class="report-module" href="#financial-drilldown"><small>HGB</small><b>GuV</b><span>Direkt aus SuSa und Mapping berechnet</span><em class="report-status ok">Zentrale Datenbasis</em></a>
-      <a class="report-module" href="#workpaper-anlagenspiegel"><small>Workpaper → Bericht</small><b>Anlagenspiegel</b><span>Direkt mit Maßnahme 6.3 und HGB-D.6.3.a verknüpft</span><em class="report-status warn">Review offen</em></a>
-      <a class="report-module" href="#mirror-provisions"><small>HGB</small><b>Rückstellungsspiegel</b><span>Zuführung/Verbrauch/Auflösung je Rückstellung</span><em class="report-status ok">Zentrale Datenbasis</em></a>
+      <button class="report-module" type="button" onclick="openIntegratedReport('page7')"><small>HGB · index39</small><b>Bilanz</b><span>Originaldarstellung, aus SuSa und Mapping befüllt</span><em class="report-status ok">Zentrale Datenbasis</em></button>
+      <button class="report-module" type="button" onclick="openIntegratedReport('page8')"><small>HGB · index39</small><b>GuV</b><span>Originaldarstellung, aus SuSa und Mapping befüllt</span><em class="report-status ok">Zentrale Datenbasis</em></button>
+      <button class="report-module" type="button" onclick="openIntegratedReport('page5')"><small>HGB · index39</small><b>Anlagenspiegel</b><span>Originaldarstellung mit offenen Bewegungsdaten</span><em class="report-status warn">Review offen</em></button>
+      <button class="report-module" type="button" onclick="openIntegratedReport('page6')"><small>HGB · index39</small><b>Rückstellungsspiegel</b><span>Originaldarstellung für Zuführung, Verbrauch und Auflösung</span><em class="report-status warn">Bewegungen prüfen</em></button>
       <a class="report-module" href="#mirror-liabilities"><small>HGB</small><b>Verbindlichkeitenspiegel</b><span>Zugang/Tilgung je Verbindlichkeit</span><em class="report-status ok">Zentrale Datenbasis</em></a>
-      <a class="report-module" href="#report-hgb"><small>HGB</small><b>Anhang &amp; Lagebericht</b><span>369 migrierte Platzhalter aus index39</span><em class="report-status warn">Parameter prüfen</em></a>
-      <a class="report-module" href="#report-ifrs"><small>IFRS</small><b>IFRS-Bericht</b><span>195 migrierte Platzhalter, gleiche Datenbasis wie HGB</span><em class="report-status warn">Parameter prüfen</em></a>
+      <button class="report-module" type="button" onclick="openIntegratedReport('page1')"><small>HGB · index39</small><b>Anhang &amp; Lagebericht</b><span>Original-Mustertext und vollständige Platzhalter</span><em class="report-status warn">Parameter prüfen</em></button>
+      <button class="report-module" type="button" onclick="openIntegratedReport('page3')"><small>IFRS · index39</small><b>IFRS-Bericht</b><span>Original-Mustertext und vollständige Platzhalter</span><em class="report-status warn">Parameter prüfen</em></button>
       <a class="report-module" href="#parameter-cockpit"><small>Übersicht</small><b>Parameter-Cockpit</b><span>Kennzahlen-Dashboard über alle Berichte</span><em class="report-status ok">Zentrale Datenbasis</em></a>
     </div>
 
@@ -3575,6 +3762,10 @@ window.addEventListener('load', () => {
 
 </div>
 
+<div id="index39Factory" class="reporting-shell" role="dialog" aria-modal="true" aria-label="Integrierter Berichtsarbeitsraum">
+  <div id="index39FactoryHost" style="height:100%;overflow:auto"></div>
+</div>
+
 <script>
 // ---- KAI/KIRA Shared Data Model / Integration MVP ----
 window.KAIKIRA_INTEGRATION = {
@@ -3611,19 +3802,153 @@ async function loadIntegrationHub() {
   const b=document.getElementById('integrationBlockerGate'); if(b) b.className='gate '+(blockers?'blocked':'ready');
 }
 
-// Ehemals: altes Reporting-HTML wurde Base64-kodiert eingebettet und per
-// iframe/srcdoc angezeigt (zwei parallele UI-Systeme, eigene CSS-Welt).
-// Ersetzt durch native Sections derselben Mobile App auf Basis von projectData.
-window.openIntegratedReport = function(pageId='page1', anchorId=''){
-  const routes = {
-    page1:'report-hgb', page3:'report-ifrs', page5:'workpaper-anlagenspiegel',
-    page7:'financial-drilldown', page8:'financial-drilldown',
-    page9:'mirror-liabilities', page10:'mirror-provisions'
-  };
-  window.location.hash = routes[pageId] || 'integration-hub';
+let index39FactoryRoot=null;
+
+function index39ParameterValue(key,standard){
+  const pd=window.projectData, candidates=[`${standard}::${key}`,key];
+  const reportValue=candidates.map(candidate=>pd.reports?.index39Parameters?.[candidate]).find(parameter=>parameter?.value);
+  if(reportValue)return reportValue.value;
+  const direct=candidates.map(candidate=>pd.parameters[candidate]).find(parameter=>parameter?.value);
+  if(direct)return direct.value;
+  const suffix='::'+key;
+  const stored=Object.entries(pd.parameters).find(([parameterKey,parameter])=>parameterKey.endsWith(suffix)&&parameter?.value)?.[1];
+  if(stored)return stored.value;
+  const kindEntry=Object.entries(REPORT_PKEY_KINDS).find(([parameterKey])=>parameterKey.startsWith(standard+'::')&&parameterKey.endsWith(suffix));
+  if(kindEntry&&REPORT_DERIVE[kindEntry[1]])return REPORT_DERIVE[kindEntry[1]](pd)?.value||'';
+  const normalized=normalizeHeader(key);
+  if(normalized.includes('unternehmen')||normalized.includes('konzernname'))return pd.masterData.companyName||'';
+  if(normalized.includes('geschaftsjahr'))return pd.masterData.financialYear||'';
+  if(normalized.includes('folgejahr'))return pd.masterData.financialYear?Number(pd.masterData.financialYear)+1:'';
+  return '';
+}
+
+function index39StatementAmounts(){
+  const pd=window.projectData, tbByAccount=new Map((pd.trialBalance.rows||[]).map(row=>[row.account,row])), result=new Map();
+  (pd.reportStructure.rows||[]).forEach(row=>result.set(row.target7,{current:0,prior:0,row}));
+  (pd.mapping.rows||[]).forEach(mapping=>{
+    const target=result.get(mapping.target7),tb=tbByAccount.get(mapping.account); if(!target||!tb)return;
+    target.current+=tb.balanceCurrent||0;target.prior+=tb.balancePrior||0;
+  });
+  const byLabel=new Map();
+  result.forEach(amount=>{
+    const labels=Object.values(amount.row.levels||{}).filter(Boolean),factor=displayFactor(amount.row);
+    labels.forEach(label=>{
+      const key=normalizeHeader(label).replace(/^\d+/,'');if(!key)return;
+      const aggregate=byLabel.get(key)||{current:0,prior:0};
+      aggregate.current+=amount.current*factor;aggregate.prior+=amount.prior*factor;byLabel.set(key,aggregate);
+    });
+  });
+  return byLabel;
+}
+
+function index39Number(value){
+  return Number(value||0).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
+function index39StoredInput(input){
+  return window.projectData.reports?.index39Inputs?.[`${input.closest('.page')?.id||'page'}::${input.dataset.row}::${input.dataset.col}`]||'';
+}
+
+function index39RecalculateMirrorRow(input){
+  const row=input.closest('tr');if(!row)return;
+  const values=column=>parseGermanAmount(row.querySelector(`[data-col="${column}"]`)?.value||0);
+  if(input.classList.contains('asset-input')){
+    const akEnd=values(0)+values(1)-values(2)+values(3)+values(4), depreciationEnd=values(6)+values(7)-values(8)-values(9);
+    row.querySelectorAll('.asset-output').forEach(output=>{const col=Number(output.dataset.col);output.textContent=index39Number(col===5?akEnd:(col===10?depreciationEnd:(col===11?akEnd-depreciationEnd:values(0)-values(6))));});
+  }else if(input.classList.contains('provision-input')){
+    const output=row.querySelector('.provision-output');if(output)output.textContent=index39Number(values(0)-values(1)-values(2)+values(3)+values(4));
+  }
+}
+
+function index39RenderDataTables(root){
+  const pd=window.projectData, mappingByAccount=new Map((pd.mapping.rows||[]).map(row=>[row.account,row]));
+  const structureByTarget=new Map((pd.reportStructure?.rows||[]).map(row=>[row.target7,row]));
+  const query=normalizeHeader(root.getElementById('susaSearch')?.value||'');
+  const trialRows=(pd.trialBalance.rows||[]).filter(row=>!query||normalizeHeader(`${row.account} ${row.name}`).includes(query));
+  const susaBody=root.getElementById('susaBody');
+  if(susaBody)susaBody.innerHTML=trialRows.map(row=>`<tr><td>${esc(row.account)}</td><td>${esc(row.name||'')}</td><td>${index39Number(row.balanceCurrent)}</td><td>${index39Number(row.balancePrior)}</td></tr>`).join('')||'<tr><td colspan="4">Noch keine SuSa importiert.</td></tr>';
+
+  const mappingQuery=normalizeHeader(root.getElementById('mappingSearch')?.value||'');
+  const mappedRows=(pd.trialBalance.rows||[]).map(row=>{const mapping=mappingByAccount.get(row.account),structure=structureByTarget.get(mapping?.target7),label=Object.values(structure?.levels||{}).filter(Boolean).at(-1)||mapping?.target7||'';return {row,structure,label};}).filter(item=>!mappingQuery||normalizeHeader(`${item.row.account} ${item.row.name} ${item.label}`).includes(mappingQuery));
+  const mappingBody=root.getElementById('mappingBody');
+  if(mappingBody)mappingBody.innerHTML=mappedRows.map(({row,structure,label})=>`<tr><td>${esc(row.account)}</td><td>${esc(row.name||'')}</td><td>${index39Number(row.balanceCurrent)}</td><td>${index39Number(row.balancePrior)}</td><td>${esc(structure?.statement||'OFFEN')}</td><td>${esc(label||'Nicht zugeordnet')}</td></tr>`).join('')||'<tr><td colspan="6">Noch kein bestätigtes Mapping importiert.</td></tr>';
+
+  const aggregates=new Map();
+  mappedRows.forEach(({row,structure,label})=>{if(!label)return;const key=`${structure?.statement||'OFFEN'}::${label}`,current=aggregates.get(key)||{area:structure?.statement||'OFFEN',label,current:0,prior:0,count:0};current.current+=row.balanceCurrent||0;current.prior+=row.balancePrior||0;current.count++;aggregates.set(key,current);});
+  const aggregateBody=root.getElementById('mappingAggregateBody');
+  if(aggregateBody)aggregateBody.innerHTML=[...aggregates.values()].sort((a,b)=>Math.abs(b.current)-Math.abs(a.current)).map((item,index)=>`<tr><td>${index+1}</td><td>${esc(item.area)}</td><td>${esc(item.label)}</td><td>${index39Number(item.current)}</td><td>${index39Number(item.prior)}</td><td>${index39Number(item.current-item.prior)}</td><td>${item.count}</td></tr>`).join('')||'<tr><td colspan="7">Noch keine aggregierten Gruppierungen vorhanden.</td></tr>';
+}
+
+function bindIndex39Factory(root){
+  root.querySelector('.factory-close').addEventListener('click',closeReportingFactory);
+  root.querySelectorAll('.tab').forEach(button=>button.addEventListener('click',()=>showIndex39Page(button.dataset.page)));
+  root.querySelectorAll('#assetDemo,#assetClear,#provisionDemo,#provisionClear,#susaDemo,#susaClear').forEach(button=>{button.hidden=true;});
+  root.querySelectorAll('.asset-input,.provision-input').forEach(input=>{
+    input.value=index39StoredInput(input);
+    input.addEventListener('change',()=>{
+      window.projectData.reports.index39Inputs ||= {};
+      window.projectData.reports.index39Inputs[`${input.closest('.page').id}::${input.dataset.row}::${input.dataset.col}`]=input.value;
+      saveProjectData();index39RecalculateMirrorRow(input);
+    });
+    index39RecalculateMirrorRow(input);
+  });
+  root.getElementById('susaSearch')?.addEventListener('input',()=>index39RenderDataTables(root));
+  root.getElementById('mappingSearch')?.addEventListener('input',()=>index39RenderDataTables(root));
+  root.querySelectorAll('.placeholder-select').forEach(select=>select.addEventListener('change',()=>{
+    const page=select.closest('.page')?.id||'page2',standard=['page3','page4'].includes(page)?'ifrs':'hgb',key=select.dataset.key;
+    const custom=root.querySelector(`.custom-input[data-id="${select.dataset.id}"]`);
+    const value=/eigene|custom|sonstige/i.test(select.value)?custom?.value:select.value;
+    if(custom)custom.hidden=!/eigene|custom|sonstige/i.test(select.value);
+    if(value){window.projectData.reports.index39Parameters||={};window.projectData.reports.index39Parameters[`${standard}::${key}`]={label:key,value,source:SRC.MANUAL,open:false};saveProjectData();refreshIndex39Factory();}
+  }));
+  root.querySelectorAll('.custom-input').forEach(input=>input.addEventListener('change',()=>{
+    const page=input.closest('.page')?.id||'page2',standard=['page3','page4'].includes(page)?'ifrs':'hgb';
+    if(input.value.trim()){window.projectData.reports.index39Parameters||={};window.projectData.reports.index39Parameters[`${standard}::${input.dataset.key}`]={label:input.dataset.key,value:input.value.trim(),source:SRC.MANUAL,open:false};saveProjectData();refreshIndex39Factory();}
+  }));
+}
+
+function refreshIndex39Factory(){
+  const root=index39FactoryRoot;if(!root)return;
+  root.querySelectorAll('.placeholder[data-key]').forEach(node=>{
+    const standard=node.closest('#page3')?'ifrs':'hgb',value=index39ParameterValue(node.dataset.key,standard);
+    if(value){node.textContent=value;node.classList.add('filled');}
+  });
+  root.querySelectorAll('.placeholder-select[data-key]').forEach(select=>{
+    const standard=select.closest('#page4')?'ifrs':'hgb',value=index39ParameterValue(select.dataset.key,standard);
+    if(!value)return; const matching=[...select.options].find(option=>option.value===String(value));
+    if(matching)select.value=matching.value;else{const custom=root.querySelector(`.custom-input[data-id="${select.dataset.id}"]`);if(custom){custom.hidden=false;custom.value=value;}}
+  });
+  const amounts=index39StatementAmounts();
+  root.querySelectorAll('.balance-input[data-label],.pl-input[data-label],.balance-output[data-label],.pl-output[data-label]').forEach(node=>{
+    const key=normalizeHeader(node.dataset.label).replace(/^\d+/,'');
+    const amount=amounts.get(key)||[...amounts.entries()].find(([label])=>label.endsWith(key)||key.endsWith(label))?.[1];
+    if(!amount)return;const value=Number(node.dataset.col)==0?amount.current:amount.prior;
+    if(node.matches('input')){node.value=value;node.readOnly=true;}else node.textContent=index39Number(value);
+    node.title='Automatisch aus SuSa und bestätigtem Mapping';
+  });
+  index39RenderDataTables(root);
+}
+
+function showIndex39Page(pageId='page1'){
+  const root=index39FactoryRoot;if(!root)return;
+  root.querySelectorAll('.page').forEach(page=>page.classList.toggle('active',page.id===pageId));
+  root.querySelectorAll('.tab').forEach(tab=>tab.classList.toggle('active',tab.dataset.page===pageId));
+  root.host?.scrollTo(0,0);
+}
+
+window.openIntegratedReport = async function(pageId='page1',anchorId=''){
+  const shell=document.getElementById('index39Factory'),host=document.getElementById('index39FactoryHost');shell.classList.add('open');
+  try{
+    if(!index39FactoryRoot){
+      const response=await fetch('reporting/index39-template.html');if(!response.ok)throw new Error('Berichtsvorlage konnte nicht geladen werden.');
+      index39FactoryRoot=host.attachShadow({mode:'open'});index39FactoryRoot.innerHTML=await response.text();bindIndex39Factory(index39FactoryRoot);
+    }
+    refreshIndex39Factory();showIndex39Page(pageId);
+    if(anchorId)setTimeout(()=>index39FactoryRoot.getElementById(anchorId)?.scrollIntoView({block:'start'}),0);
+  }catch(error){if(index39FactoryRoot)index39FactoryRoot.innerHTML=`<div class="blocker">${esc(error.message)}</div>`;else host.innerHTML=`<div class="blocker">${esc(error.message)}</div>`;}
 };
 window.openReportingFactory = function(){ return window.openIntegratedReport('page1'); };
-window.closeReportingFactory = function(){ window.location.hash = 'integration-hub'; };
+window.closeReportingFactory = function(){ document.getElementById('index39Factory').classList.remove('open');window.location.hash='integration-hub'; };
 </script>
 
 </body>
