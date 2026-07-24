@@ -906,6 +906,26 @@ Viele Grüße`
     });
 
     // Kontaktaufnahme über das lokal eingerichtete Standard-E-Mail-Programm.
+    // Klicklogik für alle dynamisch erzeugten Dialog-Schaltflächen.
+    modalOptions.addEventListener("click", (event) => {
+      const target = event.target.closest(".modal-option");
+      if (!target) return;
+
+      // Links wie mailto: normal ausführen lassen.
+      if (target.tagName === "A") {
+        return;
+      }
+
+      // Der Kopier-Button besitzt eine eigene Funktion.
+      if (target.id === "copyContactEmail") {
+        return;
+      }
+
+      // Demo-Aktionen schließen den Dialog und bestätigen den Klick.
+      dialog.close();
+      showToast(target.textContent.trim() + " – Demoansicht");
+    });
+
 
 
     renderRole("cfo");
