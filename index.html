@@ -455,6 +455,37 @@
     .modal-option:hover{border-color:#98acd0;background:#f8fbff}
     .modal-close{margin-top:14px}
 
+
+    .contact-form{display:grid;gap:12px}
+    .contact-form label{font-size:13px;font-weight:800;color:var(--text)}
+    .contact-form input,
+    .contact-form select,
+    .contact-form textarea{
+      width:100%;
+      margin-top:6px;
+      border:1px solid var(--line);
+      border-radius:11px;
+      padding:12px 13px;
+      background:#fff;
+      color:var(--text);
+      font:inherit;
+    }
+    .contact-form textarea{min-height:105px;resize:vertical}
+    .contact-form input:focus,
+    .contact-form select:focus,
+    .contact-form textarea:focus{
+      outline:3px solid var(--blue-2);
+      border-color:var(--blue);
+    }
+    .contact-note{
+      padding:11px 12px;
+      border-radius:11px;
+      background:#f8fafc;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.45;
+    }
+
     @media (max-width:1000px){
       .hero{grid-template-columns:1fr}
       .overview{grid-template-columns:repeat(2,1fr)}
@@ -829,11 +860,42 @@
     });
 
     document.getElementById("pilotBtn").addEventListener("click",()=>{
-      openModal("Interesse am Pilotprojekt","Wählen Sie Ihre Rolle. Anschließend öffnet sich eine vorbereitete E-Mail an Volker Kusch.",[
-        "Ich bin CFO / Geschäftsführung",
-        "Ich leite das Rechnungswesen",
-        "Ich bin Berater oder Wirtschaftsprüfer"
-      ]);
+      const subject = encodeURIComponent("Interesse am Pilotprojekt – Abschluss-Leitstand");
+      const body = encodeURIComponent(
+`Hallo Herr Kusch,
+
+ich habe Ihre interaktive Demo des Abschluss-Leitstands angesehen und interessiere mich für einen unverbindlichen Austausch.
+
+Meine Funktion:
+Unternehmen:
+Name:
+Telefon:
+Bevorzugter Gesprächstermin:
+
+Viele Grüße`
+      );
+
+      modalTitle.textContent = "Interesse am Pilotprojekt";
+      modalText.textContent = "Über den Button öffnet sich Ihr eingerichtetes Standard-E-Mail-Programm.";
+      modalOptions.innerHTML = `
+        <a class="modal-option primary-btn"
+           href="mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}">
+          E-Mail an Volker Kusch schreiben
+        </a>
+        <button class="modal-option" type="button" id="copyContactEmail">
+          E-Mail-Adresse kopieren: ${CONTACT_EMAIL}
+        </button>
+      `;
+      dialog.showModal();
+
+      document.getElementById("copyContactEmail").addEventListener("click", async ()=>{
+        try{
+          await navigator.clipboard.writeText(CONTACT_EMAIL);
+          showToast("E-Mail-Adresse kopiert: " + CONTACT_EMAIL);
+        }catch{
+          showToast("E-Mail-Adresse: " + CONTACT_EMAIL);
+        }
+      });
     });
 
     document.getElementById("closeDialog").addEventListener("click",()=>dialog.close());
@@ -843,66 +905,8 @@
       if(outside) dialog.close();
     });
 
-    modalOptions.addEventListener("click", async (e)=>{
-      const target = e.target.closest(".modal-option");
-      if(!target) return;
+    // Kontaktaufnahme über das lokal eingerichtete Standard-E-Mail-Programm.
 
-      if(target.dataset.copyEmail === "true"){
-        try{
-          await navigator.clipboard.writeText(CONTACT_EMAIL);
-          showToast("E-Mail-Adresse kopiert: " + CONTACT_EMAIL);
-        }catch{
-          showToast("E-Mail-Adresse: " + CONTACT_EMAIL);
-        }
-        return;
-      }
-
-      const selectedText = target.textContent.trim();
-
-      if(modalTitle.textContent === "Interesse am Pilotprojekt"){
-        const subject = `Interesse am Pilotprojekt – ${selectedText}`;
-        const body =
-`Hallo Herr Kusch,
-
-ich habe Ihre interaktive Demo des Abschluss-Leitstands angesehen.
-
-Meine Rolle:
-${selectedText}
-
-Ich interessiere mich für einen unverbindlichen Austausch zum Pilotprojekt.
-
-Unternehmen:
-Name:
-Telefon:
-Bevorzugter Gesprächstermin:
-
-Viele Grüße`;
-
-        const encodedSubject = encodeURIComponent(subject);
-        const encodedBody = encodeURIComponent(body);
-        const outlookUrl = `https://outlook.office.com/mail/deeplink/compose?to=${encodeURIComponent(CONTACT_EMAIL)}&subject=${encodedSubject}&body=${encodedBody}`;
-        const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(CONTACT_EMAIL)}&su=${encodedSubject}&body=${encodedBody}`;
-        const mailtoUrl = `mailto:${CONTACT_EMAIL}?subject=${encodedSubject}&body=${encodedBody}`;
-
-        modalTitle.textContent = "Kontakt aufnehmen";
-        modalText.textContent = "Wählen Sie Ihr E-Mail-Programm. Alternativ können Sie die Adresse kopieren.";
-        modalOptions.innerHTML = `
-          <a class="modal-option" href="${outlookUrl}" target="_blank" rel="noopener">Outlook im Browser öffnen</a>
-          <a class="modal-option" href="${gmailUrl}" target="_blank" rel="noopener">Gmail im Browser öffnen</a>
-          <a class="modal-option" href="${mailtoUrl}">Standard-E-Mail-Programm öffnen</a>
-          <button class="modal-option" data-copy-email="true">E-Mail-Adresse kopieren: ${CONTACT_EMAIL}</button>
-        `;
-        return;
-      }
-
-      if(target.tagName === "A"){
-        dialog.close();
-        return;
-      }
-
-      dialog.close();
-      showToast("Auswahl erfasst – Demo ohne Datenspeicherung");
-    });
 
     renderRole("cfo");
   </script>
