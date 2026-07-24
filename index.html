@@ -442,11 +442,15 @@
     .modal p{margin:0 0 18px;color:var(--muted);line-height:1.5}
     .modal-grid{display:grid;gap:11px}
     .modal-option{
+      display:block;
+      width:100%;
       border:1px solid var(--line);
       background:#fff;
+      color:var(--text);
       border-radius:14px;
       padding:14px;
       text-align:left;
+      text-decoration:none;
     }
     .modal-option:hover{border-color:#98acd0;background:#f8fbff}
     .modal-close{margin-top:14px}
@@ -839,17 +843,23 @@
       if(outside) dialog.close();
     });
 
-    modalOptions.addEventListener("click",(e)=>{
-      if(!e.target.matches(".modal-option")) return;
+    modalOptions.addEventListener("click", async (e)=>{
+      const target = e.target.closest(".modal-option");
+      if(!target) return;
 
-      const selectedText = e.target.textContent.trim();
+      if(target.dataset.copyEmail === "true"){
+        try{
+          await navigator.clipboard.writeText(CONTACT_EMAIL);
+          showToast("E-Mail-Adresse kopiert: " + CONTACT_EMAIL);
+        }catch{
+          showToast("E-Mail-Adresse: " + CONTACT_EMAIL);
+        }
+        return;
+      }
+
+      const selectedText = target.textContent.trim();
 
       if(modalTitle.textContent === "Interesse am Pilotprojekt"){
-        if(CONTACT_EMAIL.includes("IHRE_EMAILADRESSE")){
-          showToast("Bitte zuerst die Kontakt-E-Mail in der HTML eintragen.");
-          return;
-        }
-
         const subject = `Interesse am Pilotprojekt – ${selectedText}`;
         const body =
 `Hallo Herr Kusch,
@@ -868,11 +878,25 @@ Bevorzugter Gesprächstermin:
 
 Viele Grüße`;
 
-        const mailto = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        const encodedSubject = encodeURIComponent(subject);
+        const encodedBody = encodeURIComponent(body);
+        const outlookUrl = `https://outlook.office.com/mail/deeplink/compose?to=${encodeURIComponent(CONTACT_EMAIL)}&subject=${encodedSubject}&body=${encodedBody}`;
+        const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(CONTACT_EMAIL)}&su=${encodedSubject}&body=${encodedBody}`;
+        const mailtoUrl = `mailto:${CONTACT_EMAIL}?subject=${encodedSubject}&body=${encodedBody}`;
 
+        modalTitle.textContent = "Kontakt aufnehmen";
+        modalText.textContent = "Wählen Sie Ihr E-Mail-Programm. Alternativ können Sie die Adresse kopieren.";
+        modalOptions.innerHTML = `
+          <a class="modal-option" href="${outlookUrl}" target="_blank" rel="noopener">Outlook im Browser öffnen</a>
+          <a class="modal-option" href="${gmailUrl}" target="_blank" rel="noopener">Gmail im Browser öffnen</a>
+          <a class="modal-option" href="${mailtoUrl}">Standard-E-Mail-Programm öffnen</a>
+          <button class="modal-option" data-copy-email="true">E-Mail-Adresse kopieren: ${CONTACT_EMAIL}</button>
+        `;
+        return;
+      }
+
+      if(target.tagName === "A"){
         dialog.close();
-        showToast("E-Mail-Programm wird geöffnet …");
-        window.location.href = mailto;
         return;
       }
 
