@@ -1,1255 +1,422 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Interaktive Demo eines CFO-Jahresabschluss-Cockpits" />
-  <title>LUMINA Abschluss-Cockpit</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LUMINA | Jahresabschluss transparent, termintreu und geräuschlos</title>
+  <meta name="description" content="LUMINA macht den HGB-Jahresabschluss für CFOs messbar, berechenbar und steuerbar: Fortschritt, Verantwortlichkeiten, Engpässe, Prüfungsreife und Termine in einem Cockpit. Mit Potenzialrechner und interaktiver Demo.">
+  <meta name="keywords" content="Jahresabschluss Software, HGB Abschlussprozess, CFO Dashboard, Abschlussmanagement, Wirtschaftsprüfung Kosten senken, Closing Management, Jahresabschluss digitalisieren, Prüfungsreife">
+  <meta name="robots" content="index,follow,max-image-preview:large">
+  <meta name="author" content="Volker Kusch">
+  <meta name="theme-color" content="#f7f7f5">
+  <link rel="canonical" href="https://lumina.volkerkusch.de/">
+
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="de_DE">
+  <meta property="og:title" content="LUMINA – Der Jahresabschluss. Transparent, termintreu, geräuschlos.">
+  <meta property="og:description" content="Machen Sie Ihren HGB-Jahresabschluss messbar, berechenbar und steuerbar – mit klaren Verantwortlichkeiten, Frühwarnung und CFO-Cockpit.">
+  <meta property="og:url" content="https://lumina.volkerkusch.de/">
+  <meta property="og:site_name" content="LUMINA Abschluss-Cockpit">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="LUMINA – Der Jahresabschluss. Transparent, termintreu, geräuschlos.">
+  <meta name="twitter:description" content="Transparenz, Termintreue und messbares Verbesserungspotenzial für den HGB-Jahresabschluss.">
+  <meta property="og:image" content="https://lumina.volkerkusch.de/lumina-social-preview.png">
+  <meta name="twitter:image" content="https://lumina.volkerkusch.de/lumina-social-preview.png">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22><rect width=%2264%22 height=%2264%22 rx=%2216%22 fill=%22%2310a37f%22/><rect x=%2220%22 y=%2220%22 width=%2224%22 height=%2224%22 rx=%224%22 fill=%22none%22 stroke=%22white%22 stroke-width=%224%22 transform=%22rotate(45 32 32)%22/></svg>">
+
+  <script type="application/ld+json">
+  {
+    "@context":"https://schema.org",
+    "@type":"SoftwareApplication",
+    "name":"LUMINA Abschluss-Cockpit",
+    "applicationCategory":"BusinessApplication",
+    "operatingSystem":"Web",
+    "description":"Digitale Steuerung und Überwachung des HGB-Jahresabschlussprozesses für CFOs und Rechnungswesen.",
+    "offers":{"@type":"Offer","priceCurrency":"EUR","description":"Individuelles Pilotprojekt für mittelgroße und konzernorientierte Unternehmen"},
+    "creator":{"@type":"Person","name":"Volker Kusch"}
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context":"https://schema.org",
+    "@type":"Organization",
+    "name":"LUMINA Abschluss-Cockpit",
+    "url":"https://lumina.volkerkusch.de/",
+    "description":"Softwaregestütztes Cockpit für den transparenten und termintreuen HGB-Jahresabschluss.",
+    "areaServed":"DE",
+    "contactPoint":{"@type":"ContactPoint","email":"info@volkerkusch.de","contactType":"sales"}
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context":"https://schema.org",
+    "@type":"FAQPage",
+    "mainEntity":[
+      {"@type":"Question","name":"Ersetzt LUMINA unser ERP oder Konsolidierungssystem?","acceptedAnswer":{"@type":"Answer","text":"Nein. LUMINA steuert den Abschlussprozess über Systeme, Teams und Beteiligte hinweg. Bestehende ERP-, Konsolidierungs-, DMS- und Prüfungslösungen bleiben erhalten und können angebunden werden."}},
+      {"@type":"Question","name":"Ist LUMINA nur für das Rechnungswesen gedacht?","acceptedAnswer":{"@type":"Answer","text":"Nein. Neben CFO, Rechnungswesen und Controlling können auch HR, IT, Legal, externe Beratung und Wirtschaftsprüfung gezielt eingebunden werden."}},
+      {"@type":"Question","name":"Wie belastbar ist der Potenzialrechner?","acceptedAnswer":{"@type":"Answer","text":"Er liefert eine indikative erste Einschätzung auf Basis der von Ihnen eingegebenen Annahmen. Für einen belastbaren Business Case werden tatsächliche Abschlussstunden, Nacharbeiten, Prüfungsschleifen, Verzögerungen und interne Vollkosten gemeinsam aufgenommen."}},
+      {"@type":"Question","name":"Wie startet ein Pilotprojekt?","acceptedAnswer":{"@type":"Answer","text":"Mit einem unverbindlichen Gespräch und einer kompakten Prozessaufnahme. Danach wird ein geeigneter Abschluss, eine Gesellschaft oder ein klar abgegrenzter Prozessbereich als Pilot festgelegt."}}
+    ]
+  }
+  </script>
 
   <style>
     :root{
-      --done-green:#10a37f;
-      --done-green-soft:#e8f5f0;
+      --green:#10a37f;
+      --green-dark:#0b7f64;
+      --green-soft:#e8f5f0;
+      --blue:#2563eb;
+      --blue-soft:#eaf1ff;
       --bg:#f7f7f5;
       --surface:#ffffff;
-      --surface-2:#f3f4f2;
+      --surface-2:#f2f3f1;
       --text:#202123;
-      --muted:#6b6f76;
-      --line:#e3e3df;
-      --accent:#2563eb;
-      --accent-soft:#eaf1ff;
+      --muted:#696e75;
+      --line:#e1e3df;
+      --amber:#b7791f;
+      --amber-soft:#fff7e8;
       --red:#c2413b;
       --red-soft:#fbefee;
-      --amber:#b7791f;
-      --shadow:0 8px 30px rgba(0,0,0,.06);
-      --radius:14px;
+      --shadow:0 18px 55px rgba(25,30,35,.08);
+      --shadow-sm:0 8px 28px rgba(25,30,35,.06);
+      --radius:18px;
+      --max:1180px;
     }
 
     *{box-sizing:border-box}
     html{scroll-behavior:smooth}
     body{
       margin:0;
-      font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       color:var(--text);
       background:var(--bg);
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      -webkit-font-smoothing:antialiased;
     }
-
+    body.menu-open{overflow:hidden}
     button,input,select,textarea{font:inherit}
-    button{cursor:pointer}
-
-    .shell{
-      max-width:1180px;
-      margin:0 auto;
-      padding:24px 18px 48px;
+    button,a{cursor:pointer}
+    :focus-visible{outline:3px solid rgba(37,99,235,.35);outline-offset:3px}
+    a{color:inherit}
+    img{max-width:100%;display:block}
+    .container{width:min(var(--max),calc(100% - 32px));margin:0 auto}
+    .section{padding:94px 0}
+    .section-tight{padding:64px 0}
+    .eyebrow{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:7px 10px;border:1px solid var(--line);border-radius:999px;
+      background:rgba(255,255,255,.75);font-size:12px;font-weight:750;color:#4b535b;
+      letter-spacing:.02em;text-transform:uppercase;
     }
-
-    .topbar{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:16px;
-      margin-bottom:34px;
+    .eyebrow::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--green)}
+    h1,h2,h3,p{margin-top:0}
+    h1{font-size:clamp(42px,6vw,76px);line-height:.98;letter-spacing:-.055em;margin-bottom:24px}
+    h2{font-size:clamp(32px,4vw,52px);line-height:1.05;letter-spacing:-.04em;margin-bottom:18px}
+    h3{font-size:20px;letter-spacing:-.02em}
+    .lead{font-size:clamp(18px,2vw,22px);line-height:1.55;color:var(--muted);max-width:780px}
+    .muted{color:var(--muted)}
+    .small{font-size:13px;line-height:1.55}
+    .btn{
+      display:inline-flex;align-items:center;justify-content:center;gap:9px;
+      min-height:48px;padding:0 18px;border-radius:11px;border:1px solid var(--text);
+      background:var(--text);color:#fff;text-decoration:none;font-weight:750;
+      transition:.18s ease;white-space:nowrap;
     }
-
-    .brand{
-      font-weight:700;
-      letter-spacing:-.02em;
-      font-size:17px;
+    .btn:hover{transform:translateY(-1px);background:#0f1114}
+    .btn.green{background:var(--green);border-color:var(--green)}
+    .btn.green:hover{background:var(--green-dark)}
+    .btn.light{background:#fff;color:var(--text);border-color:var(--line)}
+    .btn.light:hover{background:var(--surface-2)}
+    .btn.full{width:100%}
+    .nav-wrap{
+      position:sticky;top:0;z-index:50;
+      backdrop-filter:blur(16px);background:rgba(247,247,245,.88);border-bottom:1px solid rgba(225,227,223,.8)
     }
+    .nav{height:70px;display:flex;align-items:center;justify-content:space-between;gap:24px}
+    .logo{display:flex;align-items:center;gap:11px;text-decoration:none;font-weight:850;letter-spacing:-.03em}
+    .logo-mark{width:29px;height:29px;border-radius:8px;background:linear-gradient(145deg,#0a8b6c,#15b38b);position:relative;box-shadow:inset 0 0 0 1px rgba(255,255,255,.3)}
+    .logo-mark::after{content:"";position:absolute;inset:7px;border:2px solid #fff;transform:rotate(45deg);border-radius:3px}
+    .nav-links{display:flex;align-items:center;gap:26px}
+    .nav-links a{text-decoration:none;color:#515860;font-size:14px;font-weight:650}
+    .nav-links a:hover{color:var(--text)}
+    .menu-btn{display:none;border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px 11px}
 
-    .demo-badge{
-      padding:7px 10px;
-      border-radius:999px;
-      background:var(--surface);
-      border:1px solid var(--line);
-      color:var(--muted);
-      font-size:12px;
-      font-weight:600;
+    .hero{padding:82px 0 62px;overflow:hidden;position:relative}
+    .hero::after{content:"";position:absolute;width:680px;height:680px;border-radius:50%;right:-300px;top:-250px;background:radial-gradient(circle,rgba(16,163,127,.13),rgba(16,163,127,0) 68%);pointer-events:none}
+    .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:55px;align-items:center}
+    .hero-copy{position:relative;z-index:1}
+    .hero-copy .eyebrow{margin-bottom:22px}
+    .hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin:30px 0 25px}
+    .trust-row{display:flex;gap:20px;flex-wrap:wrap;color:var(--muted);font-size:13px}
+    .trust-row span{display:flex;align-items:center;gap:7px}
+    .trust-row span::before{content:"✓";color:var(--green);font-weight:900}
+
+    .cockpit{
+      position:relative;z-index:1;background:#fff;border:1px solid var(--line);border-radius:22px;
+      box-shadow:var(--shadow);padding:18px;transform:perspective(1200px) rotateY(-2deg) rotateX(1deg)
     }
-
-    .hero{
-      display:grid;
-      grid-template-columns:1fr;
-      gap:12px;
-      margin-bottom:24px;
-      max-width:850px;
-    }
-
-    .hero h1{
-      margin:0;
-      font-size:clamp(34px,5vw,54px);
-      line-height:1.05;
-      letter-spacing:-.045em;
-      font-weight:700;
-    }
-
-    .hero p{
-      margin:0;
-      color:var(--muted);
-      font-size:18px;
-      line-height:1.55;
-      max-width:760px;
-    }
-
-    .hero-note{
-      margin-top:6px;
-      padding:12px 14px;
-      border:1px solid var(--line);
-      border-radius:12px;
-      background:var(--surface);
-      color:var(--muted);
-      font-size:14px;
-      box-shadow:none;
-    }
-    .hero-note strong{display:block;margin-bottom:3px;color:var(--text)}
-
-    .app{
-      background:var(--surface);
-      border:1px solid var(--line);
-      border-radius:18px;
-      box-shadow:var(--shadow);
-      overflow:hidden;
-    }
-
-    .app-header{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:18px;
-      padding:20px 22px;
-      border-bottom:1px solid var(--line);
-      background:var(--surface);
-    }
-
-    .app-title h2{
-      margin:0;
-      font-size:22px;
-      letter-spacing:-.025em;
-      font-weight:700;
-    }
-
-    .app-title small{color:var(--muted)}
-
-    .tabs{
-      display:flex;
-      gap:6px;
-      flex-wrap:wrap;
-      justify-content:flex-end;
-    }
-
-    .tab{
-      border:1px solid var(--line);
-      background:var(--surface);
-      color:var(--text);
-      padding:9px 12px;
-      border-radius:10px;
-      font-weight:600;
-      transition:.15s ease;
-    }
-    .tab:hover{background:var(--surface-2)}
-    .tab.active{
-      background:var(--text);
-      color:#fff;
-      border-color:var(--text);
-      box-shadow:none;
-    }
-
-    .content{padding:20px}
-
-    .overview{
-      display:grid;
-      grid-template-columns:1.35fr repeat(4,1fr);
-      gap:12px;
-    }
-
-    .card{
-      border:1px solid var(--line);
-      background:var(--surface);
-      border-radius:12px;
-      padding:16px;
-      min-width:0;
-      transition:.15s ease;
-    }
-    .card:hover{background:#fcfcfb}
-
-    .metric-label{
-      color:var(--muted);
-      font-weight:600;
-      font-size:12px;
-      margin-bottom:8px;
-    }
-
-    .metric-value{
-      font-weight:700;
-      font-size:30px;
-      letter-spacing:-.035em;
-    }
-
-    .metric-sub{
-      margin-top:7px;
-      font-size:12px;
-      color:var(--muted);
-    }
-
-    .up{color:var(--accent)}
-    .down{color:var(--red)}
-
-    .progress-track{
-      height:8px;
-      background:#ececea;
-      border-radius:999px;
-      overflow:hidden;
-      margin:12px 0 8px;
-    }
-
-    .progress-bar{
-      height:100%;
-      width:0;
-      background:var(--done-green);
-      border-radius:inherit;
-      transition:width .6s ease;
-    }
-
-    .section{
-      margin-top:16px;
-      border:1px solid var(--line);
-      border-radius:12px;
-      padding:18px;
-      background:var(--surface);
-    }
-
-    .section-head{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:14px;
-      margin-bottom:16px;
-    }
-
-    .section-head h3{margin:0;font-size:15px}
-    .section-head span{color:var(--muted);font-size:12px}
-
-    .timeline{
-      display:grid;
-      grid-template-columns:repeat(6,1fr);
-      gap:0;
-      align-items:start;
-    }
-
-    .step{
-      position:relative;
-      text-align:center;
-      padding:0 6px;
-    }
-
-    .step:not(:last-child)::after{
-      content:"";
-      position:absolute;
-      top:16px;
-      left:50%;
-      width:100%;
-      height:2px;
-      background:var(--line);
-      z-index:0;
-    }
-    .step.done:not(:last-child)::after{background:var(--done-green)}
-    .step.active:not(:last-child)::after{
-      background:linear-gradient(90deg,var(--done-green) 42%,var(--line) 42%);
-    }
-
-    .step-dot{
-      position:relative;
-      z-index:1;
-      width:34px;
-      height:34px;
-      margin:0 auto 9px;
-      border-radius:50%;
-      display:grid;
-      place-items:center;
-      border:1px solid #b9bbb8;
-      background:#fff;
-      color:var(--muted);
-      font-weight:700;
-      font-size:13px;
-    }
-
-    .done .step-dot{background:var(--done-green);border-color:var(--done-green);color:#fff}
-    .active .step-dot{background:var(--text);border-color:var(--text);color:#fff;box-shadow:0 0 0 4px #efefed}
-
-    .step-title{font-weight:650;font-size:12px;line-height:1.25}
-    .step-state{font-size:11px;margin-top:4px;color:var(--muted)}
-    .done .step-state{color:var(--done-green)}
-    .active .step-state{color:var(--text)}
-
-    .lower-grid{
-      display:grid;
-      grid-template-columns:1.15fr 1fr 1fr;
-      gap:12px;
-      margin-top:16px;
-    }
-
-    .panel{
-      border:1px solid var(--line);
-      border-radius:12px;
-      padding:16px;
-      background:var(--surface);
-      min-height:205px;
-      display:flex;
-      flex-direction:column;
-    }
-
-    .panel h3{margin:0 0 14px;font-size:15px}
-
-    .alert{
-      display:flex;
-      gap:10px;
-      align-items:flex-start;
-      padding:12px;
-      border-radius:10px;
-      background:var(--red-soft);
-      color:#7a2824;
-      margin-bottom:12px;
-    }
-
-    .alert-icon{
-      width:24px;height:24px;border-radius:50%;
-      display:grid;place-items:center;
-      color:#fff;background:var(--red);font-weight:700;flex:0 0 auto
-    }
-
-    .muted{color:var(--muted);font-size:13px;line-height:1.45}
-    .panel .action{margin-top:auto}
-
-    .ghost-btn,.primary-btn{
-      width:100%;
-      border-radius:10px;
-      padding:10px 12px;
-      font-weight:650;
-      transition:.15s ease;
-    }
-
-    .ghost-btn{
-      border:1px solid var(--line);
-      background:var(--surface);
-      color:var(--text);
-    }
-    .ghost-btn:hover{background:var(--surface-2)}
-
-    .primary-btn{
-      border:1px solid var(--text);
-      background:var(--text);
-      color:#fff;
-      box-shadow:none;
-    }
-    .primary-btn:hover{background:#111}
-
-    .role-row,.status-row{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      padding:9px 0;
-      border-bottom:1px solid #eeeeeb;
-      font-size:13px;
-    }
-
-    .role-row:last-of-type,.status-row:last-of-type{border-bottom:0}
-    .role-left{display:flex;align-items:center;gap:9px}
-    .avatar{
-      width:27px;height:27px;border-radius:50%;display:grid;place-items:center;
-      background:var(--surface-2);color:var(--muted);font-size:11px;font-weight:700
-    }
-
-    .pill{
-      padding:4px 8px;border-radius:999px;background:var(--accent-soft);color:#1d4ed8;
-      font-size:11px;font-weight:700;white-space:nowrap
-    }
-
-    .status-left{display:flex;align-items:center;gap:9px}
-    .status-dot{
-      width:16px;height:16px;border-radius:50%;border:1px solid #aaa;flex:0 0 auto
-    }
-    .status-dot.green{background:var(--done-green);border-color:var(--done-green);box-shadow:inset 0 0 0 4px #fff}
-    .status-dot.amber{background:var(--amber);border-color:var(--amber);box-shadow:inset 0 0 0 4px #fff}
-
-    .footer-cta{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:18px;
-      margin-top:18px;
-      padding:18px 20px;
-      border-radius:12px;
-      background:var(--text);
-      color:#fff;
-    }
-
-    .footer-cta h3{margin:0 0 4px;font-size:16px}
-    .footer-cta p{margin:0;color:#c8c8c8;font-size:13px}
-    .footer-cta button{
-      border:0;background:#fff;color:var(--text);border-radius:10px;padding:11px 15px;font-weight:700;white-space:nowrap
-    }
-
-    .toast{
-      position:fixed;
-      right:20px;
-      bottom:20px;
-      max-width:340px;
-      padding:12px 14px;
-      background:var(--text);
-      color:#fff;
-      border-radius:10px;
-      box-shadow:0 12px 35px rgba(0,0,0,.18);
-      opacity:0;
-      transform:translateY(12px);
-      pointer-events:none;
-      transition:.2s ease;
-      z-index:100;
-      font-size:13px;
-    }
-    .toast.show{opacity:1;transform:translateY(0)}
-
-    dialog{
-      width:min(520px,calc(100% - 28px));
-      border:1px solid var(--line);
-      border-radius:16px;
-      padding:0;
-      box-shadow:0 24px 70px rgba(0,0,0,.22);
-    }
-    dialog::backdrop{background:rgba(0,0,0,.42)}
-    .modal{padding:22px}
-    .modal h2{margin:0 0 8px;font-size:22px}
-    .modal p{margin:0 0 16px;color:var(--muted);line-height:1.5}
-    .modal-grid{display:grid;gap:10px}
-    .modal-option{
-      display:block;
-      width:100%;
-      border:1px solid var(--line);
-      background:#fff;
-      color:var(--text);
-      border-radius:10px;
-      padding:12px;
-      text-align:left;
-      text-decoration:none;
-    }
-    .modal-option:hover{background:var(--surface-2)}
-    .modal-close{margin-top:12px}
-
-
-    /* Desktop: gesamte Demo ohne Scrollen auf einem Bildschirm */
-    @media (min-width:1100px) and (min-height:720px){
-      html,body{height:100%;overflow:hidden}
-
-      .shell{
-        width:min(1440px,100%);
-        max-width:none;
-        height:100vh;
-        padding:10px 16px 12px;
-        display:grid;
-        grid-template-rows:auto auto minmax(0,1fr);
-        gap:8px;
-      }
-
-      .topbar{
-        min-height:34px;
-        margin:0;
-      }
-
-      .hero{
-        max-width:none;
-        margin:0;
-        display:grid;
-        grid-template-columns:minmax(0,1.4fr) minmax(330px,.6fr);
-        align-items:center;
-        gap:18px;
-      }
-
-      .hero h1{
-        font-size:clamp(28px,2.6vw,42px);
-        line-height:1;
-        margin-bottom:5px;
-      }
-
-      .hero p{
-        font-size:14px;
-        line-height:1.35;
-      }
-
-      .hero-note{
-        margin:0;
-        padding:9px 12px;
-        font-size:12px;
-      }
-
-      .app{
-        min-height:0;
-        height:100%;
-        display:flex;
-        flex-direction:column;
-        border-radius:14px;
-      }
-
-      .app-header{
-        flex:0 0 auto;
-        padding:10px 14px;
-      }
-
-      .app-title h2{font-size:18px}
-      .app-title small{font-size:11px}
-
-      .tabs{gap:5px}
-      .tab{
-        padding:7px 10px;
-        font-size:12px;
-      }
-
-      .content{
-        min-height:0;
-        flex:1;
-        padding:10px 12px 12px;
-        display:grid;
-        grid-template-rows:auto auto minmax(0,1fr) auto;
-        gap:9px;
-      }
-
-      .overview{
-        gap:8px;
-      }
-
-      .card{
-        padding:10px 12px;
-        border-radius:10px;
-      }
-
-      .metric-label{
-        font-size:10px;
-        margin-bottom:4px;
-      }
-
-      .metric-value{
-        font-size:24px;
-      }
-
-      .metric-sub{
-        margin-top:4px;
-        font-size:10px;
-      }
-
-      .progress-track{
-        height:6px;
-        margin:7px 0 4px;
-      }
-
-      .section{
-        margin:0;
-        padding:9px 12px;
-        border-radius:10px;
-      }
-
-      .section-head{
-        margin-bottom:8px;
-      }
-
-      .section-head h3{font-size:13px}
-      .section-head span{font-size:10px}
-
-      .step-dot{
-        width:28px;
-        height:28px;
-        margin-bottom:5px;
-        font-size:11px;
-      }
-
-      .step:not(:last-child)::after{
-        top:13px;
-      }
-
-      .step-title{font-size:10px}
-      .step-state{font-size:9px;margin-top:2px}
-
-      .lower-grid{
-        min-height:0;
-        margin:0;
-        gap:8px;
-      }
-
-      .panel{
-        min-height:0;
-        padding:11px 12px;
-        border-radius:10px;
-        overflow:hidden;
-      }
-
-      .panel h3{
-        margin-bottom:8px;
-        font-size:15px;
-      }
-
-      .alert{
-        padding:8px;
-        margin-bottom:6px;
-        gap:8px;
-      }
-
-      .alert-icon{
-        width:22px;
-        height:22px;
-      }
-
-      .muted{
-        font-size:12px;
-        line-height:1.4;
-      }
-
-      .role-row,.status-row{
-        padding:6px 0;
-        font-size:12px;
-      }
-
-      .avatar{
-        width:24px;
-        height:24px;
-        font-size:10px;
-      }
-
-      .pill{
-        padding:4px 7px;
-        font-size:11px;
-      }
-
-      .status-dot{
-        width:13px;
-        height:13px;
-      }
-
-      .ghost-btn,.primary-btn{
-        padding:8px 10px;
-        font-size:13px;
-        border-radius:8px;
-      }
-
-      .footer-cta{
-        margin:0;
-        padding:9px 13px;
-        border-radius:10px;
-      }
-
-      .footer-cta h3{
-        font-size:13px;
-        margin-bottom:2px;
-      }
-
-      .footer-cta p{font-size:10px}
-      .footer-cta button{
-        padding:8px 11px;
-        font-size:11px;
-      }
-    }
-
-    /* Besonders niedrige Desktop-Fenster */
-    @media (min-width:1100px) and (max-height:800px){
-      .topbar{display:none}
-      .hero h1{font-size:28px}
-      .hero p{font-size:12px}
-      .hero-note{padding:7px 10px}
-      .content{gap:7px}
-      .panel{padding:9px 10px}
-      .footer-cta{padding:7px 11px}
-    }
-
-
-    @media (max-width:1099px){
-      html,body{min-height:100%;overflow:auto}
-    }
-
-    @media (max-width:1000px){
-      .overview{grid-template-columns:repeat(2,1fr)}
-      .overview .progress-card{grid-column:1/-1}
-      .lower-grid{grid-template-columns:1fr}
-    }
-
-    @media (max-width:760px){
-      .shell{padding:18px 12px 34px}
-      .topbar{margin-bottom:26px}
-      .hero h1{font-size:36px}
-      .app-header{align-items:flex-start;flex-direction:column}
-      .tabs{justify-content:flex-start}
-      .content{padding:14px}
-      .overview{grid-template-columns:1fr 1fr}
-      .timeline{grid-template-columns:1fr}
-      .step{
-        text-align:left;
-        display:grid;
-        grid-template-columns:42px 1fr;
-        column-gap:10px;
-        align-items:center;
-        padding:8px 0;
-      }
-      .step-dot{margin:0}
-      .step:not(:last-child)::after{
-        top:41px;left:16px;width:2px;height:calc(100% - 3px)
-      }
-      .step-title,.step-state{grid-column:2}
-      .footer-cta{align-items:flex-start;flex-direction:column}
-      .footer-cta button{width:100%}
-    }
-
-    @media (max-width:520px){
-      .shell{padding:14px 10px 28px}
-      .topbar{margin-bottom:18px}
-      .hero{margin-bottom:16px}
-      .hero h1{font-size:32px}
-      .hero p{font-size:16px}
-      .hero-note{font-size:13px}
-      .overview{grid-template-columns:1fr}
-      .overview .progress-card{grid-column:auto}
-      .tabs{display:grid;grid-template-columns:1fr 1fr;width:100%}
-      .tab{width:100%}
-      .app-title h2{font-size:19px}
-      .content{padding:12px}
-      .card,.section,.panel{border-radius:12px}
-      dialog{width:calc(100% - 20px)}
-      .modal{padding:18px}
-    }
-  
-    /* Feinschliff: untere Karten höher, CTA deutlich prominenter */
-    @media (min-width:1100px) and (min-height:720px){
-      .lower-grid{
-        min-height:245px;
-      }
-
-      .lower-grid .panel{
-        min-height:245px;
-        padding-top:14px;
-        padding-bottom:14px;
-      }
-
-      .footer-cta{
-        min-height:74px;
-        padding:14px 18px;
-        border-radius:14px;
-        background:linear-gradient(135deg,#111827,#1d4ed8);
-        box-shadow:0 14px 34px rgba(29,78,216,.22);
-      }
-
-      .footer-cta h3{
-        font-size:17px;
-        line-height:1.2;
-        margin-bottom:4px;
-        letter-spacing:-.015em;
-      }
-
-      .footer-cta p{
-        font-size:12px;
-        line-height:1.35;
-        color:#dbeafe;
-      }
-
-      .footer-cta button{
-        padding:11px 15px;
-        font-size:13px;
-        border-radius:10px;
-        box-shadow:0 8px 20px rgba(0,0,0,.18);
-      }
-    }
-
-    @media (min-width:1100px) and (max-height:800px){
-      .lower-grid{
-        min-height:225px;
-      }
-
-      .lower-grid .panel{
-        min-height:225px;
-      }
-
-      .footer-cta{
-        min-height:68px;
-        padding:12px 16px;
-      }
-
-      .footer-cta h3{
-        font-size:16px;
-      }
-    }
-
-
-    /* Ruhiger, hochwertiger Marketing-CTA */
-    .footer-cta{
-      background:linear-gradient(135deg,#f7f7f5,#eef3f1);
-      color:var(--text);
-      border:1px solid #dfe7e3;
-      box-shadow:0 10px 26px rgba(15,23,42,.07);
-    }
-
-    .footer-cta h3{
-      color:var(--text);
-    }
-
-    .footer-cta p{
-      color:var(--muted);
-    }
-
-    .footer-cta button{
-      background:var(--done-green);
-      color:#fff;
-      border:1px solid var(--done-green);
-      box-shadow:none;
-    }
-
-    .footer-cta button:hover{
-      background:#0d8f70;
-    }
-
-    @media (min-width:1100px) and (min-height:720px){
-      .footer-cta{
-        min-height:74px;
-        padding:14px 18px;
-        border-radius:14px;
-        background:linear-gradient(135deg,#f7f7f5,#eef3f1);
-        color:var(--text);
-        border:1px solid #dfe7e3;
-        box-shadow:0 10px 26px rgba(15,23,42,.07);
-      }
-
-      .footer-cta h3{
-        font-size:17px;
-        line-height:1.2;
-        margin-bottom:4px;
-        letter-spacing:-.015em;
-        color:var(--text);
-      }
-
-      .footer-cta p{
-        font-size:12px;
-        line-height:1.35;
-        color:var(--muted);
-      }
-
-      .footer-cta button{
-        padding:11px 15px;
-        font-size:13px;
-        border-radius:10px;
-        background:var(--done-green);
-        color:#fff;
-        border:1px solid var(--done-green);
-        box-shadow:none;
-      }
-    }
-
-    @media (min-width:1100px) and (max-height:800px){
-      .footer-cta{
-        min-height:68px;
-        padding:12px 16px;
-      }
-
-      .footer-cta h3{
-        font-size:16px;
-      }
-    }
-
-</style>
-
+    .cockpit-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+    .cockpit-title strong{display:block;font-size:15px}.cockpit-title small{color:var(--muted)}
+    .live-pill{font-size:11px;background:var(--green-soft);color:var(--green-dark);font-weight:800;padding:6px 9px;border-radius:999px}
+    .metric-grid{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:9px}
+    .mini-card{border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff}
+    .mini-card label{display:block;color:var(--muted);font-size:10px;font-weight:700;margin-bottom:6px}
+    .mini-card strong{font-size:25px;letter-spacing:-.04em}
+    .bar{height:7px;background:#eaebe8;border-radius:99px;margin-top:10px;overflow:hidden}.bar i{display:block;width:82%;height:100%;background:var(--green);border-radius:inherit}
+    .flow{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin:14px 0}
+    .flow-step{text-align:center;font-size:9px;color:var(--muted)}
+    .flow-step b{display:grid;place-items:center;width:25px;height:25px;margin:0 auto 5px;border-radius:50%;border:1px solid #bbb;background:#fff;color:#777}
+    .flow-step.done b{background:var(--green);border-color:var(--green);color:#fff}.flow-step.active b{background:var(--text);border-color:var(--text);color:#fff}
+    .cockpit-bottom{display:grid;grid-template-columns:1.2fr .8fr;gap:9px}
+    .alert-box{padding:12px;border-radius:11px;background:var(--red-soft);font-size:11px;line-height:1.45;color:#73302c}
+    .who{padding:12px;border:1px solid var(--line);border-radius:11px}.who-row{display:flex;justify-content:space-between;padding:5px 0;font-size:10px;border-bottom:1px solid #eee}.who-row:last-child{border:0}
+
+    .proof-strip{padding:25px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:rgba(255,255,255,.45)}
+    .proof-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+    .proof-item strong{display:block;font-size:25px;letter-spacing:-.04em}.proof-item span{font-size:12px;color:var(--muted);line-height:1.4}
+
+    .section-head{max-width:800px;margin-bottom:42px}
+    .section-head.center{text-align:center;margin-left:auto;margin-right:auto}.section-head.center .lead{margin-left:auto;margin-right:auto}
+    .pain-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+    .pain-card,.benefit-card,.process-card,.faq-item{background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px;box-shadow:var(--shadow-sm)}
+    .icon{width:42px;height:42px;display:grid;place-items:center;border-radius:11px;background:var(--green-soft);color:var(--green-dark);font-weight:900;margin-bottom:18px}
+    .pain-card:nth-child(2) .icon{background:var(--amber-soft);color:var(--amber)}
+    .pain-card:nth-child(3) .icon{background:var(--blue-soft);color:var(--blue)}
+    .pain-card p,.benefit-card p,.process-card p{margin-bottom:0;color:var(--muted);line-height:1.55;font-size:14px}
+
+    .split{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
+    .check-list{display:grid;gap:13px;margin:28px 0}.check{display:grid;grid-template-columns:25px 1fr;gap:10px;line-height:1.5}.check::before{content:"✓";width:23px;height:23px;border-radius:50%;display:grid;place-items:center;background:var(--green-soft);color:var(--green-dark);font-weight:900;font-size:12px}
+    .value-stack{display:grid;gap:13px}.value-card{background:#fff;border:1px solid var(--line);border-radius:15px;padding:20px;display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start}.value-number{font-size:12px;font-weight:850;color:var(--green-dark);background:var(--green-soft);border-radius:9px;padding:8px 9px}.value-card h3{margin:0 0 6px}.value-card p{margin:0;color:var(--muted);font-size:13px;line-height:1.5}
+
+    .roi-section{background:#202123;color:#fff;position:relative;overflow:hidden}
+    .roi-section::before{content:"";position:absolute;width:600px;height:600px;border-radius:50%;left:-300px;top:-250px;background:radial-gradient(circle,rgba(16,163,127,.22),transparent 68%)}
+    .roi-section .eyebrow{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.15);color:#dce4e1}
+    .roi-section .lead{color:#bfc5c8}
+    .roi-shell{position:relative;display:grid;grid-template-columns:.95fr 1.05fr;gap:28px;align-items:start}
+    .roi-form,.roi-result{border:1px solid rgba(255,255,255,.13);border-radius:18px;background:rgba(255,255,255,.06);padding:25px;backdrop-filter:blur(10px)}
+    .roi-form h3,.roi-result h3{margin-bottom:18px}
+    .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .field{display:grid;gap:7px}.field.full{grid-column:1/-1}.field label{font-size:12px;color:#cbd0d2;font-weight:650}.field input,.field select{width:100%;border:1px solid rgba(255,255,255,.16);background:#2c2d2f;color:#fff;border-radius:10px;padding:11px 12px;outline:none}.field input:focus,.field select:focus{border-color:var(--green)}
+    .range-line{display:grid;grid-template-columns:1fr 95px;gap:10px;align-items:center}.range-line input[type="range"]{padding:0;accent-color:var(--green)}
+    .assumption{margin-top:14px;padding:12px;border-radius:10px;background:rgba(255,255,255,.05);color:#aeb5b8;font-size:11px;line-height:1.5}
+    .result-hero{padding:20px;border-radius:14px;background:#fff;color:var(--text);margin-bottom:14px}.result-hero span{display:block;color:var(--muted);font-size:12px;font-weight:700}.result-hero strong{font-size:clamp(34px,5vw,54px);letter-spacing:-.05em;color:var(--green-dark)}
+    .result-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.result-card{padding:15px;border:1px solid rgba(255,255,255,.12);border-radius:12px}.result-card span{display:block;color:#afb6b9;font-size:11px;margin-bottom:6px}.result-card strong{font-size:22px;letter-spacing:-.03em}
+    .roi-note{color:#aeb5b8;font-size:11px;line-height:1.5;margin:14px 0 0}
+
+    .benefit-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.benefit-card{padding:21px}.benefit-card h3{font-size:17px;margin-bottom:8px}
+    .demo-embed-wrap{background:#fff;border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);overflow:hidden}
+    .demo-embed-toolbar{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:16px 20px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#fcfcfb,#f5f6f3)}
+    .demo-embed-toolbar strong{display:block;font-size:16px;letter-spacing:-.02em}
+    .demo-embed-toolbar span{color:var(--muted);font-size:13px;line-height:1.45}
+    .demo-embed-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 11px;border:1px solid var(--line);border-radius:999px;background:#fff;color:#4b535b;font-size:12px;font-weight:750;white-space:nowrap}
+    .demo-embed-badge::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--green)}
+    .demo-embed-frame{display:block;width:100%;border:0;background:var(--bg);min-height:980px}
+    .demo-fallback{padding:14px 20px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:14px;align-items:center;background:#fff}
+    .demo-fallback p{margin:0;font-size:12px;color:var(--muted)}
+
+
+    .process-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.process-card strong{font-size:34px;color:#d6dad7;display:block;margin-bottom:12px}
+    .target-box{margin-top:26px;background:linear-gradient(135deg,#edf7f3,#fff);border:1px solid #d9e9e2;border-radius:18px;padding:25px;display:flex;justify-content:space-between;align-items:center;gap:22px}.target-box p{margin:0;color:var(--muted);max-width:760px}
+
+    .faq{display:grid;gap:10px}.faq-item{padding:0;overflow:hidden;box-shadow:none}.faq-q{width:100%;border:0;background:#fff;text-align:left;padding:20px 22px;display:flex;justify-content:space-between;gap:20px;font-weight:780}.faq-a{display:none;padding:0 22px 20px;color:var(--muted);line-height:1.6;font-size:14px}.faq-item.open .faq-a{display:block}.faq-item.open .faq-q span:last-child{transform:rotate(45deg)}
+
+    .contact-section{background:linear-gradient(135deg,#eef6f2,#f8f8f6)}
+    .contact-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:48px;align-items:start}.contact-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:25px;box-shadow:var(--shadow)}
+    .contact-form{display:grid;grid-template-columns:1fr 1fr;gap:14px}.contact-form .field label{color:var(--muted)}.contact-form input,.contact-form select,.contact-form textarea{border:1px solid var(--line);background:#fff;color:var(--text);border-radius:10px;padding:11px 12px}.contact-form textarea{min-height:120px;resize:vertical}.privacy{grid-column:1/-1;display:flex;gap:9px;align-items:flex-start;font-size:11px;line-height:1.5;color:var(--muted)}.privacy input{margin-top:3px}.form-status{grid-column:1/-1;font-size:12px;min-height:18px;color:var(--green-dark)}
+    footer{padding:30px 0;border-top:1px solid var(--line);background:#fff}.footer{display:flex;justify-content:space-between;gap:24px;align-items:center;font-size:12px;color:var(--muted)}.footer-links{display:flex;gap:18px;flex-wrap:wrap}.footer-links a{text-decoration:none}
+
+    @media(max-width:980px){
+      .hero-grid,.split,.roi-shell,.contact-grid{grid-template-columns:1fr}.cockpit{transform:none}.benefit-grid{grid-template-columns:1fr 1fr}.pain-grid,.process-grid{grid-template-columns:1fr}.proof-grid{grid-template-columns:1fr 1fr}.nav-links{display:none;position:fixed;inset:70px 0 auto 0;background:var(--bg);padding:25px 16px;border-bottom:1px solid var(--line);flex-direction:column;align-items:flex-start}.nav-links.open{display:flex}.menu-btn{display:block}.demo-embed-toolbar{align-items:flex-start;flex-direction:column}.demo-embed-frame{min-height:1140px}.target-box{align-items:flex-start;flex-direction:column}}
+    @media(max-width:620px){
+      .container{width:min(var(--max),calc(100% - 22px))}.section{padding:72px 0}.hero{padding-top:56px}h1{font-size:42px}.field-grid,.contact-form,.benefit-grid,.result-grid{grid-template-columns:1fr}.field.full,.privacy{grid-column:auto}.proof-grid{grid-template-columns:1fr 1fr}.proof-item strong{font-size:21px}.metric-grid{grid-template-columns:1fr 1fr}.flow{grid-template-columns:repeat(5,70px);overflow:auto;padding-bottom:5px}.cockpit-bottom{grid-template-columns:1fr}.hero-actions .btn{width:100%}.demo-embed-frame{min-height:1280px}.footer{flex-direction:column;align-items:flex-start}}
+  </style>
 </head>
 <body>
-  <main class="shell">
-    <header class="topbar">
-      <div class="brand">
-        <span>LUMINA Abschluss-Cockpit</span>
-      </div>
-      <div class="demo-badge">Interaktive Demo</div>
-    </header>
+  <header class="nav-wrap">
+    <div class="container nav">
+      <a class="logo" href="#top" aria-label="LUMINA Startseite"><span class="logo-mark" aria-hidden="true"></span><span>LUMINA</span></a>
+      <nav class="nav-links" id="navLinks" aria-label="Hauptnavigation">
+        <a href="#nutzen">Nutzen</a><a href="#roi">Potenzialrechner</a><a href="#demo">Demo</a><a href="#prozess">Pilotprojekt</a><a href="#kontakt">Kontakt</a>
+      </nav>
+      <div style="display:flex;gap:9px;align-items:center"><a class="btn green" href="#kontakt">Erstgespräch</a><button class="menu-btn" id="menuBtn" aria-label="Menü öffnen" aria-expanded="false" aria-controls="navLinks">☰</button></div>
+    </div>
+  </header>
 
+  <main id="top">
     <section class="hero">
-      <div>
-        <h1>Der Jahresabschluss auf einen Blick.</h1>
-        <p>Was wäre, wenn ein CFO jederzeit sehen könnte, wo der Abschluss steht, was ihn blockiert und wer als Nächstes handeln muss?</p>
-      </div>
-      <div class="hero-note">
-        <strong>Probieren Sie die Rollenansichten aus.</strong>
-        Wechseln Sie zwischen CFO, Buchhaltung, Berater und Prüfer und öffnen Sie die Engpassdetails.
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <span class="eyebrow">HGB-Jahresabschluss für mittelgroße Unternehmen</span>
+          <h1>Der Jahresabschluss. Transparent, termintreu, geräuschlos.</h1>
+          <p class="lead">LUMINA macht den Abschlussprozess für CFOs messbar und steuerbar – mit klaren Verantwortlichkeiten, frühzeitiger Engpasserkennung und einem belastbaren Blick auf Zeit, Aufwand und wirtschaftliches Verbesserungspotenzial.</p>
+          <div class="hero-actions"><a class="btn green" href="#roi">Verbesserungspotenzial berechnen →</a><a class="btn light" href="#demo">Interaktive Demo ansehen</a></div>
+          <div class="trust-row"><span>Messbarer Fortschritt</span><span>Berechenbarer Nutzen</span><span>Mit Team- und Prüfersicht</span></div>
+          <p class="small muted" style="margin-top:18px;max-width:680px">Entwickelt aus mehr als 30 Jahren Erfahrung in Jahresabschluss, Konzernrechnungslegung und Prüfungsbegleitung.</p>
+        </div>
+
+        <div class="cockpit" aria-label="Vorschau des LUMINA Abschluss-Cockpits">
+          <div class="cockpit-top"><div class="cockpit-title"><strong>Beispiel: Jahresabschluss 2025</strong><small>CFO-Sicht · Gesamtstatus</small></div><span class="live-pill">6 Tage vor Plan</span></div>
+          <div class="metric-grid"><div class="mini-card"><label>Abschlussfortschritt</label><strong>82 %</strong><div class="bar"><i></i></div></div><div class="mini-card"><label>Kritische Punkte</label><strong>3</strong></div><div class="mini-card"><label>Prüfungsreife</label><strong>74 %</strong></div></div>
+          <div class="flow"><div class="flow-step done"><b>✓</b>Kick-off</div><div class="flow-step done"><b>✓</b>SuSa</div><div class="flow-step done"><b>✓</b>Mapping</div><div class="flow-step active"><b>4</b>Bilanz/GuV</div><div class="flow-step"><b>5</b>Prüfung</div></div>
+          <div class="cockpit-bottom"><div class="alert-box"><strong>Nächster Engpass</strong><br>Anhangangaben zu Forderungen und Rückstellungen fehlen.<br><small>Verantwortlich: Rechnungswesen · fällig in 5 Tagen</small></div><div class="who"><strong style="font-size:11px">Wer ist dran?</strong><div class="who-row"><span>Rechnungswesen</span><b>3</b></div><div class="who-row"><span>Berater</span><b>2</b></div><div class="who-row"><span>Prüfer</span><b>1</b></div></div></div>
+        </div>
       </div>
     </section>
 
-    <section class="app" aria-label="Interaktives Jahresabschluss-Cockpit">
-      <div class="app-header">
-        <div class="app-title">
-          <h2>LUMINA Abschluss-Cockpit 2025</h2>
-          <small id="viewSubtitle">CFO-Sicht · Gesamtstatus und Entscheidungsbedarf</small>
+    <section class="proof-strip"><div class="container proof-grid"><div class="proof-item"><strong>1 Blick</strong><span>auf den Gesamtstatus des Abschlusses</span></div><div class="proof-item"><strong>1 Prozess</strong><span>für Team, Berater und Prüfer</span></div><div class="proof-item"><strong>Früher</strong><span>erkennen, was Termine gefährdet</span></div><div class="proof-item"><strong>Weniger</strong><span>Statusmails, Meetings und Nachfragen</span></div></div></section>
+
+    <section class="section" id="nutzen">
+      <div class="container">
+        <div class="section-head"><span class="eyebrow">Das eigentliche CFO-Problem</span><h2>Nicht fehlendes Fachwissen – sondern fehlende Prozessklarheit.</h2><p class="lead">In vielen Abschlussprojekten kennt jeder nur seinen Ausschnitt. Der CFO muss Informationen zusammensuchen, Entscheidungen nachhalten und Konflikte moderieren.</p></div>
+        <div class="pain-grid">
+          <article class="pain-card"><div class="icon">01</div><h3>Keine belastbare Gesamtsicht</h3><p>Statuslisten, E-Mails und Besprechungen liefern Momentaufnahmen – aber keine verlässliche Antwort auf die Frage, ob der Abschluss wirklich im Plan ist.</p></article>
+          <article class="pain-card"><div class="icon">02</div><h3>Termine kippen zu spät</h3><p>Fehlende Zuarbeiten, ungeklärte Bilanzierungsfragen oder unvollständige Prüfungsnachweise werden oft erst sichtbar, wenn kaum noch Reaktionszeit bleibt.</p></article>
+          <article class="pain-card"><div class="icon">03</div><h3>Reibungsverluste im Team</h3><p>Buchhaltung, Fachbereiche, externe Beratung und Prüfer warten aufeinander. Aus Verantwortung wird schnell gegenseitiges Fingerzeigen.</p></article>
         </div>
-        <nav class="tabs" aria-label="Rollenansichten">
-          <button class="tab active" data-role="cfo">CFO</button>
-          <button class="tab" data-role="accounting">Buchhaltung</button>
-          <button class="tab" data-role="advisor">Berater</button>
-          <button class="tab" data-role="auditor">Prüfer</button>
-        </nav>
-      </div>
-
-      <div class="content">
-        <div class="overview">
-          <article class="card progress-card">
-            <div class="metric-label">Abschlussfortschritt</div>
-            <div class="metric-value"><span id="progressValue">82</span> %</div>
-            <div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
-            <div class="metric-sub" id="progressSub">Stand: heute · 6 Tage vor Plan</div>
-          </article>
-
-          <article class="card">
-            <div class="metric-label">Offene Aufgaben</div>
-            <div class="metric-value" id="openTasks">12</div>
-            <div class="metric-sub up" id="openTasksSub">↓ 4 seit letzter Woche</div>
-          </article>
-
-          <article class="card">
-            <div class="metric-label">Kritische Punkte</div>
-            <div class="metric-value" id="criticalItems">3</div>
-            <div class="metric-sub down" id="criticalSub">↑ 1 seit letzter Woche</div>
-          </article>
-
-          <article class="card">
-            <div class="metric-label">Prüfungsreife</div>
-            <div class="metric-value"><span id="auditReadiness">74</span> %</div>
-            <div class="metric-sub up" id="auditSub">↑ 6 % seit letzter Woche</div>
-          </article>
-
-          <article class="card">
-            <div class="metric-label">Freigabe in</div>
-            <div class="metric-value"><span id="releaseDays">14</span></div>
-            <div class="metric-sub">Tagen</div>
-          </article>
-        </div>
-
-        <section class="section">
-          <div class="section-head">
-            <h3>Prozessfortschritt</h3>
-            <span id="processHint">Bilanz und GuV sind in Abstimmung</span>
-          </div>
-          <div class="timeline">
-            <div class="step done">
-              <div class="step-dot">✓</div>
-              <div class="step-title">Kick-off</div>
-              <div class="step-state">Abgeschlossen</div>
-            </div>
-            <div class="step done">
-              <div class="step-dot">✓</div>
-              <div class="step-title">SuSa</div>
-              <div class="step-state">Abgeschlossen</div>
-            </div>
-            <div class="step done">
-              <div class="step-dot">✓</div>
-              <div class="step-title">Mapping</div>
-              <div class="step-state">Abgeschlossen</div>
-            </div>
-            <div class="step active">
-              <div class="step-dot">4</div>
-              <div class="step-title">Bilanz / GuV</div>
-              <div class="step-state">In Arbeit</div>
-            </div>
-            <div class="step">
-              <div class="step-dot">5</div>
-              <div class="step-title">Anhang / Lagebericht</div>
-              <div class="step-state">Geplant</div>
-            </div>
-            <div class="step">
-              <div class="step-dot">6</div>
-              <div class="step-title">Prüfung / Freigabe</div>
-              <div class="step-state">Geplant</div>
-            </div>
-          </div>
-        </section>
-
-        <div class="lower-grid">
-          <section class="panel">
-            <h3>Nächster Engpass</h3>
-            <div class="alert">
-              <div class="alert-icon">!</div>
-              <div>
-                <strong id="bottleneckTitle">Anhangangaben zu Forderungen und Rückstellungen fehlen</strong>
-                <div class="muted" id="bottleneckMeta">Verantwortlich: Rechnungswesen · fällig in 5 Tagen</div>
-              </div>
-            </div>
-            <div class="muted" id="bottleneckText">Ohne die Angaben können Anhang, Prüfungsunterlagen und Freigabe nicht abgeschlossen werden.</div>
-            <div class="action">
-              <button class="ghost-btn" id="detailsBtn">Details anzeigen →</button>
-            </div>
-          </section>
-
-          <section class="panel">
-            <h3>Wer ist dran?</h3>
-            <div id="roleList">
-              <div class="role-row">
-                <div class="role-left"><div class="avatar">RW</div><span>Rechnungswesen</span></div>
-                <span class="pill">3 Aufgaben</span>
-              </div>
-              <div class="role-row">
-                <div class="role-left"><div class="avatar">EB</div><span>Externer Berater</span></div>
-                <span class="pill">2 Aufgaben</span>
-              </div>
-              <div class="role-row">
-                <div class="role-left"><div class="avatar">WP</div><span>Wirtschaftsprüfer</span></div>
-                <span class="pill">1 Aufgabe</span>
-              </div>
-            </div>
-            <div class="action">
-              <button class="ghost-btn" id="tasksBtn">Alle Aufgaben →</button>
-            </div>
-          </section>
-
-          <section class="panel">
-            <h3>Status im Überblick</h3>
-            <div id="statusList">
-              <div class="status-row"><div class="status-left"><span class="status-dot green"></span><span>Bilanz und GuV abgestimmt</span></div></div>
-              <div class="status-row"><div class="status-left"><span class="status-dot amber"></span><span>Anhang in Arbeit</span></div></div>
-              <div class="status-row"><div class="status-left"><span class="status-dot"></span><span>Prüfung vorbereitet</span></div></div>
-            </div>
-            <div class="action">
-              <button class="ghost-btn" id="statusBtn">Statusdetails →</button>
-            </div>
-          </section>
-        </div>
-
-        <section class="footer-cta">
-          <div>
-            <h3>Wäre diese Transparenz für Ihren Jahresabschluss hilfreich?</h3>
-            <p>Diese Demo dient als Markttest für einen praxisnahen Pilotabschluss.</p>
-          </div>
-          <button id="pilotBtn">Interesse am Pilotprojekt</button>
-        </section>
       </div>
     </section>
+
+    <section class="section-tight">
+      <div class="container split">
+        <div><span class="eyebrow">Was LUMINA verändert</span><h2>Vom Statuschaos zum steuerbaren Abschlussprozess.</h2><p class="lead">LUMINA macht sichtbar, was erledigt ist, was fehlt, wer handeln muss und welche Auswirkung ein Engpass auf Prüfung und Freigabe hat.</p><div class="check-list"><div class="check">CFO-Cockpit mit Fortschritt, Planabweichung und Entscheidungsbedarf</div><div class="check">Klare Verantwortlichkeiten und verbindliche Fälligkeiten</div><div class="check">Prüfungsanforderungen direkt mit Positionen und Nachweisen verknüpft</div><div class="check">Rollenansichten für Rechnungswesen, Fachbereiche, Berater und Prüfer</div><div class="check">Frühwarnung statt Eskalation kurz vor dem Testat</div></div></div>
+        <div class="value-stack"><div class="value-card"><span class="value-number">ROI</span><div><h3>Weniger interne Abschlusskosten</h3><p>Weniger Abstimmungsaufwand, Rückfragen, Nacharbeiten und doppelte Statuspflege.</p></div></div><div class="value-card"><span class="value-number">Zeit</span><div><h3>Mehr Terminsicherheit</h3><p>Kritische Abhängigkeiten werden sichtbar, bevor sie den Prüfungs- oder Banktermin gefährden.</p></div></div><div class="value-card"><span class="value-number">Team</span><div><h3>Weniger Reibung</h3><p>Alle Beteiligten arbeiten mit demselben Status und klaren Zuständigkeiten.</p></div></div><div class="value-card"><span class="value-number">Testat</span><div><h3>Rechtzeitig in Ihrer Hand</h3><p>Für Bank, Gesellschafter und Aufsichtsrat – Nachweise und offene Punkte sind strukturiert, nachvollziehbar und priorisiert.</p></div></div></div>
+      </div>
+    </section>
+
+    <section class="section roi-section" id="roi">
+      <div class="container">
+        <div class="section-head"><span class="eyebrow">Business Case</span><h2>Wie groß ist das messbare Verbesserungspotenzial Ihres Abschlusses?</h2><p class="lead">Der Rechner bewertet ausschließlich das wirtschaftliche Potenzial Ihres heutigen Prozesses. Eine konkrete LUMINA-Investition wird erst im Pilotgespräch auf Basis des tatsächlichen Umfangs vereinbart.</p></div>
+        <div class="roi-shell">
+          <div class="roi-form">
+            <h3>Ihre Annahmen</h3>
+            <div class="field-grid">
+              <div class="field"><label for="revenue">Unternehmensgröße</label><select id="revenue"><option value="50">50–100 Mio. € Umsatz</option><option value="100" selected>100–250 Mio. € Umsatz</option><option value="250">250–500 Mio. € Umsatz</option><option value="500">über 500 Mio. € Umsatz</option></select></div>
+              <div class="field"><label for="auditCost">Jährliche Prüfungskosten (€)</label><input id="auditCost" type="number" min="0" step="5000" value="100000"></div>
+              <div class="field"><label for="internalHours">Interne Abschlussstunden</label><input id="internalHours" type="number" min="0" step="50" value="1800"></div>
+              <div class="field"><label for="hourlyCost">Vollkosten je Stunde (€)</label><input id="hourlyCost" type="number" min="0" step="5" value="75"></div>
+              <div class="field"><label for="delayCost">Kosten/Risiko je Verzögerungstag (€)</label><input id="delayCost" type="number" min="0" step="500" value="2500"></div>
+              <div class="field"><label for="delayDays">Erwartete vermiedene Verzögerungstage</label><input id="delayDays" type="number" min="0" step="1" value="5"></div>
+              <div class="field full"><label for="efficiency">Erwartete Effizienzverbesserung</label><div class="range-line"><input id="efficiency" type="range" min="5" max="35" value="18"><input id="efficiencyValue" type="number" min="5" max="35" value="18"></div></div>
+              <div class="field full"><label for="auditSaving">Potenzielle Reduktion von Nacharbeit/Prüfungsmehraufwand</label><div class="range-line"><input id="auditSaving" type="range" min="0" max="20" value="7"><input id="auditSavingValue" type="number" min="0" max="20" value="7"></div></div>
+              <div class="field full"><label for="years">Betrachtungszeitraum</label><select id="years"><option value="1">1 Jahr</option><option value="2">2 Jahre</option><option value="3" selected>3 Jahre</option></select></div>
+            </div>
+            <div class="assumption">Berechnung: eingesparte interne Stunden + vermiedene Verzögerungskosten + reduzierter Prüfungs- und Nacharbeitsaufwand. Die konkrete Investition hängt von Pilotumfang, Gesellschaften, Rollen, Schnittstellen und Funktionsumfang ab.</div>
+          </div>
+
+          <div class="roi-result">
+            <h3>Modellrechnung auf Basis Ihrer Annahmen</h3>
+            <div class="result-hero"><span>Potenzial im Betrachtungszeitraum</span><strong id="totalPotential">0 €</strong></div>
+            <div class="result-grid"><div class="result-card"><span>Jährliches Verbesserungspotenzial</span><strong id="annualSaving">0 €</strong></div><div class="result-card"><span>Interne Effizienzgewinne</span><strong id="internalSaving">0 €</strong></div><div class="result-card"><span>Weniger Prüfungs-/Nacharbeit</span><strong id="auditSavingAmount">0 €</strong></div><div class="result-card"><span>Vermiedener Aufwand</span><strong id="savedHours">0 Std.</strong></div></div>
+            <p class="roi-note" id="roiExplanation">Die Berechnung wird automatisch aktualisiert.</p>
+            <p class="roi-note">Die konkrete Investition und damit der individuelle ROI werden erst nach Festlegung des Pilotumfangs gemeinsam berechnet.</p>
+            <a class="btn green full" href="#kontakt" style="margin-top:18px">Individuellen Business Case besprechen</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="demo">
+      <div class="container">
+        <div class="section-head center">
+          <span class="eyebrow">Interaktive Demo</span>
+          <h2>Erleben Sie die Original-Demo im vollständigen Look &amp; Feel.</h2>
+          <p class="lead">Hier ist nicht nur ein Ausschnitt, sondern das komplette interaktive LUMINA Abschluss-Cockpit 1:1 eingebunden – inklusive Rollenansichten, Engpässen, Teamstatus und Pilotansprache.</p>
+        </div>
+        <div class="demo-embed-wrap">
+          <div class="demo-embed-toolbar">
+            <div>
+              <strong>Original-Demo · direkt in die Landingpage integriert</strong>
+              <span>So sehen CFO, Buchhaltung, Berater und Prüfer denselben Status – nur aus ihrer jeweiligen Perspektive.</span>
+            </div>
+            <div class="demo-embed-badge">Vollständige interaktive Demo</div>
+          </div>
+          <iframe id="luminaDemoFrame" class="demo-embed-frame" title="LUMINA interaktive Demo" loading="lazy"></iframe>
+          <div class="demo-fallback"><p>Falls die eingebettete Ansicht nicht vollständig lädt, öffnen Sie die Demo direkt.</p><a class="btn light" href="lumina-cockpit-demo.html" target="_blank" rel="noopener">Demo in neuem Fenster öffnen</a></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-tight"><div class="container"><div class="section-head"><span class="eyebrow">Nutzen für alle Beteiligten</span><h2>Der CFO gewinnt Kontrolle. Das Team gewinnt Ruhe.</h2></div><div class="benefit-grid"><article class="benefit-card"><div class="icon">CFO</div><h3>Entscheidungsfähigkeit</h3><p>Belastbarer Gesamtstatus, Prioritäten und Eskalationsbedarf ohne operative Detailsuche.</p></article><article class="benefit-card"><div class="icon">RW</div><h3>Klare Arbeitspakete</h3><p>Weniger Nachfragen, klare Fristen und transparente Abhängigkeiten.</p></article><article class="benefit-card"><div class="icon">FB</div><h3>Gezielte Zuarbeit</h3><p>HR, IT und weitere Fachbereiche sehen genau, welche Informationen benötigt werden.</p></article><article class="benefit-card"><div class="icon">WP</div><h3>Bessere Prüfungsreife</h3><p>Nachweise und Antworten werden strukturiert bereitgestellt und nachgehalten.</p></article></div></div></section>
+
+    <section class="section" id="prozess"><div class="container"><div class="section-head"><span class="eyebrow">Pilotprojekt</span><h2>In drei Schritten zu einem transparenten Abschlussprozess.</h2><p class="lead">LUMINA soll nicht als IT-Großprojekt starten, sondern pragmatisch an einem realen Jahresabschluss.</p></div><div class="process-grid"><article class="process-card"><strong>01</strong><h3>Prozessaufnahme</h3><p>Aufgaben, Rollen, Termine, Abschlussbestandteile und Prüfungsanforderungen werden auf Ihren Prozess zugeschnitten.</p></article><article class="process-card"><strong>02</strong><h3>Pilotabschluss</h3><p>Ihr Team arbeitet für einen ausgewählten Abschluss in einem gemeinsamen Cockpit – begleitet und fachlich strukturiert.</p></article><article class="process-card"><strong>03</strong><h3>Auswertung & Skalierung</h3><p>Wir messen Termintreue, Aufwand, Engpässe und Verbesserungspotenziale und entscheiden über den weiteren Rollout.</p></article></div><div class="target-box"><div><h3>Für wen ist der Pilot gedacht?</h3><p>Deutschsprachige, mittelgroße oder konzernorientierte Unternehmen ab etwa 50 Mio. € Umsatz mit HGB-Abschluss, mehreren beteiligten Funktionen und spürbarem Koordinations- oder Prüfungsaufwand.</p></div><a class="btn green" href="#kontakt">Pilotgespräch anfragen</a></div></div></section>
+
+    <section class="section-tight"><div class="container"><div class="section-head"><span class="eyebrow">Häufige Fragen</span><h2>Was CFOs vor einem Pilotprojekt wissen möchten.</h2></div><div class="faq"><div class="faq-item open"><button class="faq-q" aria-expanded="true"><span>Ersetzt LUMINA unser ERP oder Konsolidierungssystem?</span><span aria-hidden="true">+</span></button><div class="faq-a">Nein. LUMINA steuert den Abschlussprozess über Systeme, Teams und Beteiligte hinweg. Bestehende ERP-, Konsolidierungs-, DMS- und Prüfungslösungen bleiben erhalten und können angebunden werden.</div></div><div class="faq-item"><button class="faq-q" aria-expanded="false"><span>Ist LUMINA nur für das Rechnungswesen gedacht?</span><span aria-hidden="true">+</span></button><div class="faq-a">Nein. Neben CFO, Rechnungswesen und Controlling können auch HR, IT, Legal, externe Beratung und Wirtschaftsprüfung gezielt eingebunden werden.</div></div><div class="faq-item"><button class="faq-q" aria-expanded="false"><span>Wie belastbar ist der Potenzialrechner?</span><span aria-hidden="true">+</span></button><div class="faq-a">Er liefert eine indikative erste Einschätzung. Für einen belastbaren Business Case werden tatsächliche Abschlussstunden, Nacharbeiten, Prüfungsschleifen, Verzögerungen und interne Vollkosten gemeinsam aufgenommen.</div></div><div class="faq-item"><button class="faq-q" aria-expanded="false"><span>Wie startet ein Pilotprojekt?</span><span aria-hidden="true">+</span></button><div class="faq-a">Mit einem unverbindlichen Gespräch und einer kompakten Prozessaufnahme. Danach wird ein geeigneter Abschluss, eine Gesellschaft oder ein klar abgegrenzter Prozessbereich als Pilot festgelegt.</div></div></div></div></section>
+
+    <section class="section contact-section" id="kontakt"><div class="container contact-grid"><div><span class="eyebrow">Unverbindlicher Austausch</span><h2>Wie viel Ruhe und Transparenz würde Ihr Abschluss gewinnen?</h2><p class="lead">Beschreiben Sie kurz Ihre Situation. Sie erhalten eine persönliche Rückmeldung – ohne automatisierte Verkaufsstrecke.</p><div class="check-list"><div class="check">30-minütiges CFO-orientiertes Erstgespräch</div><div class="check">Einordnung Ihres Abschlussprozesses</div><div class="check">Erste Einschätzung zu Pilotumfang und Business Case</div></div><p class="small muted">Kontakt: Volker Kusch · Interim Rechnungswesen · über 30 Jahre Erfahrung in Abschluss, Konsolidierung und Prüfungsbegleitung.</p></div><div class="contact-card"><form id="contactForm" class="contact-form"><div class="field"><label for="name">Name *</label><input id="name" name="name" required autocomplete="name"></div><div class="field"><label for="company">Unternehmen *</label><input id="company" name="company" required autocomplete="organization"></div><div class="field"><label for="email">Geschäftliche E-Mail *</label><input id="email" name="email" type="email" required autocomplete="email"></div><div class="field"><label for="role">Funktion</label><select id="role" name="role"><option>CFO / Kaufmännische Leitung</option><option>Leitung Rechnungswesen</option><option>Bilanzbuchhaltung</option><option>Geschäftsführung</option><option>Sonstige</option></select></div><div class="field full"><label for="message">Worum geht es bei Ihrem Abschlussprozess?</label><textarea id="message" name="message" placeholder="Zum Beispiel: Terminprobleme, viele Statusrunden, hohe Prüfungsnacharbeiten, fehlende Transparenz …"></textarea></div><label class="privacy"><input id="privacy" type="checkbox" required><span>Ich stimme zu, dass meine Angaben zur Bearbeitung meiner Anfrage verwendet werden. Weitere Informationen gehören in die Datenschutzerklärung der produktiven Website.</span></label><div class="field full"><button class="btn green full" type="submit">Pilotgespräch anfragen</button></div><div class="form-status" id="formStatus" aria-live="polite"></div></form></div></div></section>
   </main>
 
-  <dialog id="detailsDialog">
-    <div class="modal">
-      <h2 id="modalTitle">Engpassdetails</h2>
-      <p id="modalText">Die fehlenden Angaben blockieren den nächsten Prozessschritt.</p>
-      <div class="modal-grid" id="modalOptions"></div>
-      <button class="ghost-btn modal-close" id="closeDialog">Schließen</button>
-    </div>
-  </dialog>
-
-  <div class="toast" id="toast">Ansicht aktualisiert.</div>
+  <footer><div class="container footer"><div>© <span id="year"></span> LUMINA · Volker Kusch</div><div class="footer-links"><a href="impressum.html">Impressum</a><a href="datenschutz.html">Datenschutz</a><a href="mailto:info@volkerkusch.de">info@volkerkusch.de</a></div></div></footer>
 
   <script>
-    // HIER EINMAL DEINE E-MAIL-ADRESSE EINTRAGEN:
     const CONTACT_EMAIL = "info@volkerkusch.de";
+    const CONTACT_ENDPOINT = ""; // Für Produktion hier einen echten API-, Supabase- oder Formspree-Endpunkt eintragen.
 
-    const views = {
-      cfo: {
-        subtitle: "CFO-Sicht · Gesamtstatus und Entscheidungsbedarf",
-        progress: 82, open: 12, critical: 3, audit: 74, days: 14,
-        openSub: "↓ 4 seit letzter Woche",
-        criticalSub: "↑ 1 seit letzter Woche",
-        auditSub: "↑ 6 % seit letzter Woche",
-        progressSub: "Stand: heute · 6 Tage vor Plan",
-        hint: "Bilanz und GuV sind in Abstimmung",
-        bottleneck: "Anhangangaben zu Forderungen und Rückstellungen fehlen",
-        meta: "Verantwortlich: Rechnungswesen · fällig in 5 Tagen",
-        text: "Ohne die Angaben können Anhang, Prüfungsunterlagen und Freigabe nicht abgeschlossen werden.",
-        roles: [["RW","Rechnungswesen","3 Aufgaben"],["EB","Externer Berater","2 Aufgaben"],["WP","Wirtschaftsprüfer","1 Aufgabe"]],
-        status: [["green","Bilanz und GuV abgestimmt"],["amber","Anhang in Arbeit"],["","Prüfung vorbereitet"]]
-      },
-      accounting: {
-        subtitle: "Buchhaltung · Operative Aufgaben und offene Salden",
-        progress: 78, open: 21, critical: 5, audit: 68, days: 16,
-        openSub: "↓ 7 seit Montag",
-        criticalSub: "2 davon heute fällig",
-        auditSub: "↑ 4 % seit letzter Woche",
-        progressSub: "9 Kontenabstimmungen noch offen",
-        hint: "Schwerpunkt: Rückstellungen und Intercompany",
-        bottleneck: "Drei Rückstellungskonten sind noch nicht ausreichend dokumentiert",
-        meta: "Verantwortlich: Hauptbuch · fällig in 2 Tagen",
-        text: "Belege, Herleitungen und Freigaben fehlen. Das Cockpit zeigt direkt die betroffenen Konten und Verantwortlichen.",
-        roles: [["HB","Hauptbuch","8 Aufgaben"],["DE","Debitoren","5 Aufgaben"],["KR","Kreditoren","4 Aufgaben"]],
-        status: [["green","Banken abgestimmt"],["amber","Rückstellungen offen"],["","Intercompany ungeklärt"]]
-      },
-      advisor: {
-        subtitle: "Berater · Qualitätssicherung und Berichtserstellung",
-        progress: 84, open: 9, critical: 2, audit: 79, days: 12,
-        openSub: "↓ 3 seit gestern",
-        criticalSub: "keine neue Eskalation",
-        auditSub: "↑ 8 % seit letzter Woche",
-        progressSub: "Anhangsentwurf zu 61 % erstellt",
-        hint: "Berichtspaket wird aus den Abschlussdaten aufgebaut",
-        bottleneck: "Bewertungsmethode für Vorräte ist noch nicht final bestätigt",
-        meta: "Verantwortlich: CFO / Rechnungswesen · fällig morgen",
-        text: "Nach Bestätigung kann der zugehörige Textbaustein automatisch in den Anhang übernommen und geprüft werden.",
-        roles: [["BE","Berater","4 Aufgaben"],["CF","CFO","2 Entscheidungen"],["RW","Rechnungswesen","3 Zulieferungen"]],
-        status: [["green","Bilanzierungswahlrechte geprüft"],["amber","Anhangstexte in Arbeit"],["","Lagebericht ausstehend"]]
-      },
-      auditor: {
-        subtitle: "Prüfer · Prüfungsstatus, Nachweise und offene Findings",
-        progress: 86, open: 7, critical: 2, audit: 83, days: 10,
-        openSub: "5 Nachweise angefordert",
-        criticalSub: "1 Finding mit hoher Priorität",
-        auditSub: "↑ 9 % seit letzter Woche",
-        progressSub: "Prüfungsunterlagen zu 83 % vollständig",
-        hint: "Nachweise sind direkt den Prüffeldern zugeordnet",
-        bottleneck: "Werthaltigkeitsnachweis für eine größere Forderungsposition fehlt",
-        meta: "Verantwortlich: Rechnungswesen · fällig morgen",
-        text: "Die offene Prüfungsanforderung ist mit Bilanzposition, Konto, Beleg und Ansprechpartner verknüpft.",
-        roles: [["WP","Wirtschaftsprüfer","4 Requests"],["RW","Rechnungswesen","2 Antworten"],["BE","Berater","1 Review"]],
-        status: [["green","Vorräte geprüft"],["amber","Forderungen in Prüfung"],["","Management Letter offen"]]
-      }
+    const euro = new Intl.NumberFormat("de-DE",{style:"currency",currency:"EUR",maximumFractionDigits:0});
+    const number = new Intl.NumberFormat("de-DE",{maximumFractionDigits:0});
+    const ids = ["auditCost","internalHours","hourlyCost","delayCost","delayDays","efficiency","efficiencyValue","auditSaving","auditSavingValue","years","revenue"];
+    const el = Object.fromEntries(ids.map(id=>[id,document.getElementById(id)]));
+
+    function clamp(value,min,max){return Math.min(max,Math.max(min,value));}
+    function syncPair(range,input){range.addEventListener("input",()=>{input.value=range.value;calculateROI();});input.addEventListener("input",()=>{const v=clamp(Number(input.value)||0,Number(range.min),Number(range.max));range.value=v;calculateROI();});}
+    syncPair(el.efficiency,el.efficiencyValue);syncPair(el.auditSaving,el.auditSavingValue);
+
+    function calculateROI(){
+      const auditCost=Math.max(0,Number(el.auditCost.value)||0);
+      const internalHours=Math.max(0,Number(el.internalHours.value)||0);
+      const hourlyCost=Math.max(0,Number(el.hourlyCost.value)||0);
+      const delayCost=Math.max(0,Number(el.delayCost.value)||0);
+      const delayDays=Math.max(0,Number(el.delayDays.value)||0);
+      const efficiency=clamp(Number(el.efficiency.value)||0,0,100)/100;
+      const auditSaving=clamp(Number(el.auditSaving.value)||0,0,100)/100;
+      const years=Math.max(1,Number(el.years.value)||1);
+      const savedHours=internalHours*efficiency;
+      const internalSaving=savedHours*hourlyCost;
+      const auditSavingAmount=auditCost*auditSaving;
+      const delaySaving=delayCost*delayDays;
+      const annualSaving=internalSaving+auditSavingAmount+delaySaving;
+      const totalSaving=annualSaving*years;
+      document.getElementById("annualSaving").textContent=euro.format(annualSaving);
+      document.getElementById("totalPotential").textContent=euro.format(totalSaving);
+      document.getElementById("internalSaving").textContent=euro.format(internalSaving);
+      document.getElementById("auditSavingAmount").textContent=euro.format(auditSavingAmount);
+      document.getElementById("savedHours").textContent=number.format(savedHours)+" Std.";
+      document.getElementById("roiExplanation").textContent=`Bei diesen Annahmen entstehen jährlich rund ${euro.format(internalSaving)} interne Effizienzgewinne, ${euro.format(auditSavingAmount)} weniger Prüfungs-/Nacharbeitsaufwand und ${euro.format(delaySaving)} vermiedene Verzögerungskosten.`;
+    }
+    const revenuePresets={
+      50:{auditCost:70000,internalHours:1200,delayCost:1500},
+      100:{auditCost:100000,internalHours:1800,delayCost:2500},
+      250:{auditCost:160000,internalHours:2800,delayCost:4000},
+      500:{auditCost:250000,internalHours:4200,delayCost:6500}
     };
+    el.revenue?.addEventListener("change",()=>{const p=revenuePresets[Number(el.revenue.value)];if(!p)return;el.auditCost.value=p.auditCost;el.internalHours.value=p.internalHours;el.delayCost.value=p.delayCost;calculateROI();});
+    ids.forEach(id=>el[id]?.addEventListener("input",calculateROI));calculateROI();
 
-    const tabs = document.querySelectorAll(".tab");
-    const progressBar = document.getElementById("progressBar");
-    const toast = document.getElementById("toast");
-    const dialog = document.getElementById("detailsDialog");
-    const modalTitle = document.getElementById("modalTitle");
-    const modalText = document.getElementById("modalText");
-    const modalOptions = document.getElementById("modalOptions");
-    let currentRole = "cfo";
 
-    function showToast(message){
-      toast.textContent = message;
-      toast.classList.add("show");
-      clearTimeout(window.toastTimer);
-      window.toastTimer = setTimeout(()=>toast.classList.remove("show"),1800);
-    }
-
-    function renderRole(role){
-      currentRole = role;
-      const v = views[role];
-      document.getElementById("viewSubtitle").textContent = v.subtitle;
-      document.getElementById("progressValue").textContent = v.progress;
-      document.getElementById("openTasks").textContent = v.open;
-      document.getElementById("criticalItems").textContent = v.critical;
-      document.getElementById("auditReadiness").textContent = v.audit;
-      document.getElementById("releaseDays").textContent = v.days;
-      document.getElementById("openTasksSub").textContent = v.openSub;
-      document.getElementById("criticalSub").textContent = v.criticalSub;
-      document.getElementById("auditSub").textContent = v.auditSub;
-      document.getElementById("progressSub").textContent = v.progressSub;
-      document.getElementById("processHint").textContent = v.hint;
-      document.getElementById("bottleneckTitle").textContent = v.bottleneck;
-      document.getElementById("bottleneckMeta").textContent = v.meta;
-      document.getElementById("bottleneckText").textContent = v.text;
-
-      document.getElementById("roleList").innerHTML = v.roles.map(r => `
-        <div class="role-row">
-          <div class="role-left"><div class="avatar">${r[0]}</div><span>${r[1]}</span></div>
-          <span class="pill">${r[2]}</span>
-        </div>`).join("");
-
-      document.getElementById("statusList").innerHTML = v.status.map(s => `
-        <div class="status-row">
-          <div class="status-left"><span class="status-dot ${s[0]}"></span><span>${s[1]}</span></div>
-        </div>`).join("");
-
-      progressBar.style.width = "0";
-      requestAnimationFrame(()=>requestAnimationFrame(()=>progressBar.style.width = v.progress + "%"));
-    }
-
-    tabs.forEach(tab => tab.addEventListener("click", () => {
-      tabs.forEach(t => t.classList.remove("active"));
-      tab.classList.add("active");
-      renderRole(tab.dataset.role);
-      showToast(tab.textContent + "-Ansicht geladen");
-    }));
-
-    function openModal(title,text,options){
-      modalTitle.textContent = title;
-      modalText.textContent = text;
-      modalOptions.innerHTML = options.map((o, i) => `<button class="modal-option" data-option-index="${i}">${o}</button>`).join("");
-      dialog.showModal();
-    }
-
-    document.getElementById("detailsBtn").addEventListener("click",()=>{
-      const v=views[currentRole];
-      openModal("Engpassdetails",v.text,[
-        "Betroffene Bilanz- und Berichtspositionen anzeigen",
-        "Verantwortliche Person und Fälligkeit öffnen",
-        "Eskalation an CFO vorbereiten"
-      ]);
-    });
-
-    document.getElementById("tasksBtn").addEventListener("click",()=>{
-      openModal("Aufgabenübersicht","In der produktiven Anwendung würden hier die konkreten Aufgaben, Fristen, Bearbeiter und Nachweise erscheinen.",[
-        "Nur überfällige Aufgaben anzeigen",
-        "Nach Verantwortlichem filtern",
-        "Aufgabe direkt kommentieren"
-      ]);
-    });
-
-    document.getElementById("statusBtn").addEventListener("click",()=>{
-      openModal("Statusdetails","Jeder Status lässt sich bis zur Bilanzposition, zum Konto, zum Beleg oder zur Prüfungsanforderung herunterbrechen.",[
-        "Abschlusspositionen öffnen",
-        "Prüfungsstatus anzeigen",
-        "Änderungen seit gestern anzeigen"
-      ]);
-    });
-
-    document.getElementById("pilotBtn").addEventListener("click",()=>{
-      const subject = encodeURIComponent("Interesse am Pilotprojekt – LUMINA Abschluss-Cockpit");
-      const body = encodeURIComponent(
-`Hallo Herr Kusch,
-
-ich habe Ihre interaktive Demo des LUMINA Abschluss-Cockpits angesehen und interessiere mich für einen unverbindlichen Austausch.
-
-Meine Funktion:
-Unternehmen:
-Name:
-Telefon:
-Bevorzugter Gesprächstermin:
-
-Viele Grüße`
-      );
-
-      modalTitle.textContent = "Interesse am Pilotprojekt";
-      modalText.textContent = "Über den Button öffnet sich Ihr eingerichtetes Standard-E-Mail-Programm.";
-      modalOptions.innerHTML = `
-        <a class="modal-option primary-btn"
-           href="mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}">
-          E-Mail an Volker Kusch schreiben
-        </a>
-        <button class="modal-option" type="button" id="copyContactEmail">
-          E-Mail-Adresse kopieren: ${CONTACT_EMAIL}
-        </button>
-      `;
-      dialog.showModal();
-
-      document.getElementById("copyContactEmail").addEventListener("click", async ()=>{
-        try{
-          await navigator.clipboard.writeText(CONTACT_EMAIL);
-          showToast("E-Mail-Adresse kopiert: " + CONTACT_EMAIL);
-        }catch{
-          showToast("E-Mail-Adresse: " + CONTACT_EMAIL);
-        }
+    const luminaDemoFrame = document.getElementById("luminaDemoFrame");
+    if(luminaDemoFrame){
+      luminaDemoFrame.src = "lumina-cockpit-demo.html";
+      window.addEventListener("message",(event)=>{
+        const data = event.data;
+        if(!data || data.type !== "luminaDemoHeight") return;
+        const nextHeight = Math.max(760, Number(data.height) || 0);
+        luminaDemoFrame.style.height = nextHeight + "px";
       });
-    });
+    }
 
-    document.getElementById("closeDialog").addEventListener("click",()=>dialog.close());
-    dialog.addEventListener("click",(e)=>{
-      const box=dialog.getBoundingClientRect();
-      const outside=e.clientX<box.left||e.clientX>box.right||e.clientY<box.top||e.clientY>box.bottom;
-      if(outside) dialog.close();
-    });
+    document.querySelectorAll(".faq-q").forEach(btn=>btn.addEventListener("click",()=>{const item=btn.parentElement;item.classList.toggle("open");btn.setAttribute("aria-expanded",String(item.classList.contains("open")));}));
+    const menuBtn=document.getElementById("menuBtn"),navLinks=document.getElementById("navLinks");menuBtn.addEventListener("click",()=>{navLinks.classList.toggle("open");const open=navLinks.classList.contains("open");document.body.classList.toggle("menu-open",open);menuBtn.setAttribute("aria-expanded",String(open));});navLinks.querySelectorAll("a").forEach(a=>a.addEventListener("click",()=>{navLinks.classList.remove("open");document.body.classList.remove("menu-open");menuBtn.setAttribute("aria-expanded","false");}));document.addEventListener("keydown",e=>{if(e.key==="Escape"){navLinks.classList.remove("open");document.body.classList.remove("menu-open");menuBtn.setAttribute("aria-expanded","false");}});
 
-    // Kontaktaufnahme über das lokal eingerichtete Standard-E-Mail-Programm.
-    // Klicklogik für alle dynamisch erzeugten Dialog-Schaltflächen.
-    modalOptions.addEventListener("click", (event) => {
-      const target = event.target.closest(".modal-option");
-      if (!target) return;
-
-      // Links wie mailto: normal ausführen lassen.
-      if (target.tagName === "A") {
-        return;
+    document.getElementById("contactForm").addEventListener("submit",async(event)=>{
+      event.preventDefault();const form=event.currentTarget;const status=document.getElementById("formStatus");if(!form.reportValidity())return;
+      const data=Object.fromEntries(new FormData(form).entries());
+      const roiSummary=`Jährliches Verbesserungspotenzial: ${document.getElementById("annualSaving").textContent}; Potenzial im Betrachtungszeitraum: ${document.getElementById("totalPotential").textContent}; vermiedener Aufwand: ${document.getElementById("savedHours").textContent}`;
+      if(CONTACT_ENDPOINT){
+        try{status.textContent="Anfrage wird übermittelt …";const response=await fetch(CONTACT_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({...data,roiSummary})});if(!response.ok)throw new Error("Übertragung fehlgeschlagen");status.textContent="Vielen Dank. Ihre Anfrage wurde übermittelt.";form.reset();return;}catch(error){status.textContent="Die direkte Übertragung war nicht möglich. Ihr E-Mail-Programm wird geöffnet.";}
       }
-
-      // Der Kopier-Button besitzt eine eigene Funktion.
-      if (target.id === "copyContactEmail") {
-        return;
-      }
-
-      // Demo-Aktionen schließen den Dialog und bestätigen den Klick.
-      dialog.close();
-      showToast(target.textContent.trim() + " – Demoansicht");
+      const subject=encodeURIComponent(`LUMINA-Interesse – ${data.company}`);
+      const body=encodeURIComponent(`Hallo Herr Kusch,\n\nich interessiere mich für LUMINA.\n\nName: ${data.name}\nUnternehmen: ${data.company}\nFunktion: ${data.role}\nE-Mail: ${data.email}\n\nSituation:\n${data.message||"Keine weitere Angabe"}\n\nROI-Rechner:\n${roiSummary}\n\nViele Grüße\n${data.name}`);
+      window.location.href=`mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`;status.textContent="Ihr E-Mail-Programm wurde mit den Angaben geöffnet.";
     });
-
-
-
-    renderRole("cfo");
+    document.getElementById("year").textContent=new Date().getFullYear();
   </script>
 </body>
 </html>
