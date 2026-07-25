@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Interaktive Demo eines CFO-Jahresabschluss-Cockpits" />
+  <title>LUMINA Abschluss-Cockpit</title>
+
+  <style>
+    :root{
+      --done-green:#10a37f;
+      --done-green-soft:#e8f5f0;
+      --bg:#f7f7f5;
+      --surface:#ffffff;
+      --surface-2:#f3f4f2;
+      --text:#202123;
+      --muted:#6b6f76;
+      --line:#e3e3df;
+      --accent:#2563eb;
+      --accent-soft:#eaf1ff;
+      --red:#c2413b;
+      --red-soft:#fbefee;
+      --amber:#b7791f;
+      --shadow:0 8px 30px rgba(0,0,0,.06);
+      --radius:14px;
+    }
+
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color:var(--text);
+      background:var(--bg);
+    }
+
+    button,input,select,textarea{font:inherit}
+    button{cursor:pointer}
+
+    .shell{
+      max-width:1180px;
+      margin:0 auto;
+      padding:24px 18px 48px;
+    }
+
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      margin-bottom:34px;
+    }
+
+    .brand{
+      font-weight:700;
+      letter-spacing:-.02em;
+      font-size:17px;
+    }
+
+    .demo-badge{
+      padding:7px 10px;
+      border-radius:999px;
+      background:var(--surface);
+      border:1px solid var(--line);
+      color:var(--muted);
+      font-size:12px;
+      font-weight:600;
+    }
+
+    .hero{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:12px;
+      margin-bottom:24px;
+      max-width:850px;
+    }
+
+    .hero h1{
+      margin:0;
+      font-size:clamp(34px,5vw,54px);
+      line-height:1.05;
+      letter-spacing:-.045em;
+      font-weight:700;
+    }
+
+    .hero p{
+      margin:0;
+      color:var(--muted);
+      font-size:18px;
+      line-height:1.55;
+      max-width:760px;
+    }
+
+    .hero-note{
+      margin-top:6px;
+      padding:12px 14px;
+      border:1px solid var(--line);
+      border-radius:12px;
+      background:var(--surface);
+      color:var(--muted);
+      font-size:14px;
+      box-shadow:none;
+    }
+    .hero-note strong{display:block;margin-bottom:3px;color:var(--text)}
+
+    .app{
+      background:var(--surface);
+      border:1px solid var(--line);
+      border-radius:18px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+
+    .app-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:18px;
+      padding:20px 22px;
+      border-bottom:1px solid var(--line);
+      background:var(--surface);
+    }
+
+    .app-title h2{
+      margin:0;
+      font-size:22px;
+      letter-spacing:-.025em;
+      font-weight:700;
+    }
+
+    .app-title small{color:var(--muted)}
+
+    .tabs{
+      display:flex;
+      gap:6px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .tab{
+      border:1px solid var(--line);
+      background:var(--surface);
+      color:var(--text);
+      padding:9px 12px;
+      border-radius:10px;
+      font-weight:600;
+      transition:.15s ease;
+    }
+    .tab:hover{background:var(--surface-2)}
+    .tab.active{
+      background:var(--text);
+      color:#fff;
+      border-color:var(--text);
+      box-shadow:none;
+    }
+
+    .content{padding:20px}
+
+    .overview{
+      display:grid;
+      grid-template-columns:1.35fr repeat(4,1fr);
+      gap:12px;
+    }
+
+    .card{
+      border:1px solid var(--line);
+      background:var(--surface);
+      border-radius:12px;
+      padding:16px;
+      min-width:0;
+      transition:.15s ease;
+    }
+    .card:hover{background:#fcfcfb}
+
+    .metric-label{
+      color:var(--muted);
+      font-weight:600;
+      font-size:12px;
+      margin-bottom:8px;
+    }
+
+    .metric-value{
+      font-weight:700;
+      font-size:30px;
+      letter-spacing:-.035em;
+    }
+
+    .metric-sub{
+      margin-top:7px;
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .up{color:var(--accent)}
+    .down{color:var(--red)}
+
+    .progress-track{
+      height:8px;
+      background:#ececea;
+      border-radius:999px;
+      overflow:hidden;
+      margin:12px 0 8px;
+    }
+
+    .progress-bar{
+      height:100%;
+      width:0;
+      background:var(--done-green);
+      border-radius:inherit;
+      transition:width .6s ease;
+    }
+
+    .section{
+      margin-top:16px;
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:18px;
+      background:var(--surface);
+    }
+
+    .section-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:14px;
+      margin-bottom:16px;
+    }
+
+    .section-head h3{margin:0;font-size:15px}
+    .section-head span{color:var(--muted);font-size:12px}
+
+    .timeline{
+      display:grid;
+      grid-template-columns:repeat(6,1fr);
+      gap:0;
+      align-items:start;
+    }
+
+    .step{
+      position:relative;
+      text-align:center;
+      padding:0 6px;
+    }
+
+    .step:not(:last-child)::after{
+      content:"";
+      position:absolute;
+      top:16px;
+      left:50%;
+      width:100%;
+      height:2px;
+      background:var(--line);
+      z-index:0;
+    }
+    .step.done:not(:last-child)::after{background:var(--done-green)}
+    .step.active:not(:last-child)::after{
+      background:linear-gradient(90deg,var(--done-green) 42%,var(--line) 42%);
+    }
+
+    .step-dot{
+      position:relative;
+      z-index:1;
+      width:34px;
+      height:34px;
+      margin:0 auto 9px;
+      border-radius:50%;
+      display:grid;
+      place-items:center;
+      border:1px solid #b9bbb8;
+      background:#fff;
+      color:var(--muted);
+      font-weight:700;
+      font-size:13px;
+    }
+
+    .done .step-dot{background:var(--done-green);border-color:var(--done-green);color:#fff}
+    .active .step-dot{background:var(--text);border-color:var(--text);color:#fff;box-shadow:0 0 0 4px #efefed}
+
+    .step-title{font-weight:650;font-size:12px;line-height:1.25}
+    .step-state{font-size:11px;margin-top:4px;color:var(--muted)}
+    .done .step-state{color:var(--done-green)}
+    .active .step-state{color:var(--text)}
+
+    .lower-grid{
+      display:grid;
+      grid-template-columns:1.15fr 1fr 1fr;
+      gap:12px;
+      margin-top:16px;
+    }
+
+    .panel{
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:16px;
+      background:var(--surface);
+      min-height:205px;
+      display:flex;
+      flex-direction:column;
+    }
+
+    .panel h3{margin:0 0 14px;font-size:15px}
+
+    .alert{
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      padding:12px;
+      border-radius:10px;
+      background:var(--red-soft);
+      color:#7a2824;
+      margin-bottom:12px;
+    }
+
+    .alert-icon{
+      width:24px;height:24px;border-radius:50%;
+      display:grid;place-items:center;
+      color:#fff;background:var(--red);font-weight:700;flex:0 0 auto
+    }
+
+    .muted{color:var(--muted);font-size:13px;line-height:1.45}
+    .panel .action{margin-top:auto}
+
+    .ghost-btn,.primary-btn{
+      width:100%;
+      border-radius:10px;
+      padding:10px 12px;
+      font-weight:650;
+      transition:.15s ease;
+    }
+
+    .ghost-btn{
+      border:1px solid var(--line);
+      background:var(--surface);
+      color:var(--text);
+    }
+    .ghost-btn:hover{background:var(--surface-2)}
+
+    .primary-btn{
+      border:1px solid var(--text);
+      background:var(--text);
+      color:#fff;
+      box-shadow:none;
+    }
+    .primary-btn:hover{background:#111}
+
+    .role-row,.status-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:9px 0;
+      border-bottom:1px solid #eeeeeb;
+      font-size:13px;
+    }
+
+    .role-row:last-of-type,.status-row:last-of-type{border-bottom:0}
+    .role-left{display:flex;align-items:center;gap:9px}
+    .avatar{
+      width:27px;height:27px;border-radius:50%;display:grid;place-items:center;
+      background:var(--surface-2);color:var(--muted);font-size:11px;font-weight:700
+    }
+
+    .pill{
+      padding:4px 8px;border-radius:999px;background:var(--accent-soft);color:#1d4ed8;
+      font-size:11px;font-weight:700;white-space:nowrap
+    }
+
+    .status-left{display:flex;align-items:center;gap:9px}
+    .status-dot{
+      width:16px;height:16px;border-radius:50%;border:1px solid #aaa;flex:0 0 auto
+    }
+    .status-dot.green{background:var(--done-green);border-color:var(--done-green);box-shadow:inset 0 0 0 4px #fff}
+    .status-dot.amber{background:var(--amber);border-color:var(--amber);box-shadow:inset 0 0 0 4px #fff}
+
+    .footer-cta{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:18px;
+      margin-top:18px;
+      padding:18px 20px;
+      border-radius:12px;
+      background:var(--text);
+      color:#fff;
+    }
+
+    .footer-cta h3{margin:0 0 4px;font-size:16px}
+    .footer-cta p{margin:0;color:#c8c8c8;font-size:13px}
+    .footer-cta button{
+      border:0;background:#fff;color:var(--text);border-radius:10px;padding:11px 15px;font-weight:700;white-space:nowrap
+    }
+
+    .toast{
+      position:fixed;
+      right:20px;
+      bottom:20px;
+      max-width:340px;
+      padding:12px 14px;
+      background:var(--text);
+      color:#fff;
+      border-radius:10px;
+      box-shadow:0 12px 35px rgba(0,0,0,.18);
+      opacity:0;
+      transform:translateY(12px);
+      pointer-events:none;
+      transition:.2s ease;
+      z-index:100;
+      font-size:13px;
+    }
+    .toast.show{opacity:1;transform:translateY(0)}
+
+    dialog{
+      width:min(520px,calc(100% - 28px));
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:0;
+      box-shadow:0 24px 70px rgba(0,0,0,.22);
+    }
+    dialog::backdrop{background:rgba(0,0,0,.42)}
+    .modal{padding:22px}
+    .modal h2{margin:0 0 8px;font-size:22px}
+    .modal p{margin:0 0 16px;color:var(--muted);line-height:1.5}
+    .modal-grid{display:grid;gap:10px}
+    .modal-option{
+      display:block;
+      width:100%;
+      border:1px solid var(--line);
+      background:#fff;
+      color:var(--text);
+      border-radius:10px;
+      padding:12px;
+      text-align:left;
+      text-decoration:none;
+    }
+    .modal-option:hover{background:var(--surface-2)}
+    .modal-close{margin-top:12px}
+
+
+    /* Desktop: gesamte Demo ohne Scrollen auf einem Bildschirm */
+    @media (min-width:1100px) and (min-height:720px){
+      html,body{height:100%;overflow:hidden}
+
+      .shell{
+        width:min(1440px,100%);
+        max-width:none;
+        height:100vh;
+        padding:10px 16px 12px;
+        display:grid;
+        grid-template-rows:auto auto minmax(0,1fr);
+        gap:8px;
+      }
+
+      .topbar{
+        min-height:34px;
+        margin:0;
+      }
+
+      .hero{
+        max-width:none;
+        margin:0;
+        display:grid;
+        grid-template-columns:minmax(0,1.4fr) minmax(330px,.6fr);
+        align-items:center;
+        gap:18px;
+      }
+
+      .hero h1{
+        font-size:clamp(28px,2.6vw,42px);
+        line-height:1;
+        margin-bottom:5px;
+      }
+
+      .hero p{
+        font-size:14px;
+        line-height:1.35;
+      }
+
+      .hero-note{
+        margin:0;
+        padding:9px 12px;
+        font-size:12px;
+      }
+
+      .app{
+        min-height:0;
+        height:100%;
+        display:flex;
+        flex-direction:column;
+        border-radius:14px;
+      }
+
+      .app-header{
+        flex:0 0 auto;
+        padding:10px 14px;
+      }
+
+      .app-title h2{font-size:18px}
+      .app-title small{font-size:11px}
+
+      .tabs{gap:5px}
+      .tab{
+        padding:7px 10px;
+        font-size:12px;
+      }
+
+      .content{
+        min-height:0;
+        flex:1;
+        padding:10px 12px 12px;
+        display:grid;
+        grid-template-rows:auto auto minmax(0,1fr) auto;
+        gap:9px;
+      }
+
+      .overview{
+        gap:8px;
+      }
+
+      .card{
+        padding:10px 12px;
+        border-radius:10px;
+      }
+
+      .metric-label{
+        font-size:10px;
+        margin-bottom:4px;
+      }
+
+      .metric-value{
+        font-size:24px;
+      }
+
+      .metric-sub{
+        margin-top:4px;
+        font-size:10px;
+      }
+
+      .progress-track{
+        height:6px;
+        margin:7px 0 4px;
+      }
+
+      .section{
+        margin:0;
+        padding:9px 12px;
+        border-radius:10px;
+      }
+
+      .section-head{
+        margin-bottom:8px;
+      }
+
+      .section-head h3{font-size:13px}
+      .section-head span{font-size:10px}
+
+      .step-dot{
+        width:28px;
+        height:28px;
+        margin-bottom:5px;
+        font-size:11px;
+      }
+
+      .step:not(:last-child)::after{
+        top:13px;
+      }
+
+      .step-title{font-size:10px}
+      .step-state{font-size:9px;margin-top:2px}
+
+      .lower-grid{
+        min-height:0;
+        margin:0;
+        gap:8px;
+      }
+
+      .panel{
+        min-height:0;
+        padding:11px 12px;
+        border-radius:10px;
+        overflow:hidden;
+      }
+
+      .panel h3{
+        margin-bottom:8px;
+        font-size:15px;
+      }
+
+      .alert{
+        padding:8px;
+        margin-bottom:6px;
+        gap:8px;
+      }
+
+      .alert-icon{
+        width:22px;
+        height:22px;
+      }
+
+      .muted{
+        font-size:12px;
+        line-height:1.4;
+      }
+
+      .role-row,.status-row{
+        padding:6px 0;
+        font-size:12px;
+      }
+
+      .avatar{
+        width:24px;
+        height:24px;
+        font-size:10px;
+      }
+
+      .pill{
+        padding:4px 7px;
+        font-size:11px;
+      }
+
+      .status-dot{
+        width:13px;
+        height:13px;
+      }
+
+      .ghost-btn,.primary-btn{
+        padding:8px 10px;
+        font-size:13px;
+        border-radius:8px;
+      }
+
+      .footer-cta{
+        margin:0;
+        padding:9px 13px;
+        border-radius:10px;
+      }
+
+      .footer-cta h3{
+        font-size:13px;
+        margin-bottom:2px;
+      }
+
+      .footer-cta p{font-size:10px}
+      .footer-cta button{
+        padding:8px 11px;
+        font-size:11px;
+      }
+    }
+
+    /* Besonders niedrige Desktop-Fenster */
+    @media (min-width:1100px) and (max-height:800px){
+      .topbar{display:none}
+      .hero h1{font-size:28px}
+      .hero p{font-size:12px}
+      .hero-note{padding:7px 10px}
+      .content{gap:7px}
+      .panel{padding:9px 10px}
+      .footer-cta{padding:7px 11px}
+    }
+
+
+    @media (max-width:1099px){
+      html,body{min-height:100%;overflow:auto}
+    }
+
+    @media (max-width:1000px){
+      .overview{grid-template-columns:repeat(2,1fr)}
+      .overview .progress-card{grid-column:1/-1}
+      .lower-grid{grid-template-columns:1fr}
+    }
+
+    @media (max-width:760px){
+      .shell{padding:18px 12px 34px}
+      .topbar{margin-bottom:26px}
+      .hero h1{font-size:36px}
+      .app-header{align-items:flex-start;flex-direction:column}
+      .tabs{justify-content:flex-start}
+      .content{padding:14px}
+      .overview{grid-template-columns:1fr 1fr}
+      .timeline{grid-template-columns:1fr}
+      .step{
+        text-align:left;
+        display:grid;
+        grid-template-columns:42px 1fr;
+        column-gap:10px;
+        align-items:center;
+        padding:8px 0;
+      }
+      .step-dot{margin:0}
+      .step:not(:last-child)::after{
+        top:41px;left:16px;width:2px;height:calc(100% - 3px)
+      }
+      .step-title,.step-state{grid-column:2}
+      .footer-cta{align-items:flex-start;flex-direction:column}
+      .footer-cta button{width:100%}
+    }
+
+    @media (max-width:520px){
+      .shell{padding:14px 10px 28px}
+      .topbar{margin-bottom:18px}
+      .hero{margin-bottom:16px}
+      .hero h1{font-size:32px}
+      .hero p{font-size:16px}
+      .hero-note{font-size:13px}
+      .overview{grid-template-columns:1fr}
+      .overview .progress-card{grid-column:auto}
+      .tabs{display:grid;grid-template-columns:1fr 1fr;width:100%}
+      .tab{width:100%}
+      .app-title h2{font-size:19px}
+      .content{padding:12px}
+      .card,.section,.panel{border-radius:12px}
+      dialog{width:calc(100% - 20px)}
+      .modal{padding:18px}
+    }
+  
+    /* Feinschliff: untere Karten höher, CTA deutlich prominenter */
+    @media (min-width:1100px) and (min-height:720px){
+      .lower-grid{
+        min-height:245px;
+      }
+
+      .lower-grid .panel{
+        min-height:245px;
+        padding-top:14px;
+        padding-bottom:14px;
+      }
+
+      .footer-cta{
+        min-height:74px;
+        padding:14px 18px;
+        border-radius:14px;
+        background:linear-gradient(135deg,#111827,#1d4ed8);
+        box-shadow:0 14px 34px rgba(29,78,216,.22);
+      }
+
+      .footer-cta h3{
+        font-size:17px;
+        line-height:1.2;
+        margin-bottom:4px;
+        letter-spacing:-.015em;
+      }
+
+      .footer-cta p{
+        font-size:12px;
+        line-height:1.35;
+        color:#dbeafe;
+      }
+
+      .footer-cta button{
+        padding:11px 15px;
+        font-size:13px;
+        border-radius:10px;
+        box-shadow:0 8px 20px rgba(0,0,0,.18);
+      }
+    }
+
+    @media (min-width:1100px) and (max-height:800px){
+      .lower-grid{
+        min-height:225px;
+      }
+
+      .lower-grid .panel{
+        min-height:225px;
+      }
+
+      .footer-cta{
+        min-height:68px;
+        padding:12px 16px;
+      }
+
+      .footer-cta h3{
+        font-size:16px;
+      }
+    }
+
+
+    /* Ruhiger, hochwertiger Marketing-CTA */
+    .footer-cta{
+      background:linear-gradient(135deg,#f7f7f5,#eef3f1);
+      color:var(--text);
+      border:1px solid #dfe7e3;
+      box-shadow:0 10px 26px rgba(15,23,42,.07);
+    }
+
+    .footer-cta h3{
+      color:var(--text);
+    }
+
+    .footer-cta p{
+      color:var(--muted);
+    }
+
+    .footer-cta button{
+      background:var(--done-green);
+      color:#fff;
+      border:1px solid var(--done-green);
+      box-shadow:none;
+    }
+
+    .footer-cta button:hover{
+      background:#0d8f70;
+    }
+
+    @media (min-width:1100px) and (min-height:720px){
+      .footer-cta{
+        min-height:74px;
+        padding:14px 18px;
+        border-radius:14px;
+        background:linear-gradient(135deg,#f7f7f5,#eef3f1);
+        color:var(--text);
+        border:1px solid #dfe7e3;
+        box-shadow:0 10px 26px rgba(15,23,42,.07);
+      }
+
+      .footer-cta h3{
+        font-size:17px;
+        line-height:1.2;
+        margin-bottom:4px;
+        letter-spacing:-.015em;
+        color:var(--text);
+      }
+
+      .footer-cta p{
+        font-size:12px;
+        line-height:1.35;
+        color:var(--muted);
+      }
+
+      .footer-cta button{
+        padding:11px 15px;
+        font-size:13px;
+        border-radius:10px;
+        background:var(--done-green);
+        color:#fff;
+        border:1px solid var(--done-green);
+        box-shadow:none;
+      }
+    }
+
+    @media (min-width:1100px) and (max-height:800px){
+      .footer-cta{
+        min-height:68px;
+        padding:12px 16px;
+      }
+
+      .footer-cta h3{
+        font-size:16px;
+      }
+    }
+
+</style>
+
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <span>LUMINA Abschluss-Cockpit</span>
+      </div>
+      <div class="demo-badge">Interaktive Demo</div>
+    </header>
+
+    <section class="hero">
+      <div>
+        <h1>Der Jahresabschluss auf einen Blick.</h1>
+        <p>Was wäre, wenn ein CFO jederzeit sehen könnte, wo der Abschluss steht, was ihn blockiert und wer als Nächstes handeln muss?</p>
+      </div>
+      <div class="hero-note">
+        <strong>Probieren Sie die Rollenansichten aus.</strong>
+        Wechseln Sie zwischen CFO, Buchhaltung, Berater und Prüfer und öffnen Sie die Engpassdetails.
+      </div>
+    </section>
+
+    <section class="app" aria-label="Interaktives Jahresabschluss-Cockpit">
+      <div class="app-header">
+        <div class="app-title">
+          <h2>LUMINA Abschluss-Cockpit 2025</h2>
+          <small id="viewSubtitle">CFO-Sicht · Gesamtstatus und Entscheidungsbedarf</small>
+        </div>
+        <nav class="tabs" aria-label="Rollenansichten">
+          <button class="tab active" data-role="cfo">CFO</button>
+          <button class="tab" data-role="accounting">Buchhaltung</button>
+          <button class="tab" data-role="advisor">Berater</button>
+          <button class="tab" data-role="auditor">Prüfer</button>
+        </nav>
+      </div>
+
+      <div class="content">
+        <div class="overview">
+          <article class="card progress-card">
+            <div class="metric-label">Abschlussfortschritt</div>
+            <div class="metric-value"><span id="progressValue">82</span> %</div>
+            <div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
+            <div class="metric-sub" id="progressSub">Stand: heute · 6 Tage vor Plan</div>
+          </article>
+
+          <article class="card">
+            <div class="metric-label">Offene Aufgaben</div>
+            <div class="metric-value" id="openTasks">12</div>
+            <div class="metric-sub up" id="openTasksSub">↓ 4 seit letzter Woche</div>
+          </article>
+
+          <article class="card">
+            <div class="metric-label">Kritische Punkte</div>
+            <div class="metric-value" id="criticalItems">3</div>
+            <div class="metric-sub down" id="criticalSub">↑ 1 seit letzter Woche</div>
+          </article>
+
+          <article class="card">
+            <div class="metric-label">Prüfungsreife</div>
+            <div class="metric-value"><span id="auditReadiness">74</span> %</div>
+            <div class="metric-sub up" id="auditSub">↑ 6 % seit letzter Woche</div>
+          </article>
+
+          <article class="card">
+            <div class="metric-label">Freigabe in</div>
+            <div class="metric-value"><span id="releaseDays">14</span></div>
+            <div class="metric-sub">Tagen</div>
+          </article>
+        </div>
+
+        <section class="section">
+          <div class="section-head">
+            <h3>Prozessfortschritt</h3>
+            <span id="processHint">Bilanz und GuV sind in Abstimmung</span>
+          </div>
+          <div class="timeline">
+            <div class="step done">
+              <div class="step-dot">✓</div>
+              <div class="step-title">Kick-off</div>
+              <div class="step-state">Abgeschlossen</div>
+            </div>
+            <div class="step done">
+              <div class="step-dot">✓</div>
+              <div class="step-title">SuSa</div>
+              <div class="step-state">Abgeschlossen</div>
+            </div>
+            <div class="step done">
+              <div class="step-dot">✓</div>
+              <div class="step-title">Mapping</div>
+              <div class="step-state">Abgeschlossen</div>
+            </div>
+            <div class="step active">
+              <div class="step-dot">4</div>
+              <div class="step-title">Bilanz / GuV</div>
+              <div class="step-state">In Arbeit</div>
+            </div>
+            <div class="step">
+              <div class="step-dot">5</div>
+              <div class="step-title">Anhang / Lagebericht</div>
+              <div class="step-state">Geplant</div>
+            </div>
+            <div class="step">
+              <div class="step-dot">6</div>
+              <div class="step-title">Prüfung / Freigabe</div>
+              <div class="step-state">Geplant</div>
+            </div>
+          </div>
+        </section>
+
+        <div class="lower-grid">
+          <section class="panel">
+            <h3>Nächster Engpass</h3>
+            <div class="alert">
+              <div class="alert-icon">!</div>
+              <div>
+                <strong id="bottleneckTitle">Anhangangaben zu Forderungen und Rückstellungen fehlen</strong>
+                <div class="muted" id="bottleneckMeta">Verantwortlich: Rechnungswesen · fällig in 5 Tagen</div>
+              </div>
+            </div>
+            <div class="muted" id="bottleneckText">Ohne die Angaben können Anhang, Prüfungsunterlagen und Freigabe nicht abgeschlossen werden.</div>
+            <div class="action">
+              <button class="ghost-btn" id="detailsBtn">Details anzeigen →</button>
+            </div>
+          </section>
+
+          <section class="panel">
+            <h3>Wer ist dran?</h3>
+            <div id="roleList">
+              <div class="role-row">
+                <div class="role-left"><div class="avatar">RW</div><span>Rechnungswesen</span></div>
+                <span class="pill">3 Aufgaben</span>
+              </div>
+              <div class="role-row">
+                <div class="role-left"><div class="avatar">EB</div><span>Externer Berater</span></div>
+                <span class="pill">2 Aufgaben</span>
+              </div>
+              <div class="role-row">
+                <div class="role-left"><div class="avatar">WP</div><span>Wirtschaftsprüfer</span></div>
+                <span class="pill">1 Aufgabe</span>
+              </div>
+            </div>
+            <div class="action">
+              <button class="ghost-btn" id="tasksBtn">Alle Aufgaben →</button>
+            </div>
+          </section>
+
+          <section class="panel">
+            <h3>Status im Überblick</h3>
+            <div id="statusList">
+              <div class="status-row"><div class="status-left"><span class="status-dot green"></span><span>Bilanz und GuV abgestimmt</span></div></div>
+              <div class="status-row"><div class="status-left"><span class="status-dot amber"></span><span>Anhang in Arbeit</span></div></div>
+              <div class="status-row"><div class="status-left"><span class="status-dot"></span><span>Prüfung vorbereitet</span></div></div>
+            </div>
+            <div class="action">
+              <button class="ghost-btn" id="statusBtn">Statusdetails →</button>
+            </div>
+          </section>
+        </div>
+
+        <section class="footer-cta">
+          <div>
+            <h3>Wäre diese Transparenz für Ihren Jahresabschluss hilfreich?</h3>
+            <p>Diese Demo dient als Markttest für einen praxisnahen Pilotabschluss.</p>
+          </div>
+          <button id="pilotBtn">Interesse am Pilotprojekt</button>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="detailsDialog">
+    <div class="modal">
+      <h2 id="modalTitle">Engpassdetails</h2>
+      <p id="modalText">Die fehlenden Angaben blockieren den nächsten Prozessschritt.</p>
+      <div class="modal-grid" id="modalOptions"></div>
+      <button class="ghost-btn modal-close" id="closeDialog">Schließen</button>
+    </div>
+  </dialog>
+
+  <div class="toast" id="toast">Ansicht aktualisiert.</div>
+
+  <script>
+    // HIER EINMAL DEINE E-MAIL-ADRESSE EINTRAGEN:
+    const CONTACT_EMAIL = "info@volkerkusch.de";
+
+    const views = {
+      cfo: {
+        subtitle: "CFO-Sicht · Gesamtstatus und Entscheidungsbedarf",
+        progress: 82, open: 12, critical: 3, audit: 74, days: 14,
+        openSub: "↓ 4 seit letzter Woche",
+        criticalSub: "↑ 1 seit letzter Woche",
+        auditSub: "↑ 6 % seit letzter Woche",
+        progressSub: "Stand: heute · 6 Tage vor Plan",
+        hint: "Bilanz und GuV sind in Abstimmung",
+        bottleneck: "Anhangangaben zu Forderungen und Rückstellungen fehlen",
+        meta: "Verantwortlich: Rechnungswesen · fällig in 5 Tagen",
+        text: "Ohne die Angaben können Anhang, Prüfungsunterlagen und Freigabe nicht abgeschlossen werden.",
+        roles: [["RW","Rechnungswesen","3 Aufgaben"],["EB","Externer Berater","2 Aufgaben"],["WP","Wirtschaftsprüfer","1 Aufgabe"]],
+        status: [["green","Bilanz und GuV abgestimmt"],["amber","Anhang in Arbeit"],["","Prüfung vorbereitet"]]
+      },
+      accounting: {
+        subtitle: "Buchhaltung · Operative Aufgaben und offene Salden",
+        progress: 78, open: 21, critical: 5, audit: 68, days: 16,
+        openSub: "↓ 7 seit Montag",
+        criticalSub: "2 davon heute fällig",
+        auditSub: "↑ 4 % seit letzter Woche",
+        progressSub: "9 Kontenabstimmungen noch offen",
+        hint: "Schwerpunkt: Rückstellungen und Intercompany",
+        bottleneck: "Drei Rückstellungskonten sind noch nicht ausreichend dokumentiert",
+        meta: "Verantwortlich: Hauptbuch · fällig in 2 Tagen",
+        text: "Belege, Herleitungen und Freigaben fehlen. Das Cockpit zeigt direkt die betroffenen Konten und Verantwortlichen.",
+        roles: [["HB","Hauptbuch","8 Aufgaben"],["DE","Debitoren","5 Aufgaben"],["KR","Kreditoren","4 Aufgaben"]],
+        status: [["green","Banken abgestimmt"],["amber","Rückstellungen offen"],["","Intercompany ungeklärt"]]
+      },
+      advisor: {
+        subtitle: "Berater · Qualitätssicherung und Berichtserstellung",
+        progress: 84, open: 9, critical: 2, audit: 79, days: 12,
+        openSub: "↓ 3 seit gestern",
+        criticalSub: "keine neue Eskalation",
+        auditSub: "↑ 8 % seit letzter Woche",
+        progressSub: "Anhangsentwurf zu 61 % erstellt",
+        hint: "Berichtspaket wird aus den Abschlussdaten aufgebaut",
+        bottleneck: "Bewertungsmethode für Vorräte ist noch nicht final bestätigt",
+        meta: "Verantwortlich: CFO / Rechnungswesen · fällig morgen",
+        text: "Nach Bestätigung kann der zugehörige Textbaustein automatisch in den Anhang übernommen und geprüft werden.",
+        roles: [["BE","Berater","4 Aufgaben"],["CF","CFO","2 Entscheidungen"],["RW","Rechnungswesen","3 Zulieferungen"]],
+        status: [["green","Bilanzierungswahlrechte geprüft"],["amber","Anhangstexte in Arbeit"],["","Lagebericht ausstehend"]]
+      },
+      auditor: {
+        subtitle: "Prüfer · Prüfungsstatus, Nachweise und offene Findings",
+        progress: 86, open: 7, critical: 2, audit: 83, days: 10,
+        openSub: "5 Nachweise angefordert",
+        criticalSub: "1 Finding mit hoher Priorität",
+        auditSub: "↑ 9 % seit letzter Woche",
+        progressSub: "Prüfungsunterlagen zu 83 % vollständig",
+        hint: "Nachweise sind direkt den Prüffeldern zugeordnet",
+        bottleneck: "Werthaltigkeitsnachweis für eine größere Forderungsposition fehlt",
+        meta: "Verantwortlich: Rechnungswesen · fällig morgen",
+        text: "Die offene Prüfungsanforderung ist mit Bilanzposition, Konto, Beleg und Ansprechpartner verknüpft.",
+        roles: [["WP","Wirtschaftsprüfer","4 Requests"],["RW","Rechnungswesen","2 Antworten"],["BE","Berater","1 Review"]],
+        status: [["green","Vorräte geprüft"],["amber","Forderungen in Prüfung"],["","Management Letter offen"]]
+      }
+    };
+
+    const tabs = document.querySelectorAll(".tab");
+    const progressBar = document.getElementById("progressBar");
+    const toast = document.getElementById("toast");
+    const dialog = document.getElementById("detailsDialog");
+    const modalTitle = document.getElementById("modalTitle");
+    const modalText = document.getElementById("modalText");
+    const modalOptions = document.getElementById("modalOptions");
+    let currentRole = "cfo";
+
+    function showToast(message){
+      toast.textContent = message;
+      toast.classList.add("show");
+      clearTimeout(window.toastTimer);
+      window.toastTimer = setTimeout(()=>toast.classList.remove("show"),1800);
+    }
+
+    function renderRole(role){
+      currentRole = role;
+      const v = views[role];
+      document.getElementById("viewSubtitle").textContent = v.subtitle;
+      document.getElementById("progressValue").textContent = v.progress;
+      document.getElementById("openTasks").textContent = v.open;
+      document.getElementById("criticalItems").textContent = v.critical;
+      document.getElementById("auditReadiness").textContent = v.audit;
+      document.getElementById("releaseDays").textContent = v.days;
+      document.getElementById("openTasksSub").textContent = v.openSub;
+      document.getElementById("criticalSub").textContent = v.criticalSub;
+      document.getElementById("auditSub").textContent = v.auditSub;
+      document.getElementById("progressSub").textContent = v.progressSub;
+      document.getElementById("processHint").textContent = v.hint;
+      document.getElementById("bottleneckTitle").textContent = v.bottleneck;
+      document.getElementById("bottleneckMeta").textContent = v.meta;
+      document.getElementById("bottleneckText").textContent = v.text;
+
+      document.getElementById("roleList").innerHTML = v.roles.map(r => `
+        <div class="role-row">
+          <div class="role-left"><div class="avatar">${r[0]}</div><span>${r[1]}</span></div>
+          <span class="pill">${r[2]}</span>
+        </div>`).join("");
+
+      document.getElementById("statusList").innerHTML = v.status.map(s => `
+        <div class="status-row">
+          <div class="status-left"><span class="status-dot ${s[0]}"></span><span>${s[1]}</span></div>
+        </div>`).join("");
+
+      progressBar.style.width = "0";
+      requestAnimationFrame(()=>requestAnimationFrame(()=>progressBar.style.width = v.progress + "%"));
+    }
+
+    tabs.forEach(tab => tab.addEventListener("click", () => {
+      tabs.forEach(t => t.classList.remove("active"));
+      tab.classList.add("active");
+      renderRole(tab.dataset.role);
+      showToast(tab.textContent + "-Ansicht geladen");
+    }));
+
+    function openModal(title,text,options){
+      modalTitle.textContent = title;
+      modalText.textContent = text;
+      modalOptions.innerHTML = options.map((o, i) => `<button class="modal-option" data-option-index="${i}">${o}</button>`).join("");
+      dialog.showModal();
+    }
+
+    document.getElementById("detailsBtn").addEventListener("click",()=>{
+      const v=views[currentRole];
+      openModal("Engpassdetails",v.text,[
+        "Betroffene Bilanz- und Berichtspositionen anzeigen",
+        "Verantwortliche Person und Fälligkeit öffnen",
+        "Eskalation an CFO vorbereiten"
+      ]);
+    });
+
+    document.getElementById("tasksBtn").addEventListener("click",()=>{
+      openModal("Aufgabenübersicht","In der produktiven Anwendung würden hier die konkreten Aufgaben, Fristen, Bearbeiter und Nachweise erscheinen.",[
+        "Nur überfällige Aufgaben anzeigen",
+        "Nach Verantwortlichem filtern",
+        "Aufgabe direkt kommentieren"
+      ]);
+    });
+
+    document.getElementById("statusBtn").addEventListener("click",()=>{
+      openModal("Statusdetails","Jeder Status lässt sich bis zur Bilanzposition, zum Konto, zum Beleg oder zur Prüfungsanforderung herunterbrechen.",[
+        "Abschlusspositionen öffnen",
+        "Prüfungsstatus anzeigen",
+        "Änderungen seit gestern anzeigen"
+      ]);
+    });
+
+    document.getElementById("pilotBtn").addEventListener("click",()=>{
+      const subject = encodeURIComponent("Interesse am Pilotprojekt – LUMINA Abschluss-Cockpit");
+      const body = encodeURIComponent(
+`Hallo Herr Kusch,
+
+ich habe Ihre interaktive Demo des LUMINA Abschluss-Cockpits angesehen und interessiere mich für einen unverbindlichen Austausch.
+
+Meine Funktion:
+Unternehmen:
+Name:
+Telefon:
+Bevorzugter Gesprächstermin:
+
+Viele Grüße`
+      );
+
+      modalTitle.textContent = "Interesse am Pilotprojekt";
+      modalText.textContent = "Über den Button öffnet sich Ihr eingerichtetes Standard-E-Mail-Programm.";
+      modalOptions.innerHTML = `
+        <a class="modal-option primary-btn"
+           href="mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}">
+          E-Mail an Volker Kusch schreiben
+        </a>
+        <button class="modal-option" type="button" id="copyContactEmail">
+          E-Mail-Adresse kopieren: ${CONTACT_EMAIL}
+        </button>
+      `;
+      dialog.showModal();
+
+      document.getElementById("copyContactEmail").addEventListener("click", async ()=>{
+        try{
+          await navigator.clipboard.writeText(CONTACT_EMAIL);
+          showToast("E-Mail-Adresse kopiert: " + CONTACT_EMAIL);
+        }catch{
+          showToast("E-Mail-Adresse: " + CONTACT_EMAIL);
+        }
+      });
+    });
+
+    document.getElementById("closeDialog").addEventListener("click",()=>dialog.close());
+    dialog.addEventListener("click",(e)=>{
+      const box=dialog.getBoundingClientRect();
+      const outside=e.clientX<box.left||e.clientX>box.right||e.clientY<box.top||e.clientY>box.bottom;
+      if(outside) dialog.close();
+    });
+
+    // Kontaktaufnahme über das lokal eingerichtete Standard-E-Mail-Programm.
+    // Klicklogik für alle dynamisch erzeugten Dialog-Schaltflächen.
+    modalOptions.addEventListener("click", (event) => {
+      const target = event.target.closest(".modal-option");
+      if (!target) return;
+
+      // Links wie mailto: normal ausführen lassen.
+      if (target.tagName === "A") {
+        return;
+      }
+
+      // Der Kopier-Button besitzt eine eigene Funktion.
+      if (target.id === "copyContactEmail") {
+        return;
+      }
+
+      // Demo-Aktionen schließen den Dialog und bestätigen den Klick.
+      dialog.close();
+      showToast(target.textContent.trim() + " – Demoansicht");
+    });
+
+
+
+    renderRole("cfo");
+  </script>
+</body>
+</html>
