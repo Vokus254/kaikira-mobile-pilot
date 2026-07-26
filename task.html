@@ -45,7 +45,7 @@
 </section></div></main>
 <script>
 const SUPABASE_URL="https://mslbzypjtvvznyewupco.supabase.co";
-const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJIUzI1NiIsInJlZiI6Im1zbGJ6eXBqdHZ2em55ZXd1cGNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5OTA3NDAsImV4cCI6MjEwMDU2Njc0MH0.6f9QUtpaSLUrKVkH3rUYCcZecqwMHrdledZMtoCdRQo";
+const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1zbGJ6eXBqdHZ2em55ZXd1cGNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5OTA3NDAsImV4cCI6MjEwMDU2Njc0MH0.6f9QUtpaSLUrKVkH3rUYCcZecqwMHrdledZMtoCdRQo";
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 const params=new URLSearchParams(location.search); const taskId=params.get("task"); const initialAction=params.get("action")||""; const companyLabel=params.get("company")||"";
 let currentTask=null,currentUser=null,room=null,folders=[],documents=[],comments=[],reviews=[],approvals=[],activities=[];
