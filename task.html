@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>LUMINA | Aufgabe</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root{
+      --bg:#f6f7f5;--surface:#fff;--soft:#edf7f2;--text:#1d1f20;--muted:#68717a;
+      --line:#dfe4e1;--brand:#36a57c;--brand-dark:#248763;--danger:#b04444;
+      --danger-soft:#fff0f0;--shadow:0 18px 46px rgba(24,39,32,.08)
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;background:linear-gradient(180deg,#fafbf9,var(--bg));color:var(--text)}
+    button,input,textarea{font:inherit} button{cursor:pointer}
+    .shell{max-width:1100px;margin:auto;padding:0 22px}
+    header{background:rgba(255,255,255,.94);border-bottom:1px solid var(--line)}
+    .head{height:74px;display:flex;align-items:center;justify-content:space-between}
+    .brand{display:flex;align-items:center;gap:12px;font-weight:850}
+    .mark{width:34px;height:34px;border-radius:10px;background:var(--brand);display:grid;place-items:center}
+    .mark:before{content:"";width:13px;height:13px;border:2px solid #fff;transform:rotate(45deg);border-radius:2px}
+    main{padding:42px 0 70px}
+    .card{background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);overflow:hidden}
+    .hero{padding:28px 30px;border-bottom:1px solid var(--line)}
+    .eyebrow{color:var(--brand-dark);font-weight:800;font-size:.8rem;text-transform:uppercase;letter-spacing:.06em}
+    h1{margin:9px 0 10px;font-size:clamp(2rem,5vw,3.6rem);line-height:1.02;letter-spacing:-.045em}
+    .meta{color:var(--muted);line-height:1.6}
+    .content{padding:28px 30px}
+    .status{display:none;padding:14px 16px;border-radius:12px;margin-bottom:18px;font-weight:700;white-space:pre-wrap}
+    .status.show{display:block}.status.ok{background:var(--soft);color:var(--brand-dark)}.status.err{background:var(--danger-soft);color:var(--danger)}.status.info{background:#f7faf8;color:var(--muted);border:1px solid var(--line)}
+    .actions{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 24px}
+    .btn{border:0;border-radius:11px;padding:12px 16px;font-weight:800}
+    .btn-primary{background:var(--brand);color:#fff}.btn-primary:hover{background:var(--brand-dark)}
+    .btn-secondary{background:#edf1ef;color:#303633}
+    .btn-danger{background:var(--danger-soft);color:var(--danger)}
+    .panel{border:1px solid var(--line);border-radius:15px;padding:18px;margin-top:18px;background:#fbfcfb}
+    .panel h2{margin:0 0 14px;font-size:1.1rem}
+    textarea{width:100%;min-height:110px;border:1px solid var(--line);border-radius:11px;padding:12px 13px;resize:vertical}
+    .folder{border:1px solid var(--line);border-radius:12px;background:#fff;margin-bottom:10px;overflow:hidden}
+    .folder-head{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:13px 14px;font-weight:800}
+    .folder-body{display:none;padding:0 14px 14px}.folder.open .folder-body{display:block}
+    .file-list{display:grid;gap:8px;margin-top:10px}
+    .file-row{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:9px 10px;border:1px solid var(--line);border-radius:9px}
+    .small{font-size:.84rem;color:var(--muted)}
+    .question-box{display:none}.question-box.show{display:block}
+    @media(max-width:680px){.hero,.content{padding:22px 18px}.head{height:auto;padding:14px 0}}
+  </style>
+</head>
+<body>
+<header>
+  <div class="shell head">
+    <div class="brand"><div class="mark"></div><span>LUMINA</span></div>
+    <div class="small">Direkte Linkausführung</div>
+  </div>
+</header>
+
+<main>
+  <div class="shell">
+    <section class="card">
+      <div class="hero">
+        <div class="eyebrow">Aufgabe im Abschlussprozess</div>
+        <h1 id="taskTitle">Aufgabe wird geladen …</h1>
+        <div class="meta" id="taskMeta"></div>
+      </div>
+      <div class="content">
+        <div id="status" class="status"></div>
+
+        <div id="confirmationPanel" class="panel" hidden>
+          <h2 id="confirmationTitle">Aktion abgeschlossen</h2>
+          <p id="confirmationText" class="small"></p>
+        </div>
+
+        <div id="taskActions">
+<div id="questionBox" class="panel question-box">
+            <h2>Rückfrage zur Aufgabe</h2>
+            <textarea id="questionText" placeholder="Bitte Rückfrage oder Hinweis eingeben"></textarea>
+            <div class="actions">
+              <button class="btn btn-primary" id="sendQuestion">Rückfrage senden</button>
+            </div>
+          </div>
+
+          <div id="roomPanel" class="panel" hidden>
+            <h2>Datenraum</h2>
+            <div id="folderList"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script>
+const SUPABASE_URL="https://mslbzypjtvvznyewupco.supabase.co";
+const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1zbGJ6eXBqdHZ2em55ZXd1cGNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5OTA3NDAsImV4cCI6MjEwMDU2Njc0MH0.6f9QUtpaSLUrKVkH3rUYCcZecqwMHrdledZMtoCdRQo";
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+
+const params=new URLSearchParams(location.search);
+const taskId=params.get("task");
+const initialAction=params.get("action")||"";
+const companyLabel=params.get("company")||"";
+let currentTask=null;
+let actionAlreadyHandled=false;
+
+function setStatus(message,type="info"){
+  const el=document.getElementById("status");
+  el.textContent=message;
+  el.className=`status show ${type}`;
+}
+function clearStatus(){document.getElementById("status").className="status"}
+function deDate(v){if(!v)return "–";return new Intl.DateTimeFormat("de-DE").format(new Date(v+"T12:00:00"))}
+function escapeHtml(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function escapeAttr(v){return escapeHtml(v)}
+
+async function loadTask(){
+  if(!taskId){setStatus("In der URL fehlt die Aufgaben-ID.","err");return false}
+
+  const {data,error}=await sb.from("tasks")
+    .select("id,title,phase,due_date,status,responsible_name,project_id")
+    .eq("id",taskId)
+    .single();
+
+  if(error){
+    setStatus("Aufgabe konnte nicht geladen werden: "+error.message,"err");
+    return false;
+  }
+
+  currentTask=data;
+  document.getElementById("taskTitle").textContent=data.title;
+  document.getElementById("taskMeta").textContent=[
+    companyLabel,
+    data.phase,
+    "Fällig: "+deDate(data.due_date),
+    "Status: "+data.status
+  ].filter(Boolean).join(" · ");
+  return true;
+}
+
+async function handleAction(action,automatic=false){
+  if(!currentTask) return;
+
+  if(action==="question"){
+    document.getElementById("questionBox").classList.add("show");
+    return;
+  }
+
+  if(action==="dataroom"){
+    await openDataRoom();
+    return;
+  }
+
+  if(action==="accept"||action==="decline"){
+    if(automatic && actionAlreadyHandled) return;
+    actionAlreadyHandled=true;
+
+    const nextStatus=action==="accept"?"accepted":"declined";
+
+    const {error:e1}=await sb.from("tasks").update({
+      status:nextStatus,
+      ...(action==="accept"
+        ? {accepted_at:new Date().toISOString()}
+        : {declined_at:new Date().toISOString()})
+    }).eq("id",taskId);
+
+    if(e1){
+      setStatus("Status konnte nicht geändert werden: "+e1.message,"err");
+      return;
+    }
+
+    const {error:e2}=await sb.from("task_responses").insert({
+      task_id:taskId,
+      user_id:null,
+      response_type:nextStatus,
+      message:"Direkter Testlink ohne Anmeldung"
+    });
+
+    if(e2){
+      setStatus("Status wurde geändert, das Antwortprotokoll konnte aber nicht gespeichert werden: "+e2.message,"err");
+      return;
+    }
+
+    currentTask.status=nextStatus;
+    document.getElementById("taskMeta").textContent=[
+      companyLabel,
+      currentTask.phase,
+      "Fällig: "+deDate(currentTask.due_date),
+      "Status: "+nextStatus
+    ].filter(Boolean).join(" · ");
+
+    const panel=document.getElementById("confirmationPanel");
+    const title=document.getElementById("confirmationTitle");
+    const text=document.getElementById("confirmationText");
+    panel.hidden=false;
+    title.textContent=action==="accept" ? "Aufgabe angenommen" : "Aufgabe abgelehnt";
+    text.textContent=action==="accept"
+      ? "Vielen Dank. Die Aufgabe wurde erfolgreich angenommen."
+      : "Die Aufgabe wurde erfolgreich abgelehnt.";
+    setStatus(
+      action==="accept"
+        ? "Die Aufgabe wurde direkt angenommen."
+        : "Die Aufgabe wurde direkt abgelehnt.",
+      "ok"
+    );
+
+    history.replaceState({},document.title,location.pathname+"?task="+encodeURIComponent(taskId));
+  }
+}
+
+document.getElementById("sendQuestion").addEventListener("click",async()=>{
+  const message=document.getElementById("questionText").value.trim();
+  if(!message){setStatus("Bitte Rückfrage eingeben.","err");return}
+
+  const {error}=await sb.from("task_comments").insert({
+    task_id:taskId,
+    user_id:null,
+    author_name:"Gastlink",
+    author_type:"human",
+    comment_type:"question",
+    message
+  });
+
+  if(error){
+    setStatus("Rückfrage konnte nicht gespeichert werden: "+error.message,"err");
+    return;
+  }
+
+  document.getElementById("questionText").value="";
+  document.getElementById("questionBox").classList.remove("show");
+  setStatus("Die Rückfrage wurde gespeichert.","ok");
+});
+
+async function openDataRoom(){
+  const panel=document.getElementById("roomPanel");
+  panel.hidden=false;
+  setStatus("Datenraum wird geladen …","info");
+
+  const {data:room,error:rErr}=await sb.from("task_rooms")
+    .select("id,room_name,room_status")
+    .eq("task_id",taskId)
+    .single();
+
+  if(rErr){
+    setStatus("Datenraum konnte nicht geladen werden: "+rErr.message,"err");
+    return;
+  }
+
+  const {data:folders,error:fErr}=await sb.from("task_room_folders")
+    .select("id,folder_number,folder_name")
+    .eq("task_room_id",room.id)
+    .order("folder_number");
+
+  if(fErr){
+    setStatus("Ordner konnten nicht geladen werden: "+fErr.message,"err");
+    return;
+  }
+
+  const {data:docs,error:dErr}=await sb.from("documents")
+    .select("id,folder_id,file_name,file_size,storage_path,mime_type,uploaded_at")
+    .eq("task_id",taskId)
+    .order("uploaded_at",{ascending:false});
+
+  if(dErr){
+    setStatus("Dokumente konnten nicht geladen werden: "+dErr.message,"err");
+    return;
+  }
+
+  const docsByFolder=new Map();
+  (docs||[]).forEach(d=>{
+    if(!docsByFolder.has(d.folder_id)) docsByFolder.set(d.folder_id,[]);
+    docsByFolder.get(d.folder_id).push(d);
+  });
+
+  const list=document.getElementById("folderList");
+  list.innerHTML=(folders||[]).map(folder=>`
+    <div class="folder" data-folder="${folder.id}">
+      <div class="folder-head">
+        <span>${String(folder.folder_number).padStart(2,"0")} ${escapeHtml(folder.folder_name)}</span>
+        <button class="btn btn-secondary" type="button">Öffnen</button>
+      </div>
+      <div class="folder-body">
+        <input type="file" data-upload="${folder.id}">
+        <div class="file-list">
+          ${(docsByFolder.get(folder.id)||[]).map(d=>`
+            <div class="file-row">
+              <span>${escapeHtml(d.file_name)}</span>
+              <button class="btn btn-secondary" type="button" data-download="${escapeAttr(d.storage_path)}">Herunterladen</button>
+            </div>
+          `).join("") || '<div class="small">Noch keine Dateien vorhanden.</div>'}
+        </div>
+      </div>
+    </div>
+  `).join("");
+
+  list.querySelectorAll(".folder-head").forEach(head=>{
+    head.addEventListener("click",()=>head.parentElement.classList.toggle("open"));
+  });
+
+  list.querySelectorAll("[data-upload]").forEach(input=>{
+    input.addEventListener("change",()=>uploadFile(input.dataset.upload,input.files?.[0]));
+  });
+
+  list.querySelectorAll("[data-download]").forEach(button=>{
+    button.addEventListener("click",()=>downloadFile(button.dataset.download));
+  });
+
+  clearStatus();
+  panel.scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+async function uploadFile(folderId,file){
+  if(!file) return;
+
+  const safe=file.name.replace(/[^\w.\-äöüÄÖÜß]/g,"_");
+  const path=[currentTask.project_id,taskId,folderId,Date.now()+"-"+safe].join("/");
+
+  setStatus("Datei wird hochgeladen …","info");
+
+  const {error:uErr}=await sb.storage
+    .from("lumina-datarooms")
+    .upload(path,file,{upsert:false,contentType:file.type});
+
+  if(uErr){
+    setStatus("Upload fehlgeschlagen: "+uErr.message,"err");
+    return;
+  }
+
+  const {error:mErr}=await sb.from("documents").insert({
+    project_id:currentTask.project_id,
+    task_id:taskId,
+    folder_id:folderId,
+    storage_bucket:"lumina-datarooms",
+    storage_path:path,
+    file_name:file.name,
+    mime_type:file.type,
+    file_size:file.size,
+    uploaded_by:null
+  });
+
+  if(mErr){
+    setStatus("Datei wurde hochgeladen, Metadaten konnten aber nicht gespeichert werden: "+mErr.message,"err");
+    return;
+  }
+
+  setStatus("Datei wurde hochgeladen.","ok");
+  await openDataRoom();
+}
+
+async function downloadFile(path){
+  const {data,error}=await sb.storage.from("lumina-datarooms").createSignedUrl(path,300);
+
+  if(error){
+    setStatus("Downloadlink konnte nicht erzeugt werden: "+error.message,"err");
+    return;
+  }
+
+  window.open(data.signedUrl,"_blank","noopener");
+}
+
+(async()=>{
+  const loaded=await loadTask();
+  if(!loaded) return;
+
+  const questionBox=document.getElementById("questionBox");
+  const roomPanel=document.getElementById("roomPanel");
+  const confirmationPanel=document.getElementById("confirmationPanel");
+
+  questionBox.classList.remove("show");
+  roomPanel.hidden=true;
+  confirmationPanel.hidden=true;
+
+  if(initialAction==="accept" || initialAction==="decline"){
+    await handleAction(initialAction,true);
+    return;
+  }
+
+  if(initialAction==="question"){
+    questionBox.classList.add("show");
+    questionBox.scrollIntoView({behavior:"smooth",block:"start"});
+    return;
+  }
+
+  if(initialAction==="dataroom"){
+    await openDataRoom();
+    return;
+  }
+
+  setStatus("Bitte öffne die Aufgabe über einen Link aus der LUMINA-E-Mail.","info");
+})();
+</script>
+</body>
+</html>
