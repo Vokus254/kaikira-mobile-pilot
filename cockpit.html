@@ -43,9 +43,16 @@
     input,select,textarea{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--text)}
     .projectbar{display:grid;grid-template-columns:minmax(260px,480px) 1fr auto;gap:12px;align-items:end;padding:16px;margin-bottom:18px}
     .metrics{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:18px}
-    .metric{padding:15px;background:#fff;border:1px solid var(--line);border-radius:15px}
+    .metric{padding:15px;background:#fff;border:1px solid var(--line);border-radius:15px;text-align:left;width:100%;font:inherit;color:inherit;cursor:pointer;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
+    .metric:hover{transform:translateY(-2px);border-color:#9bcbb2;box-shadow:0 10px 24px rgba(22,66,46,.09)}
+    .metric:focus-visible{outline:3px solid rgba(47,143,91,.25);outline-offset:2px}
+    .metric.active{border-color:var(--brand);box-shadow:0 0 0 3px rgba(47,143,91,.12)}
     .metric span{display:block;color:var(--muted);font-size:.76rem;margin-bottom:5px}
     .metric strong{font-size:1.45rem}
+    .quick-filter{display:none;align-items:center;justify-content:space-between;gap:12px;margin:0 0 14px;padding:11px 14px;border-radius:12px;background:var(--soft);border:1px solid #cfe7d8;color:var(--brand-dark);font-weight:750}
+    .quick-filter.show{display:flex}
+    .focus-card{animation:focusPulse 1.15s ease}
+    @keyframes focusPulse{0%,100%{box-shadow:none}45%{box-shadow:0 0 0 5px rgba(47,143,91,.18)}}
     .view{display:none}.view.active{display:block}
     .dashboard{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(320px,.85fr);gap:18px}
     .section{padding:18px}
@@ -135,13 +142,13 @@
     <button id="openAdmin" class="btn btn-secondary">Projekt verwalten</button>
   </section>
 
-  <section class="metrics">
-    <div class="metric"><span>Aufgaben</span><strong id="mTasks">0</strong></div>
-    <div class="metric"><span>Erledigt/Freigegeben</span><strong id="mDone">0</strong></div>
-    <div class="metric"><span>Neue Dateien</span><strong id="mFiles">0</strong></div>
-    <div class="metric"><span>Offene Rückfragen</span><strong id="mQuestions">0</strong></div>
-    <div class="metric"><span>Abgelehnt</span><strong id="mDeclined">0</strong></div>
-    <div class="metric"><span>Überfällig</span><strong id="mOverdue">0</strong></div>
+  <section class="metrics" aria-label="Schnellzugriffe">
+    <button type="button" class="metric" data-metric="tasks"><span>Aufgaben</span><strong id="mTasks">0</strong></button>
+    <button type="button" class="metric" data-metric="done"><span>Erledigt/Freigegeben</span><strong id="mDone">0</strong></button>
+    <button type="button" class="metric" data-metric="files"><span>Neue Dateien</span><strong id="mFiles">0</strong></button>
+    <button type="button" class="metric" data-metric="questions"><span>Offene Rückfragen</span><strong id="mQuestions">0</strong></button>
+    <button type="button" class="metric" data-metric="declined"><span>Abgelehnt</span><strong id="mDeclined">0</strong></button>
+    <button type="button" class="metric" data-metric="overdue"><span>Überfällig</span><strong id="mOverdue">0</strong></button>
   </section>
 
   <section id="view-cockpit" class="view active">
@@ -172,6 +179,7 @@
 
   <section id="view-tasks" class="view">
     <div class="card tabs-panel">
+      <div id="taskQuickFilter" class="quick-filter"><span id="taskQuickFilterText"></span><button id="clearQuickFilter" class="btn btn-secondary btn-small" type="button">Filter aufheben</button></div>
       <div class="filters">
         <select id="taskPhase"><option value="">Alle Phasen</option></select>
         <select id="taskPerson"><option value="">Alle Zuständigen</option></select>
@@ -193,8 +201,8 @@
 
   <section id="view-communication" class="view">
     <div class="comm-grid">
-      <div class="card section"><h2>Offene Rückfragen</h2><div id="questionsList" class="feed"></div></div>
-      <div class="card section"><h2>Neue Datenlieferungen</h2><div id="deliveriesList" class="feed"></div></div>
+      <div id="questionsCard" class="card section"><h2>Offene Rückfragen</h2><div id="questionsList" class="feed"></div></div>
+      <div id="deliveriesCard" class="card section"><h2>Neue Datenlieferungen</h2><div id="deliveriesList" class="feed"></div></div>
     </div>
   </section>
 </div>
@@ -206,6 +214,7 @@ const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 
 let user=null,projects=[],currentProject=null,tasks=[],rooms=[],folders=[],documents=[],comments=[],responses=[],notifications=[],activities=[];
+let quickTaskFilter="";
 const statusMap={planned:"Geplant",invited:"Eingeladen",accepted:"Angenommen",declined:"Abgelehnt",in_progress:"In Bearbeitung",question:"Rückfrage",blocked:"Blockiert",submitted:"Eingereicht",in_review:"In Prüfung",approved:"Freigegeben",completed:"Erledigt",rooms_ready:"Datenräume bereit"};
 
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
@@ -361,7 +370,14 @@ function renderTaskFilters(){
 }
 function filteredTasks(){
   const p=document.getElementById("taskPhase").value,u=document.getElementById("taskPerson").value,s=document.getElementById("taskStatus").value,q=document.getElementById("taskSearch").value.toLowerCase();
-  return tasks.filter(t=>(!p||t.phase===p)&&(!u||t.responsible_name===u)&&(!s||t.status===s)&&(!q||`${t.title} ${t.phase}`.toLowerCase().includes(q)));
+  const today=new Date().toISOString().slice(0,10);
+  return tasks.filter(t=>{
+    const quickOk=!quickTaskFilter
+      ||(quickTaskFilter==="done"&&["completed","approved"].includes(t.status))
+      ||(quickTaskFilter==="declined"&&t.status==="declined")
+      ||(quickTaskFilter==="overdue"&&t.due_date&&t.due_date<today&&!["completed","approved"].includes(t.status));
+    return quickOk&&(!p||t.phase===p)&&(!u||t.responsible_name===u)&&(!s||t.status===s)&&(!q||`${t.title} ${t.phase}`.toLowerCase().includes(q));
+  });
 }
 function renderTasks(){
   document.getElementById("taskBody").innerHTML=filteredTasks().map(t=>{
@@ -384,15 +400,53 @@ function renderCommunication(){
   document.getElementById("deliveriesList").innerHTML=documents.slice(0,30).map(d=>{const t=taskForFolder(d.folder_id);return eventHtml({type:"file",time:docTime(d),title:docName(d),detail:`${t?.title||"Datenraum"} · ${folderOf(d.folder_id)?.folder_name||""}`})}).join("")||'<div class="empty">Keine Datenlieferungen vorhanden.</div>';
 }
 
+function activateView(name){
+  document.querySelectorAll("[data-view]").forEach(x=>x.classList.toggle("active",x.dataset.view===name));
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  document.getElementById("view-"+name)?.classList.add("active");
+}
+function focusElement(id){
+  const el=document.getElementById(id);if(!el)return;
+  el.classList.remove("focus-card");void el.offsetWidth;el.classList.add("focus-card");
+  el.scrollIntoView({behavior:"smooth",block:"start"});
+}
+function clearTaskQuickFilter(){
+  quickTaskFilter="";
+  document.getElementById("taskQuickFilter").classList.remove("show");
+  document.querySelectorAll(".metric").forEach(x=>x.classList.remove("active"));
+  renderTasks();
+}
+function openMetric(metric){
+  document.querySelectorAll(".metric").forEach(x=>x.classList.toggle("active",x.dataset.metric===metric));
+  if(metric==="files"||metric==="questions"){
+    quickTaskFilter="";
+    activateView("communication");
+    const target=metric==="files"?"deliveriesCard":"questionsCard";
+    setTimeout(()=>focusElement(target),50);
+    return;
+  }
+  activateView("tasks");
+  document.getElementById("taskPhase").value="";
+  document.getElementById("taskPerson").value="";
+  document.getElementById("taskStatus").value="";
+  document.getElementById("taskSearch").value="";
+  quickTaskFilter=metric==="tasks"?"":metric;
+  const names={done:"Erledigte und freigegebene Aufgaben",declined:"Abgelehnte Aufgaben",overdue:"Überfällige Aufgaben"};
+  const bar=document.getElementById("taskQuickFilter");
+  if(quickTaskFilter){document.getElementById("taskQuickFilterText").textContent=names[quickTaskFilter];bar.classList.add("show")}else bar.classList.remove("show");
+  renderTasks();
+  setTimeout(()=>document.getElementById("view-tasks").scrollIntoView({behavior:"smooth",block:"start"}),50);
+}
 function openRoom(taskId){
   window.open(`/task?task=${encodeURIComponent(taskId)}&action=dataroom&project=${encodeURIComponent(currentProject.id)}&company=${encodeURIComponent(currentProject.companies?.name||"")}`,"_blank");
 }
 
 document.querySelectorAll("[data-view]").forEach(btn=>btn.addEventListener("click",()=>{
-  document.querySelectorAll("[data-view]").forEach(x=>x.classList.remove("active"));btn.classList.add("active");
-  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
-  document.getElementById("view-"+btn.dataset.view).classList.add("active");
+  activateView(btn.dataset.view);
+  document.querySelectorAll(".metric").forEach(x=>x.classList.remove("active"));
 }));
+document.querySelectorAll(".metric").forEach(btn=>btn.addEventListener("click",()=>openMetric(btn.dataset.metric)));
+document.getElementById("clearQuickFilter").addEventListener("click",clearTaskQuickFilter);
 document.getElementById("projectSelect").addEventListener("change",e=>selectProject(e.target.value));
 document.getElementById("feedFilter").addEventListener("change",renderFeed);
 ["taskPhase","taskPerson","taskStatus"].forEach(id=>document.getElementById(id).addEventListener("change",renderTasks));
