@@ -974,7 +974,7 @@
             <div>✉</div>
             <div>
               <strong>Persönlich und freundlich formuliert</strong>
-              Jede E-Mail wird als formatierter Outlook-Entwurf mit sprechenden Links erstellt. Die technischen URLs bleiben hinter den Linkbezeichnungen verborgen.
+              Jede E-Mail wird als echtes Verfassen-Fenster im Standard-Mailprogramm geöffnet. Empfänger, Betreff, Anschreiben, Aufgaben und Links sind bereits vorbelegt.
             </div>
           </div>
 
@@ -982,7 +982,7 @@
 
           <div class="actions">
             <button type="button" class="btn btn-secondary" id="backToRooms">Zurück zu den Datenräumen</button>
-            <button type="button" class="btn btn-primary" id="openAllMails">Alle Outlook-Entwürfe erstellen</button>
+            <button type="button" class="btn btn-primary" id="openAllMails">Alle E-Mails in Outlook öffnen</button>
           </div>
         </section>
       </form>
@@ -2098,10 +2098,18 @@ function mailTextFor(group){
   const lines=tasks.map((t,i)=>{
     const links=taskLinks(t);
     return `${i+1}. ${t.title}
-✓ Aufgabe annehmen: ${links.accept}
-✕ Aufgabe ablehnen: ${links.decline}
-? Rückfrage: ${links.question}
-▣ Datenraum öffnen: ${links.dataroom}
+
+✓ Aufgabe annehmen
+${links.accept}
+
+✕ Aufgabe ablehnen
+${links.decline}
+
+? Rückfrage
+${links.question}
+
+▣ Datenraum öffnen
+${links.dataroom}
 
 Fällig: ${dateLabel(t.due)}
 Phase: ${t.phase}
@@ -2156,7 +2164,7 @@ function renderMailStep(){
           <div style="margin-top:18px">${escapeHtml(mailOutroFor(g))}</div>
         </div>
         <div class="mail-actions">
-          <button type="button" class="btn btn-primary btn-small" data-mail-index="${idx}" ${g.email?'':'disabled'}>Outlook-Entwurf erstellen</button>
+          <button type="button" class="btn btn-primary btn-small" data-mail-index="${idx}" ${g.email?'':'disabled'}>E-Mail in Outlook öffnen</button>
           <button type="button" class="btn btn-secondary btn-small" data-copy-index="${idx}">Text kopieren</button>
         </div>
       </div>
@@ -2226,39 +2234,22 @@ function mailHtmlFor(group){
 </body>
 </html>`;
 }
-function downloadEmlForGroup(group){
-  if(!group?.email) return;
+function buildMailtoForGroup(group){
+  if(!group?.email) return '';
+
   const a=collectAnswers();
   const subject=`LUMINA-Abschlussplan – Deine Aufgaben für ${a.company||'den Abschluss'}`;
-  const htmlBody=mailHtmlFor(group);
-  const boundary='----=_LUMINA_'+Date.now();
-  const eml=[
-    `To: ${group.email}`,
-    `Subject: ${subject}`,
-    'MIME-Version: 1.0',
-    `Content-Type: multipart/alternative; boundary="${boundary}"`,
-    '',
-    `--${boundary}`,
-    'Content-Type: text/plain; charset="UTF-8"',
-    'Content-Transfer-Encoding: 8bit',
-    '',
-    mailTextFor(group),
-    '',
-    `--${boundary}`,
-    'Content-Type: text/html; charset="UTF-8"',
-    'Content-Transfer-Encoding: 8bit',
-    '',
-    htmlBody,
-    '',
-    `--${boundary}--`
-  ].join('\r\n');
+  const body=mailTextFor(group);
 
-  const safe=(group.name||'Empfaenger').replace(/[\\/:*?"<>|]+/g,'-');
-  download(`LUMINA-Aufgaben-${safe}.eml`,eml,'message/rfc822;charset=utf-8');
+  return `mailto:${encodeURIComponent(group.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
 function openMailForGroup(group){
-  downloadEmlForGroup(group);
+  const mailtoUrl=buildMailtoForGroup(group);
+  if(!mailtoUrl) return;
+
+  // Öffnet ein echtes Verfassen-Fenster im eingestellten Standard-Mailprogramm.
+  window.location.href=mailtoUrl;
 }
 
 
@@ -2332,7 +2323,10 @@ document.getElementById('openAllMails').addEventListener('click',()=>{
   if(!roomSetupState.confirmed){alert('Bitte richten Sie zuerst die Datenräume ein und bestätigen Sie diese.');return;}
   if(!publicationState.published){alert('Bitte veröffentlichen Sie das Projekt zuerst in Supabase.');return;}
   if(!groups.length){alert('Es sind keine Empfänger mit E-Mail-Adresse vorhanden.');return;}
-  groups.forEach((g,i)=>setTimeout(()=>openMailForGroup(g),i*900));
+  if(groups.length>1){
+    alert(`Es werden ${groups.length} Verfassen-Fenster nacheinander geöffnet. Der Browser oder Outlook kann für jedes Fenster eine Bestätigung verlangen.`);
+  }
+  groups.forEach((g,i)=>setTimeout(()=>openMailForGroup(g),i*1200));
 });
 
 function download(filename,content,type){
