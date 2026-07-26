@@ -1,0 +1,2591 @@
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="LUMINA Abschlussplaner – schlanker, regelbasierter Onboarding-Fragebogen für CFOs und Rechnungswesen." />
+  <title>LUMINA | Abschlussplaner</title>
+  <!-- Version 2026-07-25b: alle Teammitglieder global in Zuständigkeits-Dropdowns -->
+  <style>
+    :root{
+      --bg:#f6f7f5;
+      --surface:#ffffff;
+      --surface-soft:#f1f8f5;
+      --surface-quiet:#fbfcfb;
+      --text:#1d1f20;
+      --muted:#68717a;
+      --line:#dfe4e1;
+      --brand:#36a57c;
+      --brand-dark:#248763;
+      --brand-soft:#e8f5ef;
+      --warning:#a46b00;
+      --warning-soft:#fff7df;
+      --danger:#b04444;
+      --danger-soft:#fff0f0;
+      --shadow:0 18px 46px rgba(24,39,32,.08);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color:var(--text);
+      background:linear-gradient(180deg,#fafbf9 0%,var(--bg) 100%);
+    }
+    button,input,select,textarea{font:inherit}
+    button{cursor:pointer}
+    a{color:inherit}
+    .shell{max-width:1600px;margin:0 auto;padding:0 24px}
+    header{
+      position:sticky;top:0;z-index:30;
+      background:rgba(255,255,255,.92);
+      backdrop-filter:blur(14px);
+      border-bottom:1px solid rgba(223,228,225,.92);
+    }
+    .header-inner{
+      min-height:76px;display:flex;align-items:center;justify-content:space-between;gap:20px;
+    }
+    .brand{display:flex;align-items:center;gap:12px;font-weight:850;letter-spacing:-.02em}
+    .mark{
+      width:34px;height:34px;border-radius:10px;background:var(--brand);
+      display:grid;place-items:center;box-shadow:0 6px 18px rgba(54,165,124,.22);
+    }
+    .mark:before{
+      content:"";width:13px;height:13px;border:2px solid #fff;transform:rotate(45deg);border-radius:2px;
+    }
+    .header-note{font-size:.92rem;color:var(--muted)}
+    main{padding:52px 0 80px}
+    .hero{
+      display:grid;grid-template-columns:minmax(0,1.2fr) minmax(330px,.8fr);
+      gap:34px;align-items:start;margin-bottom:30px;
+    }
+    .eyebrow{
+      display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;
+      border:1px solid var(--line);background:var(--surface);font-weight:800;font-size:.8rem;
+      text-transform:uppercase;letter-spacing:.05em;
+    }
+    .dot{width:8px;height:8px;border-radius:50%;background:var(--brand)}
+    h1{
+      font-size:clamp(2.35rem,5vw,4.7rem);line-height:.98;letter-spacing:-.058em;
+      margin:18px 0 20px;max-width:900px;
+    }
+    .lead{font-size:1.16rem;line-height:1.68;color:var(--muted);max-width:830px;margin:0}
+    .hero-card{
+      background:var(--surface-soft);border:1px solid #cfe6da;border-radius:var(--radius);
+      padding:24px;box-shadow:var(--shadow);
+    }
+    .hero-card h2{font-size:1.12rem;margin:0 0 14px}
+    .hero-card ul{margin:0;padding-left:20px;color:var(--muted);line-height:1.72}
+    .planner{
+      display:grid;grid-template-columns:230px minmax(0,1fr);
+      border:1px solid var(--line);border-radius:22px;background:var(--surface);
+      overflow:hidden;box-shadow:var(--shadow);min-height:720px;
+    }
+    .sidebar{
+      padding:28px 22px;border-right:1px solid var(--line);background:var(--surface-quiet);
+    }
+    .progress-caption{
+      font-size:.8rem;font-weight:850;color:var(--brand-dark);text-transform:uppercase;
+      letter-spacing:.055em;margin-bottom:10px;
+    }
+    .progress{height:8px;border-radius:999px;background:#e9eeeb;overflow:hidden;margin-bottom:26px}
+    .progress>span{display:block;height:100%;width:14.28%;background:var(--brand);transition:width .25s ease}
+    .steps{display:grid;gap:8px}
+    .step-link{
+      display:flex;cursor:pointer;align-items:center;gap:12px;padding:12px;border-radius:12px;
+      color:var(--muted);font-weight:750;font-size:.92rem;cursor:pointer;user-select:none;
+    }
+    .step-link:hover{background:#f0f4f1;color:var(--text)}
+    .step-link.active{background:var(--brand-soft);color:var(--brand-dark)}
+    .step-number{
+      width:28px;height:28px;border-radius:9px;border:1px solid var(--line);display:grid;
+      place-items:center;background:#fff;font-size:.81rem;flex:0 0 auto;
+    }
+    .step-link.active .step-number{background:var(--brand);color:#fff;border-color:var(--brand)}
+    .sidebar-footer{
+      margin-top:34px;padding-top:22px;border-top:1px solid var(--line);
+      color:var(--muted);font-size:.84rem;line-height:1.56;
+    }
+    .form-area{padding:30px 28px 28px}
+    .step{display:none;animation:fade .18s ease}
+    .step.active{display:block}
+    @keyframes fade{from{opacity:.2;transform:translateY(4px)}to{opacity:1;transform:none}}
+    .step h2{font-size:2rem;letter-spacing:-.035em;margin:0 0 10px}
+    .step-intro{color:var(--muted);margin:0 0 28px;line-height:1.62}
+    .section-title{
+      margin:28px 0 14px;font-size:1.03rem;font-weight:850;letter-spacing:-.015em;
+    }
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+    .field{display:grid;gap:8px}
+    .field.full{grid-column:1/-1}
+    label,.label{font-weight:760;font-size:.93rem}
+    .hint{color:var(--muted);font-size:.81rem;font-weight:500}
+    input[type="text"],input[type="email"],input[type="date"],input[type="number"],select,textarea{
+      width:100%;border:1px solid var(--line);border-radius:12px;padding:13px 14px;
+      background:#fff;color:var(--text);outline:none;transition:.18s ease;
+    }
+    textarea{min-height:104px;resize:vertical}
+    input:focus,select:focus,textarea:focus{
+      border-color:var(--brand);box-shadow:0 0 0 4px rgba(54,165,124,.12);
+    }
+    .choices{display:grid;gap:10px}
+    .choices.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .choices.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .choice{
+      position:relative;display:flex;align-items:flex-start;gap:11px;padding:13px 14px;
+      border:1px solid var(--line);border-radius:12px;background:#fff;transition:.18s ease;
+    }
+    .choice:hover{border-color:#b9ccc3}
+    .choice input{margin-top:3px;accent-color:var(--brand)}
+    .choice:has(input:checked){border-color:var(--brand);background:var(--brand-soft)}
+    .choice strong{display:block;font-size:.93rem}
+    .choice small{display:block;color:var(--muted);margin-top:3px;line-height:1.38}
+    .inline-note{
+      background:#f7faf8;border:1px solid var(--line);border-radius:12px;padding:13px 14px;
+      color:var(--muted);font-size:.86rem;line-height:1.55;
+    }
+    .team-table,.result-table{width:100%;border-collapse:collapse}
+    .team-table th,.team-table td,.result-table th,.result-table td{
+      border-bottom:1px solid var(--line);padding:11px 9px;text-align:left;vertical-align:top;
+    }
+    .team-table th,.result-table th{
+      font-size:.78rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);
+    }
+    .team-table input,.team-table select,.result-table input,.result-table select{
+      padding:9px 10px;border-radius:10px;
+    }
+    .team-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px}
+    .result-wrap{overflow:hidden;border:1px solid var(--line);border-radius:14px}
+    .remove-row{
+      border:0;background:transparent;color:var(--danger);font-weight:800;padding:8px;
+    }
+    .btn{
+      border:0;border-radius:12px;padding:13px 20px;font-weight:820;transition:.18s ease;
+    }
+    .btn-primary{background:var(--brand);color:#fff;box-shadow:0 8px 20px rgba(54,165,124,.22)}
+    .btn-primary:hover{background:var(--brand-dark);transform:translateY(-1px)}
+    .btn-secondary{background:#eef1ef;color:#343a37}
+    .btn-secondary:hover{background:#e4e9e6}
+    .btn-ghost{background:transparent;color:var(--muted)}
+    .btn-small{padding:9px 13px;border-radius:10px;font-size:.87rem}
+    .actions{
+      display:flex;justify-content:space-between;gap:14px;margin-top:34px;padding-top:24px;
+      border-top:1px solid var(--line);
+    }
+    .error{color:var(--danger);font-size:.84rem;margin-top:8px;display:none}
+    .summary-grid{
+      display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:20px 0 24px;
+    }
+    .metric{
+      border:1px solid var(--line);border-radius:14px;padding:16px;background:#fff;
+    }
+    .metric span{display:block;color:var(--muted);font-size:.78rem;margin-bottom:7px}
+    .metric strong{font-size:1.45rem;letter-spacing:-.03em}
+    .filters{
+      display:flex;gap:10px;flex-wrap:wrap;margin:0 0 16px;
+    }
+    .filters select{width:auto;min-width:180px}
+    .status-pill{
+      display:inline-flex;align-items:center;padding:6px 9px;border-radius:999px;
+      font-size:.76rem;font-weight:800;background:var(--brand-soft);color:var(--brand-dark);
+    }
+    .status-pill.warn{background:var(--warning-soft);color:var(--warning)}
+    .result-table{table-layout:fixed;width:100%;min-width:0}
+    .result-table td{font-size:.82rem;line-height:1.35;overflow-wrap:anywhere;word-break:break-word}
+    .result-table input,.result-table select{min-width:0;width:100%;max-width:100%;padding:8px 6px;font-size:.8rem}
+    .result-table .task-title{min-width:0;font-weight:720}
+    .result-table .phase{min-width:0;color:var(--muted)}
+    .toolbar{
+      display:flex;gap:10px;flex-wrap:wrap;margin-top:20px;
+    }
+    .callout{
+      display:flex;gap:12px;align-items:flex-start;border:1px solid #cfe6da;background:var(--surface-soft);
+      border-radius:14px;padding:15px 16px;margin-top:18px;color:#355448;line-height:1.55;
+    }
+    .callout strong{display:block;margin-bottom:2px}
+    .riskbox{
+      border:1px solid #f0d9a6;background:var(--warning-soft);border-radius:14px;
+      padding:15px 16px;margin:16px 0;color:#6f5000;line-height:1.5;
+    }
+
+    .size-years{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:12px}
+    .year-card{border:1px solid var(--line);border-radius:15px;padding:16px;background:#fff}
+    .year-card h3{margin:0 0 14px;font-size:1rem}
+    .size-result{margin-top:18px;border:1px solid #cfe6da;background:var(--surface-soft);border-radius:14px;padding:16px}
+    .size-result-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+    .size-result span{display:block;color:var(--muted);font-size:.78rem;margin-bottom:5px}
+    .size-result strong{font-size:1rem}
+    .custom-task-panel{display:none;margin-top:18px;border:1px solid #cfe6da;background:var(--surface-soft);border-radius:15px;padding:18px}
+    .custom-task-panel.open{display:block}
+    .custom-task-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:14px}
+
+    @media(max-width:980px){
+      .hero{grid-template-columns:1fr}
+      .planner{grid-template-columns:1fr}
+      .sidebar{border-right:0;border-bottom:1px solid var(--line)}
+      .steps{grid-template-columns:repeat(11,minmax(0,1fr))}
+      .step-link{justify-content:center;padding:8px}
+      .step-link span:last-child{display:none}
+      .sidebar-footer{display:none}
+      .summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .size-years,.size-result-grid{grid-template-columns:1fr}
+    }
+    @media(max-width:680px){
+      .shell{padding:0 16px}
+      .header-note{display:none}
+      main{padding-top:30px}
+      h1{font-size:2.55rem}
+      .form-area{padding:26px 18px 20px}
+      .sidebar{padding:20px 18px}
+      .grid,.choices.two,.choices.three{grid-template-columns:1fr}
+      .field.full{grid-column:auto}
+      .actions{align-items:stretch}
+      .actions .btn{width:100%}
+      .summary-grid{grid-template-columns:1fr}
+    }
+  
+    html,body{max-width:100%;overflow-x:hidden}
+    .planner,.form-area,.result-wrap,.result-table{min-width:0}
+    .result-table th:nth-child(1){width:4%}
+
+  
+    .review-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:18px 0}
+    .review-card{border:1px solid var(--line);border-radius:14px;padding:16px;background:#fff}
+    .review-card span{display:block;color:var(--muted);font-size:.8rem;margin-bottom:6px}
+    .review-card strong{font-size:1.1rem;line-height:1.4}
+    .approval-box{border:1px solid #cfe6da;background:var(--surface-soft);border-radius:16px;padding:18px;margin-top:20px}
+    .approval-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px}
+    .approval-check{display:flex;gap:10px;align-items:flex-start;margin-top:16px;padding:14px;border:1px solid var(--line);border-radius:12px;background:#fff}
+    .approval-check input{margin-top:3px;accent-color:var(--brand)}
+    .approval-status{display:none;margin-top:16px;border-radius:12px;padding:14px 16px;background:var(--brand-soft);color:var(--brand-dark);font-weight:750}
+    .approval-status.show{display:block}
+    .review-table-wrap{overflow:hidden;border:1px solid var(--line);border-radius:14px;margin-top:18px}
+    .review-table{width:100%;border-collapse:collapse;table-layout:fixed}
+    .review-table th,.review-table td{padding:10px 9px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;font-size:.84rem;overflow-wrap:anywhere}
+    .review-table th{font-size:.76rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+    .mail-grid{display:grid;gap:16px;margin-top:18px}
+    .mail-card{border:1px solid var(--line);border-radius:16px;background:#fff;overflow:hidden}
+    .mail-card-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;padding:16px 18px;background:#fbfcfb;border-bottom:1px solid var(--line)}
+    .mail-card-head h3{margin:0 0 4px;font-size:1rem}
+    .mail-card-head p{margin:0;color:var(--muted);font-size:.84rem}
+    .mail-card-body{padding:18px}
+    .mail-preview{white-space:pre-wrap;line-height:1.6;color:#353b38;background:#f8faf9;border:1px solid var(--line);border-radius:12px;padding:15px;max-height:360px;overflow:auto}
+    .mail-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+    .mail-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:18px 0}
+    .mail-summary .metric strong{font-size:1.25rem}
+    @media(max-width:980px){
+      .review-grid,.mail-summary{grid-template-columns:1fr}
+      .approval-row{grid-template-columns:1fr}
+    }
+
+  
+    .app-link-settings{border:1px solid #cfe6da;background:var(--surface-soft);border-radius:16px;padding:18px;margin:18px 0}
+    .app-link-settings .grid{align-items:end}
+    .task-room-cell{display:grid;gap:6px}
+    .task-room-cell input{width:100%}
+    .link-preview{font-size:.78rem;color:var(--muted);word-break:break-all}
+    .mail-link-list{display:grid;gap:8px;margin:14px 0}
+    .mail-link-list a{display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:var(--brand-dark);font-weight:750}
+    .mail-link-list a:hover{text-decoration:underline}
+    .room-template-box{border:1px solid var(--line);background:#fff;border-radius:14px;padding:16px;margin-top:16px}
+    .room-template-list{display:grid;gap:10px;margin-top:12px}
+    .room-template-item{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
+    .room-template-item input{width:100%}
+
+  
+    .mail-task-block{padding:14px 0;border-bottom:1px solid var(--line)}
+    .mail-task-block:last-of-type{border-bottom:0}
+    .mail-task-title{font-weight:800;margin-bottom:5px;color:var(--text)}
+    .mail-task-links{display:flex;flex-wrap:wrap;gap:6px;align-items:center;line-height:1.45}
+    .mail-task-links a{color:var(--brand-dark);font-weight:750;text-decoration:none}
+    .mail-task-links a:hover{text-decoration:underline}
+    .mail-task-meta{margin-top:6px;color:var(--muted);font-size:.84rem}
+
+  
+    .mail-preview{line-height:1.25;padding:12px;max-height:none}
+    .mail-task-block{padding:7px 0;border-bottom:1px solid var(--line)}
+    .mail-task-title{margin-bottom:2px;line-height:1.2}
+    .mail-task-links{gap:4px;line-height:1.2}
+    .mail-task-meta{margin-top:2px;line-height:1.2;font-size:.8rem}
+    .mail-card-body{padding:12px}
+    .mail-card-head{padding:12px 16px}
+
+  
+    .room-setup-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:18px 0}
+    .room-setup-grid{display:grid;gap:14px;margin-top:18px}
+    .room-setup-card{border:1px solid var(--line);border-radius:16px;background:#fff;overflow:hidden}
+    .room-setup-head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:start;padding:15px 17px;background:#fbfcfb;border-bottom:1px solid var(--line)}
+    .room-setup-head h3{margin:0 0 4px;font-size:1rem}
+    .room-setup-head p{margin:0;color:var(--muted);font-size:.84rem;line-height:1.4}
+    .room-setup-body{padding:16px}
+    .folder-editor{display:grid;gap:8px}
+    .folder-row{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:8px;align-items:center}
+    .folder-index{display:grid;place-items:center;height:40px;border:1px solid var(--line);border-radius:10px;background:#f7f9f8;color:var(--muted);font-weight:750}
+    .folder-row input{width:100%}
+    .room-card-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}
+    .room-ready{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:999px;background:var(--brand-soft);color:var(--brand-dark);font-size:.78rem;font-weight:800}
+    .room-not-ready{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:999px;background:var(--warning-soft);color:var(--warning);font-size:.78rem;font-weight:800}
+    .room-approval-box{border:1px solid #cfe6da;background:var(--surface-soft);border-radius:16px;padding:18px;margin-top:20px}
+    @media(max-width:980px){
+      .room-setup-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
+    }
+    @media(max-width:680px){
+      .room-setup-summary{grid-template-columns:1fr}
+      .room-setup-head{grid-template-columns:1fr}
+    }
+
+  
+    .supabase-panel{border:1px solid #cfe6da;background:#f4fbf7;border-radius:16px;padding:18px;margin:20px 0}
+    .supabase-panel-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:14px}
+    .supabase-panel-head h3{margin:0 0 5px;font-size:1.05rem}
+    .supabase-panel-head p{margin:0;color:var(--muted);font-size:.86rem;line-height:1.5}
+    .connection-badge{display:inline-flex;padding:7px 10px;border-radius:999px;background:var(--warning-soft);color:var(--warning);font-size:.78rem;font-weight:800}
+    .connection-badge.online{background:var(--brand-soft);color:var(--brand-dark)}
+    .supabase-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+    .publish-box{display:none;margin-top:14px;padding:14px 16px;border-radius:12px;white-space:pre-wrap}
+    .publish-box.show{display:block}
+    .publish-box.info{background:#fff;border:1px solid var(--line);color:var(--muted)}
+    .publish-box.success{background:var(--brand-soft);color:var(--brand-dark);font-weight:750}
+    .publish-box.error{background:var(--danger-soft);color:var(--danger);font-weight:700}
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<header>
+  <div class="shell header-inner">
+    <div class="brand"><div class="mark" aria-hidden="true"></div><span>LUMINA</span></div>
+    <div class="header-note">Abschlussplaner · regelbasiertes Setup</div>
+  </div>
+</header>
+
+<main>
+  <div class="shell">
+    <section class="hero">
+      <div>
+        <div class="eyebrow"><span class="dot"></span>Abschlussplaner</div>
+        <h1>Vom Fragebogen zur fertigen Maßnahmenliste.</h1>
+        <p class="lead">
+          LUMINA ermittelt aus wenigen strukturierten Angaben den passenden Projektumfang,
+          die benötigten Rollen, Fristen, Meilensteine und eine editierbare Maßnahmenliste
+          für den realen Abschlussprozess.
+        </p>
+      </div>
+      <aside class="hero-card">
+        <h2>Das Ergebnis</h2>
+        <ul>
+          <li>passender Abschlussumfang</li>
+          <li>benötigte Teamrollen und offene Besetzungen</li>
+          <li>automatisch berechnete Fristen</li>
+          <li>Maßnahmenliste mit Zuständigkeiten</li>
+          <li>JSON- und CSV-Export für LUMINA</li>
+        </ul>
+      </aside>
+    </section>
+
+    <section class="planner">
+      <aside class="sidebar">
+        <div class="progress-caption" id="progressCaption">Schritt 1 von 11</div>
+        <div class="progress"><span id="progressBar"></span></div>
+        <div class="steps">
+          <div class="step-link active"><span class="step-number">1</span><span>Abschluss</span></div>
+          <div class="step-link"><span class="step-number">2</span><span>Größenklasse</span></div>
+          <div class="step-link"><span class="step-number">3</span><span>Bestandteile</span></div>
+          <div class="step-link"><span class="step-number">4</span><span>Systeme</span></div>
+          <div class="step-link"><span class="step-number">5</span><span>Team</span></div>
+          <div class="step-link"><span class="step-number">6</span><span>Termine</span></div>
+          <div class="step-link"><span class="step-number">7</span><span>Risiken</span></div>
+          <div class="step-link"><span class="step-number">8</span><span>Plan</span></div>
+          <div class="step-link"><span class="step-number">9</span><span>Review & Freigabe</span></div>
+          <div class="step-link"><span class="step-number">10</span><span>Datenräume</span></div>
+          <div class="step-link"><span class="step-number">11</span><span>E-Mail-Versand</span></div>
+        </div>
+        <div class="sidebar-footer">
+          Alle Eingaben, die Freigabe, die Datenraumstrukturen und die vorbereiteten E-Mails werden ausschließlich lokal im Browser gespeichert.
+        </div>
+      </aside>
+
+      <form class="form-area" id="plannerForm" novalidate>
+        <section class="step active" data-step="0">
+          <h2>Unternehmen und Abschluss</h2>
+          <p class="step-intro">Die Eckdaten bestimmen den Grundumfang des Projekts.</p>
+          <div class="grid">
+            <div class="field full">
+              <label for="company">Unternehmen *</label>
+              <input id="company" name="company" type="text" required placeholder="Muster GmbH">
+            </div>
+            <div class="field">
+              <label for="framework">Rechnungslegungsstandard *</label>
+              <select id="framework" name="framework" required>
+                <option value="">Bitte auswählen</option>
+                <option value="HGB">HGB</option>
+                <option value="IFRS">IFRS</option>
+                <option value="HGB_IFRS">HGB und IFRS</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="closingScope">Abschlussumfang *</label>
+              <select id="closingScope" name="closingScope" required>
+                <option value="">Bitte auswählen</option>
+                <option value="single">Einzelabschluss</option>
+                <option value="group">Konzernabschluss</option>
+                <option value="single_group">Einzel- und Konzernabschluss</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="entities">Anzahl Gesellschaften</label>
+              <input id="entities" name="entities" type="number" min="1" value="1">
+            </div>
+            <div class="field">
+              <label for="legalForm">Rechtsform / Einordnung</label>
+              <select id="legalForm" name="legalForm">
+                <option value="kapg">Kapitalgesellschaft / § 264a HGB</option>
+                <option value="other">Andere Rechtsform</option>
+                <option value="public">Unternehmen von öffentlichem Interesse</option>
+              </select>
+            </div>
+            <div class="field full">
+              <div class="label">Abschlussprüfung</div>
+              <div class="choices two">
+                <label class="choice"><input type="radio" name="audit" value="yes" checked><span><strong>Mit Abschlussprüfung</strong><small>Prüfungsplanung, Datenraum und PBC-Liste werden berücksichtigt.</small></span></label>
+                <label class="choice"><input type="radio" name="audit" value="no"><span><strong>Ohne Abschlussprüfung</strong><small>Fokus auf internen Abschluss und Freigabe.</small></span></label>
+              </div>
+            </div>
+          </div>
+          <div class="error" id="error-0">Bitte Unternehmen, Rechnungslegungsstandard und Abschlussumfang vollständig angeben.</div>
+          <div class="actions"><span></span><button type="button" class="btn btn-primary" data-next>Weiter</button></div>
+        </section>
+
+        <section class="step" data-step="1">
+          <h2>Größenklasse und Berichtsumfang</h2>
+          <p class="step-intro">
+            Die HGB-Größenklasse wird anhand von Bilanzsumme, Umsatzerlösen und durchschnittlicher Arbeitnehmerzahl
+            an zwei aufeinanderfolgenden Abschlussstichtagen beurteilt. Maßgeblich sind mindestens zwei von drei Kriterien.
+          </p>
+
+          <div class="size-years">
+            <div class="year-card">
+              <h3>Vorangegangener Abschlussstichtag</h3>
+              <div class="grid">
+                <div class="field full"><label for="sizeDatePrev">Abschlussstichtag</label><input id="sizeDatePrev" name="sizeDatePrev" type="date"></div>
+                <div class="field"><label for="balancePrev">Bilanzsumme in €</label><input id="balancePrev" name="balancePrev" type="text" inputmode="decimal" data-number-format="money" placeholder="25.000.000"></div>
+                <div class="field"><label for="revenuePrev">Umsatzerlöse in €</label><input id="revenuePrev" name="revenuePrev" type="text" inputmode="decimal" data-number-format="money" placeholder="50.000.000"></div>
+                <div class="field full"><label for="employeesPrev">Arbeitnehmer im Jahresdurchschnitt</label><input id="employeesPrev" name="employeesPrev" type="text" inputmode="numeric" data-number-format="integer" placeholder="250"></div>
+              </div>
+            </div>
+            <div class="year-card">
+              <h3>Aktueller Abschlussstichtag</h3>
+              <div class="grid">
+                <div class="field full"><label for="sizeDateCurr">Abschlussstichtag</label><input id="sizeDateCurr" name="sizeDateCurr" type="date"></div>
+                <div class="field"><label for="balanceCurr">Bilanzsumme in €</label><input id="balanceCurr" name="balanceCurr" type="text" inputmode="decimal" data-number-format="money" placeholder="25.000.000"></div>
+                <div class="field"><label for="revenueCurr">Umsatzerlöse in €</label><input id="revenueCurr" name="revenueCurr" type="text" inputmode="decimal" data-number-format="money" placeholder="50.000.000"></div>
+                <div class="field full"><label for="employeesCurr">Arbeitnehmer im Jahresdurchschnitt</label><input id="employeesCurr" name="employeesCurr" type="text" inputmode="numeric" data-number-format="integer" placeholder="250"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-title">Sonderkriterien und freiwillige Erweiterungen</div>
+          <div class="choices two">
+            <label class="choice"><input type="checkbox" name="specialScope" value="capital_market"><span><strong>Kapitalmarktorientiert</strong><small>Das Unternehmen wird unabhängig von den Schwellenwerten als groß behandelt.</small></span></label>
+            <label class="choice"><input type="checkbox" name="specialScope" value="public_interest"><span><strong>Unternehmen von öffentlichem Interesse</strong><small>Zusätzliche Prüfungs- und Governance-Anforderungen berücksichtigen.</small></span></label>
+            <label class="choice"><input type="checkbox" name="specialScope" value="voluntary_large"><span><strong>Freiwilliger Umfang wie große Kapitalgesellschaft</strong><small>Aufgrund Gremienbeschluss, Satzung, Vertrag oder interner Vorgabe.</small></span></label>
+            <label class="choice"><input type="checkbox" name="specialScope" value="voluntary_audit"><span><strong>Freiwillige Abschlussprüfung</strong><small>Prüfungsplanung und Datenraum auch ohne gesetzliche Pflicht.</small></span></label>
+            <label class="choice"><input type="checkbox" name="specialScope" value="voluntary_management_report"><span><strong>Freiwilliger Lagebericht</strong><small>Aufgrund Gremienbeschluss, Vertrag oder Stakeholderanforderung.</small></span></label>
+            <label class="choice"><input type="checkbox" name="specialScope" value="voluntary_kfr_ek"><span><strong>Freiwillige KFR und Eigenkapitalspiegel</strong><small>Erweiterter Berichts- oder Konzernumfang.</small></span></label>
+          </div>
+
+          <div class="grid" style="margin-top:18px">
+            <div class="field">
+              <label for="previousLegalClass">Bisherige rechtliche Größenklasse</label>
+              <select id="previousLegalClass" name="previousLegalClass">
+                <option value="">Noch nicht hinterlegt</option>
+                <option value="micro">Kleinst</option>
+                <option value="small">Klein</option>
+                <option value="medium">Mittelgroß</option>
+                <option value="large">Groß</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="scopeReason">Grund einer freiwilligen Erweiterung</label>
+              <select id="scopeReason" name="scopeReason">
+                <option value="">Nicht zutreffend / noch offen</option>
+                <option>Gremienbeschluss</option>
+                <option>Gesellschaftsvertrag / Satzung</option>
+                <option>Kredit- oder sonstiger Vertrag</option>
+                <option>Gesellschafteranforderung</option>
+                <option>Interne Konzernrichtlinie</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="size-result">
+            <div class="size-result-grid">
+              <div><span>Vorjahr nach Kennzahlen</span><strong id="classPrevLabel">Noch nicht berechnet</strong></div>
+              <div><span>Aktuelles Jahr nach Kennzahlen</span><strong id="classCurrLabel">Noch nicht berechnet</strong></div>
+              <div><span>Für den Plan verwendeter Umfang</span><strong id="effectiveClassLabel">Noch nicht berechnet</strong></div>
+            </div>
+            <div class="hint" id="classExplanation" style="margin-top:10px">
+              Bitte Kennzahlen für beide Stichtage eingeben.
+            </div>
+          </div>
+
+          <div class="actions">
+            <button type="button" class="btn btn-secondary" data-prev>Zurück</button>
+            <button type="button" class="btn btn-primary" data-next>Berichtsumfang ableiten</button>
+          </div>
+        </section>
+
+        <section class="step" data-step="2">
+          <h2>Abschlussbestandteile</h2>
+          <p class="step-intro">Die Auswahl aktiviert automatisch die zugehörigen Arbeitspakete.</p>
+          <div class="choices two">
+            <label class="choice"><input type="checkbox" name="components" value="balance" checked><span><strong>Bilanz und GuV</strong><small>Pflichtumfang und zentrale Abschlussarbeiten.</small></span></label>
+            <label class="choice"><input type="checkbox" name="components" value="notes" checked><span><strong>Anhang</strong><small>Angaben, Spiegel und redaktionelle Abstimmung.</small></span></label>
+            <label class="choice"><input type="checkbox" name="components" value="management_report" checked><span><strong>Lagebericht</strong><small>Analyse, Risiken, Prognose und Freigabe.</small></span></label>
+            <label class="choice"><input type="checkbox" name="components" value="cashflow"><span><strong>Kapitalflussrechnung</strong><small>Datenermittlung, Überleitung und Plausibilisierung.</small></span></label>
+            <label class="choice"><input type="checkbox" name="components" value="equity"><span><strong>Eigenkapitalspiegel</strong><small>Bewegungsrechnung und Abstimmung.</small></span></label>
+            <label class="choice"><input type="checkbox" name="components" value="consolidation"><span><strong>Konsolidierung</strong><small>Reporting Packages, IC-Abstimmung und Konsolidierungsbuchungen.</small></span></label>
+            <label class="choice"><input type="checkbox" name="components" value="disclosure" checked><span><strong>Offenlegung</strong><small>Freigabe, Formatierung und fristgerechte Einreichung.</small></span></label>
+            <label class="choice"><input type="checkbox" name="components" value="bank_reporting"><span><strong>Banken- oder Gesellschafterreporting</strong><small>Covenants, Kennzahlen und adressatengerechte Unterlagen.</small></span></label>
+          </div>
+          <div class="section-title">Besondere Berichtsanforderungen</div>
+          <div class="choices two">
+            <label class="choice"><input type="checkbox" name="components" value="esef"><span><strong>ESEF</strong><small>Tagging, technische Prüfung und Veröffentlichung.</small></span></label>
+            <label class="choice"><input type="checkbox" name="components" value="sustainability"><span><strong>Nachhaltigkeitsbericht</strong><small>Datensammlung, Abstimmung und Berichtserstellung.</small></span></label>
+          </div>
+          <div class="actions">
+            <button type="button" class="btn btn-secondary" data-prev>Zurück</button>
+            <button type="button" class="btn btn-primary" data-next>Weiter</button>
+          </div>
+        </section>
+
+        <section class="step" data-step="3">
+          <h2>Systeme und Datenquellen</h2>
+          <p class="step-intro">Systeme und Ablagen bestimmen die vorbereitenden Daten- und Zugriffsschritte.</p>
+          <div class="grid">
+            <div class="field">
+              <label for="erp">ERP-System</label>
+              <select id="erp" name="erp">
+                <option>SAP</option><option>DATEV</option><option>Microsoft Dynamics</option>
+                <option>Oracle</option><option>Workday</option><option>Sonstiges</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="consolidationSystem">Konsolidierungssystem</label>
+              <select id="consolidationSystem" name="consolidationSystem">
+                <option value="none">Kein separates System</option>
+                <option>LucaNet</option><option>SAP Group Reporting</option><option>Tagetik</option>
+                <option>Excel</option><option>Sonstiges</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="documentRoom">Dokumentenablage / Datenraum</label>
+              <select id="documentRoom" name="documentRoom">
+                <option>SharePoint</option><option>Teams</option><option>OneDrive</option>
+                <option>Supabase</option><option>Prüferportal</option><option>Netzlaufwerk</option><option>Noch offen</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="sources">Anzahl wesentlicher Datenquellen</label>
+              <input id="sources" name="sources" type="number" min="1" value="4">
+            </div>
+            <div class="field full">
+              <div class="label">Weitere Vorsysteme <span class="hint">– Mehrfachauswahl möglich</span></div>
+              <div class="choices three">
+                <label class="choice"><input type="checkbox" name="systems" value="payroll"><span><strong>Personalabrechnung</strong></span></label>
+                <label class="choice"><input type="checkbox" name="systems" value="fixed_assets" checked><span><strong>Anlagenbuchhaltung</strong></span></label>
+                <label class="choice"><input type="checkbox" name="systems" value="treasury"><span><strong>Treasury</strong></span></label>
+                <label class="choice"><input type="checkbox" name="systems" value="tax"><span><strong>Steuersystem</strong></span></label>
+                <label class="choice"><input type="checkbox" name="systems" value="controlling" checked><span><strong>Controlling</strong></span></label>
+                <label class="choice"><input type="checkbox" name="systems" value="excel"><span><strong>Excel-Nebenrechnungen</strong></span></label>
+              </div>
+            </div>
+          </div>
+          <div class="actions">
+            <button type="button" class="btn btn-secondary" data-prev>Zurück</button>
+            <button type="button" class="btn btn-primary" data-next>Weiter</button>
+          </div>
+        </section>
+
+        <section class="step" data-step="4">
+          <h2>Team und Zuständigkeiten</h2>
+          <p class="step-intro">LUMINA schlägt Rollen vor. Hinterlegen Sie bekannte Personen; offene Rollen bleiben sichtbar.</p>
+          <div class="team-wrap">
+            <table class="team-table">
+              <thead><tr><th>Rolle</th><th>Name</th><th>E-Mail</th><th>Stellvertretung</th><th>E-Mail Stellvertretung</th><th></th></tr></thead>
+              <tbody id="teamBody"></tbody>
+            </table>
+          </div>
+          <div class="toolbar">
+            <button type="button" class="btn btn-secondary btn-small" id="addTeamRow">+ Teammitglied hinzufügen</button>
+            <button type="button" class="btn btn-ghost btn-small" id="addRecommendedRoles">Empfohlene Rollen ergänzen</button>
+          </div>
+          <div class="callout">
+            <div>✓</div>
+            <div><strong>Automatische Zuordnung</strong>Jede Maßnahme erhält zunächst eine Standardrolle. Ist eine Person hinterlegt, wird sie direkt übernommen.</div>
+          </div>
+          <div class="actions">
+            <button type="button" class="btn btn-secondary" data-prev>Zurück</button>
+            <button type="button" class="btn btn-primary" data-next>Weiter</button>
+          </div>
+        </section>
+
+        <section class="step" data-step="5">
+          <h2>Meilensteine und Fristen</h2>
+          <p class="step-intro">Aus wenigen Eckterminen werden alle Aufgabenfristen rückwärts berechnet.</p>
+          <div class="grid">
+            <div class="field">
+              <label for="closingDate">Abschlussstichtag *</label>
+              <input id="closingDate" name="closingDate" type="date" required>
+            </div>
+            <div class="field">
+              <label for="bookCloseDate">Buchungsschluss</label>
+              <input id="bookCloseDate" name="bookCloseDate" type="date">
+            </div>
+            <div class="field">
+              <label for="draftDate">Abschlussentwurf *</label>
+              <input id="draftDate" name="draftDate" type="date" required>
+            </div>
+            <div class="field">
+              <label for="auditStartDate">Prüfungsbeginn</label>
+              <input id="auditStartDate" name="auditStartDate" type="date">
+            </div>
+            <div class="field">
+              <label for="signingDate">Testat / finale Freigabe *</label>
+              <input id="signingDate" name="signingDate" type="date" required>
+            </div>
+            <div class="field">
+              <label for="disclosureDate">Offenlegung / Veröffentlichung</label>
+              <input id="disclosureDate" name="disclosureDate" type="date">
+            </div>
+          </div>
+          <div class="inline-note" style="margin-top:18px">
+            Fristen werden zunächst nach Standardvorläufen berechnet. In der Ergebnisliste können alle Termine einzeln geändert werden.
+          </div>
+          <div class="error" id="error-5">Bitte Abschlussstichtag, Entwurfstermin und Testat bzw. finale Freigabe angeben.</div>
+          <div class="actions">
+            <button type="button" class="btn btn-secondary" data-prev>Zurück</button>
+            <button type="button" class="btn btn-primary" data-next>Weiter</button>
+          </div>
+        </section>
+
+        <section class="step" data-step="6">
+          <h2>Besonderheiten und Risiken</h2>
+          <p class="step-intro">Nur ausgewählte Besonderheiten aktivieren zusätzliche Maßnahmen.</p>
+          <div class="choices two">
+            <label class="choice"><input type="checkbox" name="risks" value="acquisition"><span><strong>Erwerb oder Verkauf von Unternehmen</strong></span></label>
+            <label class="choice"><input type="checkbox" name="risks" value="restructuring"><span><strong>Restrukturierung</strong></span></label>
+            <label class="choice"><input type="checkbox" name="risks" value="litigation"><span><strong>Rechtsstreitigkeiten</strong></span></label>
+            <label class="choice"><input type="checkbox" name="risks" value="covenants"><span><strong>Covenants / Finanzierung</strong></span></label>
+            <label class="choice"><input type="checkbox" name="risks" value="impairment"><span><strong>Impairment-Risiken</strong></span></label>
+            <label class="choice"><input type="checkbox" name="risks" value="pensions"><span><strong>Pensionsverpflichtungen</strong></span></label>
+            <label class="choice"><input type="checkbox" name="risks" value="provisions"><span><strong>Komplexe Rückstellungen</strong></span></label>
+            <label class="choice"><input type="checkbox" name="risks" value="going_concern"><span><strong>Going-Concern-Risiko</strong></span></label>
+            <label class="choice"><input type="checkbox" name="risks" value="new_policy"><span><strong>Neue Bilanzierungsgrundsätze</strong></span></label>
+            <label class="choice"><input type="checkbox" name="risks" value="auditor_change"><span><strong>Wechsel des Wirtschaftsprüfers</strong></span></label>
+          </div>
+          <div class="field full" style="margin-top:18px">
+            <label for="specialNote">Weitere Besonderheiten</label>
+            <textarea id="specialNote" name="specialNote" placeholder="Optional: weitere projektrelevante Besonderheiten"></textarea>
+          </div>
+          <div class="actions">
+            <button type="button" class="btn btn-secondary" data-prev>Zurück</button>
+            <button type="button" class="btn btn-primary" id="generatePlan">Maßnahmenliste erzeugen</button>
+          </div>
+        </section>
+
+        <section class="step" data-step="7">
+          <h2>Ihr LUMINA-Abschlussplan</h2>
+          <p class="step-intro">Die Maßnahmen wurden aus Ihren Antworten generiert. Zuständigkeiten und Termine bleiben vollständig editierbar.</p>
+
+          <div class="summary-grid">
+            <div class="metric"><span>Aktivierte Maßnahmen</span><strong id="metricTasks">0</strong></div>
+            <div class="metric"><span>Beteiligte Rollen</span><strong id="metricRoles">0</strong></div>
+            <div class="metric"><span>Offene Besetzungen</span><strong id="metricOpen">0</strong></div>
+            <div class="metric"><span>Terminrisiken</span><strong id="metricRisks">0</strong></div>
+          </div>
+
+          <div class="riskbox" id="riskBox" hidden></div>
+
+          <div class="callout">
+            <div>i</div>
+            <div><strong>So entstehen die Maßnahmenfristen</strong>Jede Standardmaßnahme besitzt eine Terminregel aus Bezugsmeilenstein und Zeitversatz in Kalendertagen. Beispiel: „Datenraum vollständig befüllen“ = Prüfungsbeginn minus 7 Tage. Fehlt der vorgesehene Meilenstein, verwendet LUMINA ersatzweise den Abschlussentwurf beziehungsweise die finale Freigabe. Alle berechneten Termine können anschließend manuell geändert werden.</div>
+          </div>
+
+
+          <div class="app-link-settings">
+            <div class="section-title" style="margin-top:0">App-Kommunikation und Datenräume</div>
+            <div class="grid">
+              <div class="field full">
+                <label for="appBaseUrl">Basis-URL der produktiven LUMINA-App</label>
+                <input id="appBaseUrl" type="text" value="https://lumina.volkerkusch.de/app" placeholder="https://lumina.volkerkusch.de/app">
+                <div class="hint">Aus dieser URL erzeugt LUMINA pro Maßnahme eindeutige Links für Annahme, Ablehnung, Rückfrage und Datenraum.</div>
+              </div>
+              <div class="field">
+                <label for="assistantMode">Kommunikationspartner im Hintergrund</label>
+                <select id="assistantMode">
+                  <option value="volker">Volker</option>
+                  <option value="kai">KAI</option>
+                  <option value="kira">KIRA</option>
+                  <option value="auto" selected>Automatisch nach Vorgang</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="defaultRoomTemplate">Standardstruktur Datenraum</label>
+                <select id="defaultRoomTemplate">
+                  <option value="standard">Standard</option>
+                  <option value="audit">Prüfung / PBC</option>
+                  <option value="reporting">Berichtserstellung</option>
+                  <option value="custom">Individuell</option>
+                </select>
+              </div>
+            </div>
+            <div class="room-template-box">
+              <strong>Standardordner für neue Maßnahmen</strong>
+              <div class="room-template-list" id="roomTemplateList"></div>
+              <div class="toolbar">
+                <button type="button" class="btn btn-secondary btn-small" id="addRoomFolder">+ Ordner ergänzen</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="filters">
+            <select id="filterPhase"><option value="">Alle Phasen</option></select>
+            <select id="filterRole"><option value="">Alle Rollen</option></select>
+            <select id="filterOpen"><option value="">Alle Zuständigkeiten</option><option value="open">Nur offene Besetzungen</option></select><span class="hint" id="teamDropdownHint">Im Feld „Zuständig“ stehen alle unter Schritt 5 angelegten Teammitglieder zur Auswahl.</span>
+          </div>
+
+          <div class="result-wrap">
+            <table class="result-table">
+              <colgroup>
+                <col style="width:4%"><col style="width:9%"><col style="width:25%">
+                <col style="width:13%"><col style="width:13%"><col style="width:11%">
+                <col style="width:11%"><col style="width:14%">
+              </colgroup>
+              <thead>
+                <tr><th>Nr.</th><th>Phase</th><th>Maßnahme</th><th>Rolle</th><th>Zuständig</th><th>Fällig</th><th>Status</th><th>Datenraum</th></tr>
+              </thead>
+              <tbody id="resultBody"></tbody>
+            </table>
+          </div>
+
+
+          <div class="custom-task-panel" id="customTaskPanel">
+            <div class="section-title" style="margin-top:0">Weitere Maßnahme</div>
+            <div class="grid">
+              <div class="field"><label for="customPhase">Phase</label><input id="customPhase" type="text" value="10. Ergänzende Maßnahmen"></div>
+              <div class="field"><label for="customTitle">Maßnahme *</label><input id="customTitle" type="text" placeholder="Neue Maßnahme beschreiben"></div>
+              <div class="field"><label for="customRole">Standardrolle</label><select id="customRole"></select></div>
+              <div class="field"><label for="customPerson">Zuständige Person</label><select id="customPerson"><option value="">Noch offen</option></select></div>
+              <div class="field"><label for="customDue">Fälligkeit</label><input id="customDue" type="date"></div>
+              <div class="field"><label for="customEmail">E-Mail für Export</label><input id="customEmail" type="email" placeholder="wird bei Teamzuordnung automatisch übernommen"></div>
+              <div class="field full"><label for="customRoomStructure">Datenraumstruktur</label><input id="customRoomStructure" type="text" placeholder="z. B. 01 Eingang | 02 Bearbeitung | 03 Freigabe"></div>
+            </div>
+            <div class="custom-task-actions">
+              <button type="button" class="btn btn-ghost btn-small" id="cancelCustomTask">Abbrechen</button>
+              <button type="button" class="btn btn-primary btn-small" id="saveCustomTask">Maßnahme übernehmen</button>
+            </div>
+          </div>
+
+          <div class="toolbar">
+            <button type="button" class="btn btn-primary" id="addCustomTaskButton">+ Maßnahme hinzufügen</button>
+            <button type="button" class="btn btn-primary" id="downloadJson">JSON exportieren</button>
+            <button type="button" class="btn btn-secondary" id="downloadCsv" title="Exportiert die Punkte 1 bis 11 als elf formatierte Excel-Reiter">Excel exportieren</button>
+            <button type="button" class="btn btn-secondary" id="printPlan">Plan drucken</button>
+            <button type="button" class="btn btn-ghost" id="editAnswers">Fragebogen bearbeiten</button>
+            <button type="button" class="btn btn-primary" id="goToReview">Weiter zu Review & Freigabe</button>
+          </div>
+        </section>
+
+        <section class="step" data-step="8">
+          <h2>Review und Freigabe</h2>
+          <p class="step-intro">
+            Prüfen Sie den generierten Abschlussplan noch einmal vollständig. Erst nach der Freigabe wird der E-Mail-Versand vorbereitet.
+          </p>
+
+          <div class="review-grid">
+            <div class="review-card"><span>Unternehmen</span><strong id="reviewCompany">–</strong></div>
+            <div class="review-card"><span>Abschlussumfang</span><strong id="reviewScope">–</strong></div>
+            <div class="review-card"><span>Größenklasse</span><strong id="reviewClass">–</strong></div>
+            <div class="review-card"><span>Maßnahmen</span><strong id="reviewTaskCount">0</strong></div>
+            <div class="review-card"><span>Zugeordnete Personen</span><strong id="reviewAssignedCount">0</strong></div>
+            <div class="review-card"><span>Noch offene Zuständigkeiten</span><strong id="reviewOpenCount">0</strong></div>
+          </div>
+
+          <div class="review-table-wrap">
+            <table class="review-table">
+              <colgroup>
+                <col style="width:6%"><col style="width:14%"><col style="width:36%">
+                <col style="width:20%"><col style="width:12%"><col style="width:12%">
+              </colgroup>
+              <thead>
+                <tr><th>Nr.</th><th>Phase</th><th>Maßnahme</th><th>Zuständig</th><th>Fällig</th><th>Status</th></tr>
+              </thead>
+              <tbody id="reviewBody"></tbody>
+            </table>
+          </div>
+
+          <div class="approval-box">
+            <div class="section-title" style="margin-top:0">Formelle Freigabe</div>
+            <div class="approval-row">
+              <div class="field">
+                <label for="approvedBy">Freigegeben durch *</label>
+                <input id="approvedBy" type="text" placeholder="Vorname Nachname">
+              </div>
+              <div class="field">
+                <label for="approvalRole">Funktion *</label>
+                <input id="approvalRole" type="text" placeholder="z. B. CFO">
+              </div>
+              <div class="field">
+                <label for="approvalDate">Freigabedatum</label>
+                <input id="approvalDate" type="date">
+              </div>
+              <div class="field">
+                <label for="approvalComment">Freigabevermerk</label>
+                <input id="approvalComment" type="text" placeholder="Optional">
+              </div>
+            </div>
+            <label class="approval-check">
+              <input id="approvalConfirm" type="checkbox">
+              <span>
+                <strong>Ich bestätige die Freigabe des Abschlussplans.</strong>
+                <small>Maßnahmen, Zuständigkeiten und Fristen wurden geprüft und können an das Team kommuniziert werden.</small>
+              </span>
+            </label>
+            <div class="approval-status" id="approvalStatus"></div>
+          </div>
+
+          <div class="actions">
+            <button type="button" class="btn btn-secondary" id="backToPlan">Zurück zum Plan</button>
+            <button type="button" class="btn btn-primary" id="approvePlan">Plan verbindlich freigeben</button>
+          </div>
+        </section>
+
+        <section class="step" data-step="9">
+          <h2>Einrichtung der Datenräume</h2>
+          <p class="step-intro">
+            Für jede Maßnahme wird vor dem E-Mail-Versand ein eigener Datenraum eingerichtet.
+            Prüfen Sie die Ordnerstruktur, ergänzen Sie bei Bedarf individuelle Unterordner und bestätigen Sie anschließend die Einrichtung.
+          </p>
+
+          <div class="room-setup-summary">
+            <div class="metric"><span>Maßnahmen mit Datenraum</span><strong id="roomTaskCount">0</strong></div>
+            <div class="metric"><span>Vollständig eingerichtet</span><strong id="roomReadyCount">0</strong></div>
+            <div class="metric"><span>Noch zu prüfen</span><strong id="roomOpenCount">0</strong></div>
+            <div class="metric"><span>Standardordner gesamt</span><strong id="roomFolderCount">0</strong></div>
+          </div>
+
+          <div class="toolbar" style="margin:0 0 14px">
+            <button type="button" class="btn btn-primary btn-small" id="markAllRoomsReady">
+              ✓ Alle Datenräume als eingerichtet markieren
+            </button>
+            <button type="button" class="btn btn-secondary btn-small" id="markAllRoomsOpen">
+              Alle Markierungen zurücksetzen
+            </button>
+          </div>
+
+          <div class="callout">
+            <div>▣</div>
+            <div>
+              <strong>Ein Datenraum je Maßnahme</strong>
+              Die Links in den späteren E-Mails öffnen genau den Datenraum der jeweiligen Aufgabe. Die Struktur kann pro Maßnahme individuell angepasst werden.
+            </div>
+          </div>
+
+          <div class="room-setup-grid" id="roomSetupGrid"></div>
+
+          <div class="room-approval-box">
+            <div class="section-title" style="margin-top:0">Einrichtung bestätigen</div>
+            <label class="approval-check">
+              <input id="roomSetupConfirm" type="checkbox">
+              <span>
+                <strong>Alle Datenräume wurden geprüft und können verwendet werden.</strong>
+                <small>Die Ordnerstrukturen sind für die jeweiligen Maßnahmen passend eingerichtet.</small>
+              </span>
+            </label>
+            <div class="approval-status" id="roomSetupStatus"></div>
+          </div>
+
+          <div class="supabase-panel">
+            <div class="supabase-panel-head">
+              <div>
+                <h3>Supabase-Verbindung</h3>
+                <p>Nach der Anmeldung werden Unternehmen, Projekt, Team, Maßnahmen, Datenräume und Ordner in „LUMINA-FRAGEBOGEN“ angelegt.</p>
+              </div>
+              <span class="connection-badge" id="supabaseConnectionBadge">Nicht angemeldet</span>
+            </div>
+            <div class="grid">
+              <div class="field">
+                <label for="supabaseLoginEmail">Anmelde-E-Mail</label>
+                <input id="supabaseLoginEmail" type="email" placeholder="name@unternehmen.de">
+              </div>
+              <div class="field">
+                <label>Supabase-Projekt</label>
+                <input type="text" value="LUMINA-FRAGEBOGEN" readonly>
+              </div>
+            </div>
+            <div class="supabase-actions">
+              <button type="button" class="btn btn-secondary btn-small" id="sendMagicLink">Anmeldelink senden</button>
+              <button type="button" class="btn btn-ghost btn-small" id="signOutSupabase" hidden>Abmelden</button>
+              <button type="button" class="btn btn-primary btn-small" id="publishToSupabase">Projekt in Supabase anlegen</button>
+            </div>
+            <div class="publish-box info" id="publishInfo"></div>
+            <div class="publish-box success" id="publishSuccess"></div>
+            <div class="publish-box error" id="publishError"></div>
+          </div>
+
+          <div class="actions">
+            <button type="button" class="btn btn-secondary" id="backToReviewFromRooms">Zurück zu Review & Freigabe</button>
+            <button type="button" class="btn btn-primary" id="confirmRoomsAndContinue">Datenräume bestätigen</button>
+            <button type="button" class="btn btn-primary" id="continueAfterPublish" disabled>Weiter zum E-Mail-Versand</button>
+          </div>
+        </section>
+
+        <section class="step" data-step="10">
+          <h2>E-Mail-Versand an das Team</h2>
+          <p class="step-intro">
+            Für jedes Teammitglied wird ein persönliches Anschreiben mit den jeweils zugeordneten Aufgaben vorbereitet.
+          </p>
+
+          <div class="mail-summary">
+            <div class="metric"><span>Freigabestatus</span><strong id="mailApprovalStatus">Nicht freigegeben</strong></div>
+            <div class="metric"><span>Empfänger mit Aufgaben</span><strong id="mailRecipientCount">0</strong></div>
+            <div class="metric"><span>Aufgaben im Versand</span><strong id="mailTaskCount">0</strong></div>
+          </div>
+
+          <div class="callout">
+            <div>✉</div>
+            <div>
+              <strong>Persönlich und freundlich formuliert</strong>
+              Jede E-Mail wird als formatierter Outlook-Entwurf mit sprechenden Links erstellt. Die technischen URLs bleiben hinter den Linkbezeichnungen verborgen.
+            </div>
+          </div>
+
+          <div class="mail-grid" id="mailGrid"></div>
+
+          <div class="actions">
+            <button type="button" class="btn btn-secondary" id="backToRooms">Zurück zu den Datenräumen</button>
+            <button type="button" class="btn btn-primary" id="openAllMails">Alle Outlook-Entwürfe erstellen</button>
+          </div>
+        </section>
+      </form>
+    </section>
+  </div>
+</main>
+
+<script>
+const SUPABASE_URL = "https://mslbzypjtvvznyewupco.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1zbGJ6eXBqdHZ2em55ZXd1cGNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5OTA3NDAsImV4cCI6MjEwMDU2Njc0MH0.6f9QUtpaSLUrKVkH3rUYCcZecqwMHrdledZMtoCdRQo";
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true }
+});
+let publicationState={published:false,companyId:'',projectId:'',publishedAt:'',publishedBy:''};
+
+const STORAGE_KEY = 'luminaAbschlussplanerV1';
+const form = document.getElementById('plannerForm');
+const stepEls = [...document.querySelectorAll('.step')];
+const navEls = [...document.querySelectorAll('.step-link')];
+const progressBar = document.getElementById('progressBar');
+const progressCaption = document.getElementById('progressCaption');
+let currentStep = 0;
+let generatedTasks = [];
+
+const roleOptions = [
+  'CFO / Geschäftsführung','Projektleitung Abschluss','Leiter Rechnungswesen','Bilanzbuchhaltung',
+  'Controlling','Steuern','Personal / HR','IT','Treasury','Recht','Externe Beratung',
+  'Wirtschaftsprüfung','Konsolidierung','Investor Relations','Nachhaltigkeit','Sonstige'
+];
+
+const baseTeam = [
+  ['CFO / Geschäftsführung','','','',''],
+  ['Projektleitung Abschluss','','','',''],
+  ['Leiter Rechnungswesen','','','',''],
+  ['Bilanzbuchhaltung','','','',''],
+  ['Controlling','','','',''],
+  ['Wirtschaftsprüfung','','','','']
+];
+
+const taskCatalog = [
+
+  {id:'M-000A',phase:'1. Planung',title:'HGB-Größenklasse und gesetzlichen Berichtsumfang dokumentieren',role:'Leiter Rechnungswesen',anchor:'draftDate',offset:-76,tags:['base']},
+  {id:'M-000B',phase:'1. Planung',title:'Freiwillige Umfangserweiterungen aus Gremienbeschluss, Satzung oder Vertrag dokumentieren',role:'Projektleitung Abschluss',anchor:'draftDate',offset:-74,tags:['voluntary_scope']},
+  {id:'M-000C',phase:'1. Planung',title:'Kapitalmarktrechtliche Zusatzanforderungen und Veröffentlichungsfristen prüfen',role:'CFO / Geschäftsführung',anchor:'draftDate',offset:-72,tags:['capital_market']},
+  {id:'M-001',phase:'1. Planung',title:'Abschlussumfang und Projektziele bestätigen',role:'Projektleitung Abschluss',anchor:'draftDate',offset:-75,tags:['base']},
+  {id:'M-002',phase:'1. Planung',title:'Abschlusskalender erstellen und freigeben',role:'Projektleitung Abschluss',anchor:'draftDate',offset:-70,tags:['base']},
+  {id:'M-003',phase:'1. Planung',title:'Rollen, Verantwortlichkeiten und Stellvertretungen bestätigen',role:'Leiter Rechnungswesen',anchor:'draftDate',offset:-68,tags:['base']},
+  {id:'M-004',phase:'1. Planung',title:'Kick-off mit allen Beteiligten durchführen',role:'Projektleitung Abschluss',anchor:'draftDate',offset:-63,tags:['base']},
+  {id:'M-005',phase:'1. Planung',title:'Wesentlichkeitsgrenzen und Reportinganforderungen festlegen',role:'CFO / Geschäftsführung',anchor:'draftDate',offset:-60,tags:['base']},
+  {id:'M-006',phase:'2. Daten & Systeme',title:'Zugriffe auf ERP, Vorsysteme und Ablagen prüfen',role:'IT',anchor:'draftDate',offset:-55,tags:['base']},
+  {id:'M-007',phase:'2. Daten & Systeme',title:'Datenraum bzw. Abschlussablage einrichten',role:'Projektleitung Abschluss',anchor:'draftDate',offset:-52,tags:['base']},
+  {id:'M-008',phase:'2. Daten & Systeme',title:'Saldenliste und Kontenstammdaten bereitstellen',role:'Bilanzbuchhaltung',anchor:'bookCloseDate',offset:1,tags:['base']},
+  {id:'M-009',phase:'2. Daten & Systeme',title:'Nebenbücher mit Hauptbuch abstimmen',role:'Bilanzbuchhaltung',anchor:'draftDate',offset:-35,tags:['base']},
+  {id:'M-010',phase:'3. Abschlussarbeiten',title:'Banken, Kassen und Finanzmittel abstimmen',role:'Treasury',anchor:'draftDate',offset:-30,tags:['base']},
+  {id:'M-011',phase:'3. Abschlussarbeiten',title:'Forderungen und Verbindlichkeiten abstimmen',role:'Bilanzbuchhaltung',anchor:'draftDate',offset:-28,tags:['base']},
+  {id:'M-012',phase:'3. Abschlussarbeiten',title:'Abgrenzungen und Rückstellungen buchen',role:'Bilanzbuchhaltung',anchor:'draftDate',offset:-24,tags:['base']},
+  {id:'M-013',phase:'3. Abschlussarbeiten',title:'Anlagevermögen abstimmen und Abschreibungen prüfen',role:'Bilanzbuchhaltung',anchor:'draftDate',offset:-26,tags:['base','fixed_assets']},
+  {id:'M-014',phase:'3. Abschlussarbeiten',title:'Steuerberechnung und Steuerabgrenzung erstellen',role:'Steuern',anchor:'draftDate',offset:-18,tags:['base']},
+  {id:'M-015',phase:'3. Abschlussarbeiten',title:'Abschlussbuchungen dokumentieren und freigeben',role:'Leiter Rechnungswesen',anchor:'draftDate',offset:-12,tags:['base']},
+  {id:'M-016',phase:'4. Bericht',title:'Bilanz und GuV finalisieren',role:'Bilanzbuchhaltung',anchor:'draftDate',offset:-8,tags:['balance']},
+  {id:'M-017',phase:'4. Bericht',title:'Anhangangaben und Spiegel zusammenstellen',role:'Bilanzbuchhaltung',anchor:'draftDate',offset:-12,tags:['notes']},
+  {id:'M-018',phase:'4. Bericht',title:'Anhang redaktionell abstimmen und freigeben',role:'Leiter Rechnungswesen',anchor:'draftDate',offset:-5,tags:['notes']},
+  {id:'M-019',phase:'4. Bericht',title:'Lageberichtsdaten aus Rechnungswesen und Controlling zusammentragen',role:'Controlling',anchor:'draftDate',offset:-20,tags:['management_report']},
+  {id:'M-020',phase:'4. Bericht',title:'Lagebericht erstellen und mit Geschäftsführung abstimmen',role:'CFO / Geschäftsführung',anchor:'draftDate',offset:-4,tags:['management_report']},
+  {id:'M-021',phase:'4. Bericht',title:'Kapitalflussrechnung erstellen und plausibilisieren',role:'Controlling',anchor:'draftDate',offset:-8,tags:['cashflow']},
+  {id:'M-022',phase:'4. Bericht',title:'Eigenkapitalspiegel erstellen und abstimmen',role:'Bilanzbuchhaltung',anchor:'draftDate',offset:-8,tags:['equity']},
+  {id:'M-023',phase:'4. Bericht',title:'Banken- und Gesellschafterreporting vorbereiten',role:'CFO / Geschäftsführung',anchor:'signingDate',offset:-7,tags:['bank_reporting']},
+  {id:'M-024',phase:'5. Konsolidierung',title:'Reporting Packages an Gesellschaften versenden',role:'Konsolidierung',anchor:'draftDate',offset:-45,tags:['consolidation','group']},
+  {id:'M-025',phase:'5. Konsolidierung',title:'Intercompany-Abstimmung durchführen',role:'Konsolidierung',anchor:'draftDate',offset:-25,tags:['consolidation','group']},
+  {id:'M-026',phase:'5. Konsolidierung',title:'Konsolidierungsbuchungen erfassen und dokumentieren',role:'Konsolidierung',anchor:'draftDate',offset:-14,tags:['consolidation','group']},
+  {id:'M-027',phase:'5. Konsolidierung',title:'Konzernabschluss und Konzernanhang finalisieren',role:'Konsolidierung',anchor:'draftDate',offset:-4,tags:['consolidation','group']},
+  {id:'M-028',phase:'6. Prüfung',title:'Prüfungsplanung und PBC-Liste abstimmen',role:'Wirtschaftsprüfung',anchor:'auditStartDate',offset:-35,tags:['audit']},
+  {id:'M-029',phase:'6. Prüfung',title:'Datenraum vollständig befüllen',role:'Projektleitung Abschluss',anchor:'auditStartDate',offset:-7,tags:['audit']},
+  {id:'M-030',phase:'6. Prüfung',title:'Prüfungsanfragen koordinieren und nachhalten',role:'Projektleitung Abschluss',anchor:'auditStartDate',offset:1,tags:['audit']},
+  {id:'M-031',phase:'6. Prüfung',title:'Prüfungsfeststellungen bewerten und bearbeiten',role:'Leiter Rechnungswesen',anchor:'signingDate',offset:-12,tags:['audit']},
+  {id:'M-032',phase:'6. Prüfung',title:'Vollständigkeitserklärung vorbereiten und freigeben',role:'CFO / Geschäftsführung',anchor:'signingDate',offset:-2,tags:['audit']},
+  {id:'M-033',phase:'7. Freigabe',title:'Abschlussentwurf intern freigeben',role:'CFO / Geschäftsführung',anchor:'draftDate',offset:0,tags:['base']},
+  {id:'M-034',phase:'7. Freigabe',title:'Finale Abschlussunterlagen für Unterzeichnung vorbereiten',role:'Leiter Rechnungswesen',anchor:'signingDate',offset:-3,tags:['base']},
+  {id:'M-035',phase:'7. Freigabe',title:'Abschluss und Testat final dokumentieren',role:'Projektleitung Abschluss',anchor:'signingDate',offset:0,tags:['base']},
+  {id:'M-036',phase:'8. Offenlegung',title:'Offenlegungsunterlagen technisch aufbereiten',role:'Bilanzbuchhaltung',anchor:'disclosureDate',offset:-10,tags:['disclosure']},
+  {id:'M-037',phase:'8. Offenlegung',title:'Offenlegung freigeben und einreichen',role:'CFO / Geschäftsführung',anchor:'disclosureDate',offset:0,tags:['disclosure']},
+  {id:'M-038',phase:'8. Offenlegung',title:'ESEF-Tagging erstellen und prüfen',role:'Investor Relations',anchor:'disclosureDate',offset:-15,tags:['esef']},
+  {id:'M-039',phase:'8. Offenlegung',title:'ESEF-Dateien technisch validieren',role:'IT',anchor:'disclosureDate',offset:-5,tags:['esef']},
+  {id:'M-040',phase:'4. Bericht',title:'Nachhaltigkeitsdaten aus Fachbereichen einsammeln',role:'Nachhaltigkeit',anchor:'draftDate',offset:-35,tags:['sustainability']},
+  {id:'M-041',phase:'4. Bericht',title:'Nachhaltigkeitsbericht erstellen und freigeben',role:'Nachhaltigkeit',anchor:'signingDate',offset:-5,tags:['sustainability']},
+  {id:'M-042',phase:'3. Abschlussarbeiten',title:'Personalrückstellungen und Personalverbindlichkeiten abstimmen',role:'Personal / HR',anchor:'draftDate',offset:-23,tags:['payroll']},
+  {id:'M-043',phase:'3. Abschlussarbeiten',title:'Treasury-Bewertungen und Finanzierungsdaten bereitstellen',role:'Treasury',anchor:'draftDate',offset:-22,tags:['treasury']},
+  {id:'M-044',phase:'3. Abschlussarbeiten',title:'Controlling-Überleitungen und Managementzahlen abstimmen',role:'Controlling',anchor:'draftDate',offset:-17,tags:['controlling']},
+  {id:'M-045',phase:'2. Daten & Systeme',title:'Excel-Nebenrechnungen inventarisieren und versionieren',role:'Bilanzbuchhaltung',anchor:'draftDate',offset:-40,tags:['excel']},
+  {id:'R-001',phase:'9. Sonderthemen',title:'Kaufpreisallokation und Erwerbsbilanzierung prüfen',role:'Externe Beratung',anchor:'draftDate',offset:-25,tags:['acquisition']},
+  {id:'R-002',phase:'9. Sonderthemen',title:'Restrukturierungsmaßnahmen und Rückstellungen dokumentieren',role:'Leiter Rechnungswesen',anchor:'draftDate',offset:-22,tags:['restructuring']},
+  {id:'R-003',phase:'9. Sonderthemen',title:'Rechtsstreitigkeiten mit Rechtsabteilung und Anwälten abstimmen',role:'Recht',anchor:'draftDate',offset:-20,tags:['litigation']},
+  {id:'R-004',phase:'9. Sonderthemen',title:'Covenants berechnen und Einhaltung dokumentieren',role:'Treasury',anchor:'signingDate',offset:-18,tags:['covenants']},
+  {id:'R-005',phase:'9. Sonderthemen',title:'Impairment-Test durchführen und dokumentieren',role:'Controlling',anchor:'draftDate',offset:-21,tags:['impairment']},
+  {id:'R-006',phase:'9. Sonderthemen',title:'Pensionsgutachten einholen und verbuchen',role:'Personal / HR',anchor:'draftDate',offset:-22,tags:['pensions']},
+  {id:'R-007',phase:'9. Sonderthemen',title:'Komplexe Rückstellungen fachlich bewerten und dokumentieren',role:'Leiter Rechnungswesen',anchor:'draftDate',offset:-20,tags:['provisions']},
+  {id:'R-008',phase:'9. Sonderthemen',title:'Going-Concern-Analyse und Liquiditätsplanung erstellen',role:'CFO / Geschäftsführung',anchor:'signingDate',offset:-25,tags:['going_concern']},
+  {id:'R-009',phase:'9. Sonderthemen',title:'Auswirkungen neuer Bilanzierungsgrundsätze analysieren',role:'Externe Beratung',anchor:'draftDate',offset:-35,tags:['new_policy']},
+  {id:'R-010',phase:'9. Sonderthemen',title:'Übergabe und Informationspaket für neuen Wirtschaftsprüfer koordinieren',role:'Projektleitung Abschluss',anchor:'auditStartDate',offset:-45,tags:['auditor_change']}
+];
+
+function radio(name){ return form.querySelector(`[name="${name}"]:checked`)?.value || ''; }
+function checked(name){ return [...form.querySelectorAll(`[name="${name}"]:checked`)].map(x=>x.value); }
+function val(name){ return form.elements[name]?.value || ''; }
+function addDays(dateStr, days){
+  if(!dateStr) return '';
+  const d = new Date(dateStr+'T12:00:00');
+  d.setDate(d.getDate()+days);
+  return d.toISOString().slice(0,10);
+}
+function dateLabel(dateStr){
+  if(!dateStr) return 'offen';
+  return new Intl.DateTimeFormat('de-DE').format(new Date(dateStr+'T12:00:00'));
+}
+function showStep(i){
+  currentStep=i;
+  stepEls.forEach((el,idx)=>el.classList.toggle('active',idx===i));
+  navEls.forEach((el,idx)=>el.classList.toggle('active',idx===i));
+  progressCaption.textContent = i<10 ? `Schritt ${i+1} von 11` : 'Abschlussplan';
+  progressBar.style.width = `${((i+1)/11)*100}%`;
+  window.scrollTo({top:Math.max(0,document.querySelector('.planner').offsetTop-90),behavior:'smooth'});
+}
+
+navEls.forEach((el,idx)=>{
+  el.style.cursor='pointer';
+  el.setAttribute('role','button');
+  el.setAttribute('tabindex','0');
+  const open=()=>{
+    if(idx===8) renderReview();
+    if(idx===9){
+      if(!approvalState.approved){
+        alert('Bitte geben Sie den Abschlussplan zunächst in Punkt 9 frei.');
+        renderReview();
+        showStep(8);
+        return;
+      }
+      renderRoomSetup();
+    }
+    if(idx===10){
+      if(!approvalState.approved){
+        alert('Bitte geben Sie den Abschlussplan zunächst in Punkt 9 frei.');
+        renderReview();
+        showStep(8);
+        return;
+      }
+      if(!roomSetupState.confirmed){
+        alert('Bitte richten Sie die Datenräume zunächst in Punkt 10 ein und bestätigen Sie diese.');
+        renderRoomSetup();showStep(9);return;
+      }
+      if(!publicationState.published){
+        alert('Bitte veröffentlichen Sie das Projekt zunächst in Supabase.');
+        renderRoomSetup();showStep(9);return;
+      }
+      renderMailStep();
+    }
+    showStep(idx);
+  };
+  el.addEventListener('click',open);
+  el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}});
+});
+
+function validateStep(i){
+  const err=document.getElementById(`error-${i}`); if(err) err.style.display='none';
+  let ok=true;
+  if(i===0) ok=val('company').trim() && val('framework') && val('closingScope');
+  if(i===5) ok=val('closingDate') && val('draftDate') && val('signingDate');
+  if(!ok && err) err.style.display='block';
+  return !!ok;
+}
+navEls.forEach((el,idx)=>el.addEventListener('click',()=>{
+  saveState();
+  if(idx===7 && generatedTasks.length) renderPlan();
+  showStep(idx);
+}));
+document.querySelectorAll('[data-next]').forEach(b=>b.addEventListener('click',()=>{
+  if(validateStep(currentStep)){
+    if(currentStep===1) renderSizeAssessment(true);
+    saveState(); showStep(currentStep+1);
+  }
+}));
+document.querySelectorAll('[data-prev]').forEach(b=>b.addEventListener('click',()=>showStep(Math.max(0,currentStep-1))));
+navEls.forEach((item,index)=>item.addEventListener('click',()=>{ saveState(); if(index===7 && generatedTasks.length) renderPlan(); showStep(index); }));
+
+function roleSelect(selected=''){
+  return `<select class="team-role">${roleOptions.map(r=>`<option ${r===selected?'selected':''}>${r}</option>`).join('')}</select>`;
+}
+function addTeamRow(role='',name='',email='',deputy='',deputyEmail=''){
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td>${roleSelect(role||'Sonstige')}</td>
+    <td><input class="team-name" type="text" value="${escapeAttr(name)}" placeholder="Name"></td>
+    <td><input class="team-email" type="email" value="${escapeAttr(email)}" placeholder="E-Mail"></td>
+    <td><input class="team-deputy" type="text" value="${escapeAttr(deputy)}" placeholder="Optional"></td>
+    <td><input class="team-deputy-email" type="email" value="${escapeAttr(deputyEmail)}" placeholder="E-Mail Stellvertretung"></td>
+    <td><button type="button" class="remove-row">×</button></td>`;
+  tr.querySelector('.remove-row').addEventListener('click',()=>{tr.remove();saveState();});
+  tr.querySelectorAll('input,select').forEach(el=>el.addEventListener('change',saveState));
+  document.getElementById('teamBody').appendChild(tr);
+}
+function escapeAttr(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
+function collectTeam(){
+  return [...document.querySelectorAll('#teamBody tr')].map(tr=>({
+    role:tr.querySelector('.team-role').value,
+    name:tr.querySelector('.team-name').value.trim(),
+    email:tr.querySelector('.team-email').value.trim(),
+    deputy:tr.querySelector('.team-deputy').value.trim(),
+    deputyEmail:tr.querySelector('.team-deputy-email').value.trim()
+  }));
+}
+document.getElementById('addTeamRow').addEventListener('click',()=>addTeamRow());
+document.getElementById('addRecommendedRoles').addEventListener('click',()=>{
+  const existing=new Set(collectTeam().map(x=>x.role));
+  ['Steuern','Personal / HR','IT','Treasury','Recht','Konsolidierung','Externe Beratung'].forEach(r=>{if(!existing.has(r))addTeamRow(r)});
+});
+
+
+
+function parseGermanNumber(value){
+  if(value===null || value===undefined || value==='') return '';
+  if(typeof value==='number') return Number.isFinite(value) ? value : '';
+  let s=String(value).trim().replace(/\s/g,'');
+  if(!s) return '';
+  // German format: dots are thousands separators, comma is decimal separator.
+  if(s.includes(',')){
+    s=s.replace(/\./g,'').replace(',','.');
+  }else{
+    // Values without a comma are treated as whole numbers; remove thousands dots.
+    s=s.replace(/\./g,'');
+  }
+  s=s.replace(/[^\d.-]/g,'');
+  const n=Number(s);
+  return Number.isFinite(n) ? n : '';
+}
+function formatGermanNumber(value,decimals=2){
+  const n=parseGermanNumber(value);
+  if(n==='') return '';
+  return new Intl.NumberFormat('de-DE',{
+    minimumFractionDigits:decimals,
+    maximumFractionDigits:decimals
+  }).format(n);
+}
+function formatGermanInteger(value){
+  const n=parseGermanNumber(value);
+  if(n==='') return '';
+  return new Intl.NumberFormat('de-DE',{
+    minimumFractionDigits:0,
+    maximumFractionDigits:0
+  }).format(Math.round(n));
+}
+function installGermanNumberFormatting(){
+  document.querySelectorAll('[data-number-format]').forEach(el=>{
+    const type=el.dataset.numberFormat;
+    const apply=()=>{
+      el.value = type==='integer'
+        ? formatGermanInteger(el.value)
+        : formatGermanNumber(el.value,2);
+    };
+    el.addEventListener('blur',apply);
+    el.addEventListener('focus',()=>{
+      const n=parseGermanNumber(el.value);
+      el.value = n==='' ? '' : String(n).replace('.',',');
+    });
+    apply();
+  });
+}
+
+const CLASS_ORDER={micro:0,small:1,medium:2,large:3};
+const CLASS_LABEL={micro:'Kleinst',small:'Klein',medium:'Mittelgroß',large:'Groß'};
+
+function classifyYear(balance,revenue,employees){
+  if([balance,revenue,employees].some(v=>parseGermanNumber(v)==='')) return '';
+  balance=parseGermanNumber(balance); revenue=parseGermanNumber(revenue); employees=parseGermanNumber(employees);
+  const meets=(limits)=>[balance<=limits.b,revenue<=limits.r,employees<=limits.e].filter(Boolean).length>=2;
+  if(meets({b:450000,r:900000,e:10})) return 'micro';
+  if(meets({b:7500000,r:15000000,e:50})) return 'small';
+  if(meets({b:25000000,r:50000000,e:250})) return 'medium';
+  return 'large';
+}
+function getSizeAssessment(){
+  const prev=classifyYear(val('balancePrev'),val('revenuePrev'),val('employeesPrev'));
+  const curr=classifyYear(val('balanceCurr'),val('revenueCurr'),val('employeesCurr'));
+  const special=checked('specialScope');
+  const previousLegal=val('previousLegalClass');
+  let effective='';
+  let explanation='';
+
+  if(special.includes('capital_market') || special.includes('public_interest')){
+    effective='large';
+    explanation='Sonderkriterium: Der Plan verwendet unabhängig von den Kennzahlen den Umfang einer großen Kapitalgesellschaft.';
+  }else if(prev && curr && prev===curr){
+    effective=curr;
+    explanation='Die gleiche Größenklasse ergibt sich an zwei aufeinanderfolgenden Abschlussstichtagen.';
+  }else if(prev && curr && prev!==curr){
+    effective=previousLegal || (CLASS_ORDER[prev]>CLASS_ORDER[curr]?prev:curr);
+    explanation=previousLegal
+      ? 'Die Kennzahlenklassen unterscheiden sich. Für den Plan wird die hinterlegte bisherige rechtliche Größenklasse verwendet.'
+      : 'Die Kennzahlenklassen unterscheiden sich. Ohne hinterlegte bisherige Klasse verwendet der Plan vorsorglich den umfangreicheren Berichtsumfang.';
+  }else{
+    effective=previousLegal || '';
+    explanation=effective
+      ? 'Mangels vollständiger Zweijahresdaten wird die hinterlegte bisherige rechtliche Größenklasse verwendet.'
+      : 'Bitte Kennzahlen für beide Stichtage eingeben.';
+  }
+  if(special.includes('voluntary_large')) {
+    effective='large';
+    explanation += ' Zusätzlich wurde freiwillig der Umfang einer großen Kapitalgesellschaft gewählt.';
+  }
+  return {prev,curr,effective,explanation};
+}
+function renderSizeAssessment(applyComponents=false){
+  const s=getSizeAssessment();
+  document.getElementById('classPrevLabel').textContent=s.prev?CLASS_LABEL[s.prev]:'Noch nicht berechnet';
+  document.getElementById('classCurrLabel').textContent=s.curr?CLASS_LABEL[s.curr]:'Noch nicht berechnet';
+  document.getElementById('effectiveClassLabel').textContent=s.effective?CLASS_LABEL[s.effective]:'Noch nicht berechnet';
+  document.getElementById('classExplanation').textContent=s.explanation;
+  if(applyComponents && s.effective) applyScopeDefaults(s.effective);
+}
+function setCheck(name,value,on=true){
+  const el=form.querySelector(`[name="${name}"][value="${value}"]`);
+  if(el) el.checked=on;
+}
+function applyScopeDefaults(sizeClass){
+  const special=checked('specialScope');
+  const scope=val('closingScope');
+  setCheck('components','balance',true);
+  setCheck('components','disclosure',true);
+  setCheck('components','notes',sizeClass!=='micro');
+  setCheck('components','management_report',['medium','large'].includes(sizeClass) || special.includes('voluntary_management_report'));
+  setCheck('components','cashflow',scope!=='single' || special.includes('capital_market') || special.includes('voluntary_kfr_ek'));
+  setCheck('components','equity',scope!=='single' || special.includes('capital_market') || special.includes('voluntary_kfr_ek'));
+  setCheck('components','consolidation',scope!=='single');
+  if(['medium','large'].includes(sizeClass) || special.includes('voluntary_audit') || special.includes('public_interest')){
+    const yes=form.querySelector('[name="audit"][value="yes"]'); if(yes) yes.checked=true;
+  }
+}
+['balancePrev','revenuePrev','employeesPrev','balanceCurr','revenueCurr','employeesCurr','previousLegalClass']
+  .forEach(id=>document.getElementById(id)?.addEventListener('input',()=>renderSizeAssessment(false)));
+document.querySelectorAll('[name="specialScope"]').forEach(el=>el.addEventListener('change',()=>renderSizeAssessment(false)));
+
+function collectAnswers(){
+  return {
+    company:val('company'),framework:val('framework'),closingScope:val('closingScope'),
+    entities:Number(val('entities')||1),legalForm:val('legalForm'),audit:radio('audit'),
+    sizeDatePrev:val('sizeDatePrev'),balancePrev:parseGermanNumber(val('balancePrev'))||0,revenuePrev:parseGermanNumber(val('revenuePrev'))||0,
+    employeesPrev:parseGermanNumber(val('employeesPrev'))||0,sizeDateCurr:val('sizeDateCurr'),balanceCurr:parseGermanNumber(val('balanceCurr'))||0,
+    revenueCurr:parseGermanNumber(val('revenueCurr'))||0,employeesCurr:parseGermanNumber(val('employeesCurr'))||0,
+    specialScope:checked('specialScope'),previousLegalClass:val('previousLegalClass'),scopeReason:val('scopeReason'),
+    sizeAssessment:getSizeAssessment(),
+    components:checked('components'),erp:val('erp'),consolidationSystem:val('consolidationSystem'),
+    documentRoom:val('documentRoom'),sources:Number(val('sources')||1),systems:checked('systems'),
+    team:collectTeam(),closingDate:val('closingDate'),bookCloseDate:val('bookCloseDate'),
+    draftDate:val('draftDate'),auditStartDate:val('auditStartDate'),
+    signingDate:val('signingDate'),disclosureDate:val('disclosureDate'),
+    risks:checked('risks'),specialNote:val('specialNote')
+  };
+}
+function saveState(){
+  localStorage.setItem(STORAGE_KEY,JSON.stringify({answers:collectAnswers(),tasks:generatedTasks,approval:approvalState,appLinks:appLinkSettings,roomSetup:roomSetupState,publication:publicationState}));
+}
+function shouldInclude(task,a){
+  const tags=task.tags;
+  if(tags.includes('base')) return true;
+  if(tags.includes('audit') && a.audit==='yes') return true;
+  if(tags.includes('group') && ['group','single_group'].includes(a.closingScope)) return true;
+  if(tags.some(t=>a.components.includes(t))) return true;
+  if(tags.some(t=>a.systems.includes(t))) return true;
+  if(tags.some(t=>a.risks.includes(t))) return true;
+  if(tags.includes('capital_market') && a.specialScope.includes('capital_market')) return true;
+  if(tags.includes('voluntary_scope') && a.specialScope.some(x=>x.startsWith('voluntary_'))) return true;
+  return false;
+}
+function personForRole(role,team){
+  return team.find(x=>x.role===role && x.name)?.name || '';
+}
+function generateTasks(){
+  const a=collectAnswers();
+  generatedTasks=taskCatalog.filter(t=>shouldInclude(t,a)).map((t,idx)=>{
+    const anchor=a[t.anchor] || a.draftDate || a.signingDate;
+    return {
+      ...t,
+      no:idx+1,
+      due:addDays(anchor,t.offset),
+      person:personForRole(t.role,a.team),
+      email:(a.team.find(x=>x.role===t.role && x.name===personForRole(t.role,a.team))?.email || ''),
+      deputy:(a.team.find(x=>x.role===t.role && x.name===personForRole(t.role,a.team))?.deputy || ''),
+      deputyEmail:(a.team.find(x=>x.role===t.role && x.name===personForRole(t.role,a.team))?.deputyEmail || ''),
+      roomStructure:defaultRoomStructure(),
+      status:'Geplant'
+    };
+  });
+  saveState();
+  renderPlan();
+  showStep(7);
+}
+document.getElementById('generatePlan').addEventListener('click',()=>{
+  if(validateStep(5)) generateTasks(); else showStep(5);
+});
+
+function renderPlan(){
+  const a=collectAnswers();
+  const roles=[...new Set(generatedTasks.map(t=>t.role))];
+  const open=generatedTasks.filter(t=>!t.person).length;
+  const risks=[];
+  if(a.audit==='yes' && a.auditStartDate && a.draftDate){
+    const gap=(new Date(a.auditStartDate)-new Date(a.draftDate))/86400000;
+    if(gap<5) risks.push(`Zwischen Abschlussentwurf und Prüfungsbeginn liegen nur ${Math.max(0,Math.round(gap))} Kalendertage.`);
+  }
+  if(a.signingDate && a.draftDate){
+    const gap=(new Date(a.signingDate)-new Date(a.draftDate))/86400000;
+    if(gap<20) risks.push(`Zwischen Abschlussentwurf und finaler Freigabe liegen nur ${Math.round(gap)} Kalendertage.`);
+  }
+  if(open>0) risks.push(`${open} Maßnahmen haben noch keine namentlich hinterlegte Zuständigkeit.`);
+  document.getElementById('metricTasks').textContent=generatedTasks.length;
+  document.getElementById('metricRoles').textContent=roles.length;
+  document.getElementById('metricOpen').textContent=open;
+  document.getElementById('metricRisks').textContent=risks.length;
+  const rb=document.getElementById('riskBox');
+  rb.hidden=!risks.length;
+  rb.innerHTML=risks.length?`<strong>Hinweise zur Planung</strong><br>${risks.map(r=>'• '+r).join('<br>')}`:'';
+
+  const phaseSel=document.getElementById('filterPhase');
+  const roleSel=document.getElementById('filterRole');
+  const oldP=phaseSel.value,oldR=roleSel.value;
+  phaseSel.innerHTML='<option value="">Alle Phasen</option>'+[...new Set(generatedTasks.map(t=>t.phase))].map(x=>`<option>${x}</option>`).join('');
+  roleSel.innerHTML='<option value="">Alle Rollen</option>'+roles.map(x=>`<option>${x}</option>`).join('');
+  phaseSel.value=oldP;roleSel.value=oldR;
+  renderRows();
+}
+function getSelectableTeamMembers(currentPerson=''){
+  const members=[];
+  const seen=new Set();
+  collectTeam().forEach((member,index)=>{
+    const name=(member.name||'').trim();
+    if(!name) return;
+    const key=[name,(member.email||'').trim(),member.role||''].join('|').toLowerCase();
+    if(seen.has(key)) return;
+    seen.add(key);
+    members.push({...member,index});
+  });
+  // Eine bereits gespeicherte Zuständigkeit darf nicht aus dem Dropdown verschwinden,
+  // selbst wenn das Team später geändert wurde.
+  if(currentPerson && !members.some(m=>m.name===currentPerson)){
+    members.push({name:currentPerson,email:'',role:'Nicht mehr im Team',deputy:'',deputyEmail:'',index:-1});
+  }
+  return members;
+}
+function buildPersonOptions(currentPerson=''){
+  const members=getSelectableTeamMembers(currentPerson);
+  return ['<option value="">Noch offen</option>',...members.map(m=>{
+    const suffix=[m.role,m.email].filter(Boolean).join(' · ');
+    return `<option value="${escapeAttr(m.name)}" ${m.name===currentPerson?'selected':''}>${escapeHtml(m.name)}${suffix?' · '+escapeHtml(suffix):''}</option>`;
+  })].join('');
+}
+function renderRows(){
+  const pf=document.getElementById('filterPhase').value;
+  const rf=document.getElementById('filterRole').value;
+  const of=document.getElementById('filterOpen').value;
+  const body=document.getElementById('resultBody');
+  const team=collectTeam();
+  const rows=generatedTasks.filter(t=>(!pf||t.phase===pf)&&(!rf||t.role===rf)&&(!of||!t.person));
+  body.innerHTML=rows.map(t=>{
+    const personOptions=buildPersonOptions(t.person);
+    return `<tr data-id="${t.id}">
+      <td>${t.no}</td><td class="phase">${escapeHtml(t.phase)}</td>
+      <td class="task-title">${escapeHtml(t.title)}</td>
+      <td><select class="task-role">${roleOptions.map(r=>`<option ${r===t.role?'selected':''}>${r}</option>`).join('')}</select></td>
+      <td><select class="task-person">${personOptions}</select></td>
+      <td><input class="task-due" type="date" value="${t.due||''}"></td>
+      <td><select class="task-status"><option ${t.status==='Geplant'?'selected':''}>Geplant</option><option ${t.status==='In Arbeit'?'selected':''}>In Arbeit</option><option ${t.status==='Blockiert'?'selected':''}>Blockiert</option><option ${t.status==='Erledigt'?'selected':''}>Erledigt</option></select></td>
+      <td>
+        <div class="task-room-cell">
+          <input class="task-room" type="text" value="${escapeAttr((t.roomStructure||defaultRoomStructure()).join(' | '))}">
+          <div class="link-preview">${escapeHtml(taskLinks(t).dataroom)}</div>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+  body.querySelectorAll('tr').forEach(tr=>{
+    const t=generatedTasks.find(x=>x.id===tr.dataset.id);
+    tr.querySelector('.task-role').addEventListener('change',e=>{t.role=e.target.value;renderPlan();saveState()});
+    tr.querySelector('.task-person').addEventListener('change',e=>{
+      t.person=e.target.value;
+      const member=collectTeam().find(x=>x.name===t.person);
+      t.email=member?.email||'';
+      t.deputy=member?.deputy||'';
+      t.deputyEmail=member?.deputyEmail||'';
+      renderPlan();saveState()
+    });
+    tr.querySelector('.task-due').addEventListener('change',e=>{t.due=e.target.value;saveState()});
+    tr.querySelector('.task-status').addEventListener('change',e=>{t.status=e.target.value;saveState()});
+    tr.querySelector('.task-room').addEventListener('change',e=>{
+      t.roomStructure=e.target.value.split('|').map(x=>x.trim()).filter(Boolean);
+      saveState();
+    });
+  });
+}
+function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
+['filterPhase','filterRole','filterOpen'].forEach(id=>document.getElementById(id).addEventListener('change',renderRows));
+
+
+function refreshCustomTaskOptions(){
+  const role=document.getElementById('customRole');
+  role.innerHTML=roleOptions.map(r=>`<option>${r}</option>`).join('');
+  const person=document.getElementById('customPerson');
+  person.innerHTML=buildPersonOptions('');
+}
+document.getElementById('addCustomTaskButton').addEventListener('click',()=>{
+  refreshCustomTaskOptions();
+  document.getElementById('customTaskPanel').classList.add('open');
+  document.getElementById('customTitle').focus();
+});
+document.getElementById('cancelCustomTask').addEventListener('click',()=>{
+  document.getElementById('customTaskPanel').classList.remove('open');
+});
+document.getElementById('customPerson').addEventListener('change',e=>{
+  const opt=e.target.selectedOptions[0];
+  document.getElementById('customEmail').value=opt?.dataset?.email||'';
+  const member=collectTeam().find(x=>x.name===e.target.value);
+  if(member) document.getElementById('customRole').value=member.role;
+});
+document.getElementById('saveCustomTask').addEventListener('click',()=>{
+  const title=document.getElementById('customTitle').value.trim();
+  if(!title){alert('Bitte eine Maßnahme eingeben.');return;}
+  const nextNo=generatedTasks.length?Math.max(...generatedTasks.map(t=>Number(t.no)||0))+1:1;
+  generatedTasks.push({
+    id:'CUSTOM-'+Date.now(),no:nextNo,phase:document.getElementById('customPhase').value.trim()||'10. Ergänzende Maßnahmen',
+    title,role:document.getElementById('customRole').value,person:document.getElementById('customPerson').value,
+    email:document.getElementById('customEmail').value.trim(),due:document.getElementById('customDue').value,
+    deputy:(collectTeam().find(x=>x.name===document.getElementById('customPerson').value)?.deputy||''),
+    deputyEmail:(collectTeam().find(x=>x.name===document.getElementById('customPerson').value)?.deputyEmail||''),
+    roomStructure:(document.getElementById('customRoomStructure').value.trim()
+      ? document.getElementById('customRoomStructure').value.split('|').map(x=>x.trim()).filter(Boolean)
+      : defaultRoomStructure()),
+    status:'Geplant',tags:['custom'],custom:true
+  });
+  document.getElementById('customTitle').value='';
+  document.getElementById('customDue').value='';
+  document.getElementById('customEmail').value='';
+  document.getElementById('customRoomStructure').value='';
+  document.getElementById('customTaskPanel').classList.remove('open');
+  saveState();renderPlan();
+});
+
+
+
+let appLinkSettings={
+  baseUrl:'https://lumina.volkerkusch.de/app',
+  assistantMode:'auto',
+  defaultRoomTemplate:'standard',
+  roomFolders:['01 Aufgabenbeschreibung','02 Eingangsdokumente','03 Arbeitspapiere','04 Rückfragen','05 Freigaben','06 Finale Unterlagen']
+};
+
+function normalizeBaseUrl(url){
+  return String(url||'').trim().replace(/\/+$/,'');
+}
+function taskToken(task){
+  return encodeURIComponent(task.id || `TASK-${task.no}`);
+}
+function buildTaskLink(task,action){
+  const base=normalizeBaseUrl(appLinkSettings.baseUrl);
+  const params=new URLSearchParams({
+    task:task.databaseId||task.id||String(task.no),
+    action,
+    assistant:appLinkSettings.assistantMode,
+    company:collectAnswers().company||'',
+    project:publicationState.projectId||''
+  });
+  return `${base}/task?${params.toString()}`;
+}
+function taskLinks(task){
+  return {
+    accept:buildTaskLink(task,'accept'),
+    decline:buildTaskLink(task,'decline'),
+    question:buildTaskLink(task,'question'),
+    dataroom:buildTaskLink(task,'dataroom')
+  };
+}
+function defaultRoomStructure(){
+  return [...appLinkSettings.roomFolders];
+}
+function renderRoomTemplateList(){
+  const list=document.getElementById('roomTemplateList');
+  if(!list) return;
+  list.innerHTML=appLinkSettings.roomFolders.map((folder,idx)=>`
+    <div class="room-template-item">
+      <input type="text" value="${escapeAttr(folder)}" data-room-folder="${idx}">
+      <button type="button" class="remove-row" data-remove-folder="${idx}">×</button>
+    </div>
+  `).join('');
+  list.querySelectorAll('[data-room-folder]').forEach(input=>input.addEventListener('change',e=>{
+    appLinkSettings.roomFolders[Number(e.target.dataset.roomFolder)]=e.target.value.trim();
+    saveState();
+  }));
+  list.querySelectorAll('[data-remove-folder]').forEach(btn=>btn.addEventListener('click',()=>{
+    appLinkSettings.roomFolders.splice(Number(btn.dataset.removeFolder),1);
+    renderRoomTemplateList();saveState();
+  }));
+}
+
+let approvalState={approved:false,approvedBy:'',approvalRole:'',approvalDate:'',approvalComment:'',approvedAt:''};
+
+function getTaskEmail(task){
+  const member=collectTeam().find(x=>x.name===task.person);
+  return task.email || member?.email || '';
+}
+function formatScopeLabel(){
+  const map={single:'Einzelabschluss',group:'Konzernabschluss',single_group:'Einzel- und Konzernabschluss'};
+  return map[val('closingScope')] || val('closingScope') || '–';
+}
+function renderReview(){
+  const a=collectAnswers();
+  document.getElementById('reviewCompany').textContent=a.company||'–';
+  document.getElementById('reviewScope').textContent=formatScopeLabel();
+  document.getElementById('reviewClass').textContent=CLASS_LABEL[a.sizeAssessment?.effective]||'Noch offen';
+  document.getElementById('reviewTaskCount').textContent=generatedTasks.length;
+  document.getElementById('reviewAssignedCount').textContent=new Set(generatedTasks.filter(t=>t.person).map(t=>t.person)).size;
+  document.getElementById('reviewOpenCount').textContent=generatedTasks.filter(t=>!t.person).length;
+
+  document.getElementById('reviewBody').innerHTML=generatedTasks.map(t=>`
+    <tr>
+      <td>${t.no}</td>
+      <td>${escapeHtml(t.phase)}</td>
+      <td><strong>${escapeHtml(t.title)}</strong></td>
+      <td>${escapeHtml(t.person||'Noch offen')}</td>
+      <td>${escapeHtml(dateLabel(t.due))}</td>
+      <td>${escapeHtml(t.status||'Geplant')}</td>
+    </tr>
+  `).join('');
+
+  if(!document.getElementById('approvalDate').value){
+    document.getElementById('approvalDate').value=new Date().toISOString().slice(0,10);
+  }
+  if(approvalState.approved){
+    document.getElementById('approvedBy').value=approvalState.approvedBy;
+    document.getElementById('approvalRole').value=approvalState.approvalRole;
+    document.getElementById('approvalDate').value=approvalState.approvalDate;
+    document.getElementById('approvalComment').value=approvalState.approvalComment;
+    document.getElementById('approvalConfirm').checked=true;
+    const box=document.getElementById('approvalStatus');
+    box.classList.add('show');
+    box.textContent=`Freigegeben durch ${approvalState.approvedBy} (${approvalState.approvalRole}) am ${dateLabel(approvalState.approvalDate)}.`;
+  }
+}
+
+function approvePlan(){
+  const by=document.getElementById('approvedBy').value.trim();
+  const role=document.getElementById('approvalRole').value.trim();
+  const date=document.getElementById('approvalDate').value;
+  const confirmed=document.getElementById('approvalConfirm').checked;
+  if(!by || !role || !date || !confirmed){
+    alert('Bitte Namen, Funktion und Freigabedatum angeben und die Freigabe bestätigen.');
+    return;
+  }
+  const open=generatedTasks.filter(t=>!t.person);
+  if(open.length){
+    const proceed=confirm(`${open.length} Maßnahmen sind noch ohne namentliche Zuständigkeit. Trotzdem freigeben?`);
+    if(!proceed) return;
+  }
+  approvalState={
+    approved:true,
+    approvedBy:by,
+    approvalRole:role,
+    approvalDate:date,
+    approvalComment:document.getElementById('approvalComment').value.trim(),
+    approvedAt:new Date().toISOString()
+  };
+  saveState();
+  renderReview();
+  renderRoomSetup();
+  showStep(9);
+}
+
+
+let roomSetupState={confirmed:false,confirmedAt:'',confirmedBy:''};
+
+function ensureTaskRoomStructure(task){
+  if(!Array.isArray(task.roomStructure) || !task.roomStructure.length){
+    task.roomStructure=defaultRoomStructure();
+  }
+  if(typeof task.roomReady!=='boolean') task.roomReady=false;
+}
+function renderRoomSetup(){
+  generatedTasks.forEach(ensureTaskRoomStructure);
+  const grid=document.getElementById('roomSetupGrid');
+  if(!grid) return;
+
+  const ready=generatedTasks.filter(t=>t.roomReady).length;
+  const totalFolders=generatedTasks.reduce((sum,t)=>sum+(t.roomStructure?.length||0),0);
+
+  document.getElementById('roomTaskCount').textContent=generatedTasks.length;
+  document.getElementById('roomReadyCount').textContent=ready;
+  document.getElementById('roomOpenCount').textContent=generatedTasks.length-ready;
+  document.getElementById('roomFolderCount').textContent=totalFolders;
+
+  grid.innerHTML=generatedTasks.map((t,taskIndex)=>`
+    <article class="room-setup-card" data-room-task="${escapeAttr(t.id)}">
+      <div class="room-setup-head">
+        <div>
+          <h3>${t.no}. ${escapeHtml(t.title)}</h3>
+          <p>${escapeHtml(t.phase)} · ${escapeHtml(t.person||'Noch keine Zuständigkeit')} · fällig ${escapeHtml(dateLabel(t.due))}</p>
+        </div>
+        <span class="${t.roomReady?'room-ready':'room-not-ready'}">
+          ${t.roomReady?'✓ Eingerichtet':'Noch prüfen'}
+        </span>
+      </div>
+      <div class="room-setup-body">
+        <div class="folder-editor">
+          ${(t.roomStructure||[]).map((folder,folderIndex)=>`
+            <div class="folder-row">
+              <div class="folder-index">${String(folderIndex+1).padStart(2,'0')}</div>
+              <input type="text" value="${escapeAttr(folder)}" data-task-index="${taskIndex}" data-folder-index="${folderIndex}">
+              <button type="button" class="remove-row" data-remove-task="${taskIndex}" data-remove-folder="${folderIndex}">×</button>
+            </div>
+          `).join('')}
+        </div>
+        <div class="room-card-actions">
+          <button type="button" class="btn btn-secondary btn-small" data-add-folder="${taskIndex}">+ Ordner ergänzen</button>
+          <button type="button" class="btn btn-ghost btn-small" data-reset-room="${taskIndex}">Standardstruktur übernehmen</button>
+          <button type="button" class="btn btn-primary btn-small" data-ready-room="${taskIndex}">
+            ${t.roomReady?'Einrichtung ändern':'Datenraum als eingerichtet markieren'}
+          </button>
+        </div>
+      </div>
+    </article>
+  `).join('');
+
+  grid.querySelectorAll('[data-task-index][data-folder-index]').forEach(input=>{
+    input.addEventListener('change',e=>{
+      const t=generatedTasks[Number(e.target.dataset.taskIndex)];
+      t.roomStructure[Number(e.target.dataset.folderIndex)]=e.target.value.trim();
+      t.roomReady=false;
+      roomSetupState.confirmed=false;
+      saveState();
+      renderRoomSetup();
+    });
+  });
+
+  grid.querySelectorAll('[data-remove-task]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const t=generatedTasks[Number(btn.dataset.removeTask)];
+      t.roomStructure.splice(Number(btn.dataset.removeFolder),1);
+      t.roomReady=false;
+      roomSetupState.confirmed=false;
+      saveState();
+      renderRoomSetup();
+    });
+  });
+
+  grid.querySelectorAll('[data-add-folder]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const t=generatedTasks[Number(btn.dataset.addFolder)];
+      t.roomStructure.push(`Neuer Ordner ${t.roomStructure.length+1}`);
+      t.roomReady=false;
+      roomSetupState.confirmed=false;
+      saveState();
+      renderRoomSetup();
+    });
+  });
+
+  grid.querySelectorAll('[data-reset-room]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const t=generatedTasks[Number(btn.dataset.resetRoom)];
+      t.roomStructure=defaultRoomStructure();
+      t.roomReady=false;
+      roomSetupState.confirmed=false;
+      saveState();
+      renderRoomSetup();
+    });
+  });
+
+  grid.querySelectorAll('[data-ready-room]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const t=generatedTasks[Number(btn.dataset.readyRoom)];
+      t.roomReady=!t.roomReady;
+      roomSetupState.confirmed=false;
+      saveState();
+      renderRoomSetup();
+    });
+  });
+
+  const status=document.getElementById('roomSetupStatus');
+  if(roomSetupState.confirmed){
+    document.getElementById('roomSetupConfirm').checked=true;
+    status.classList.add('show');
+    status.textContent=`Datenräume bestätigt am ${new Intl.DateTimeFormat('de-DE',{dateStyle:'medium',timeStyle:'short'}).format(new Date(roomSetupState.confirmedAt))}.`;
+  }else{
+    document.getElementById('roomSetupConfirm').checked=false;
+    status.classList.remove('show');
+    status.textContent='';
+  }
+}
+
+function confirmRoomSetup(){
+  const notReady=generatedTasks.filter(t=>!t.roomReady);
+  if(notReady.length){
+    alert(`Bitte markieren Sie zunächst alle ${notReady.length} noch offenen Datenräume als eingerichtet.`);
+    return;
+  }
+  if(!document.getElementById('roomSetupConfirm').checked){
+    alert('Bitte bestätigen Sie, dass alle Datenräume geprüft wurden.');
+    return;
+  }
+  roomSetupState={
+    confirmed:true,
+    confirmedAt:new Date().toISOString(),
+    confirmedBy:approvalState.approvedBy||''
+  };
+  publicationState={published:false,companyId:'',projectId:'',publishedAt:'',publishedBy:''};
+  saveState();
+  renderRoomSetup();
+  updateSupabaseUi();
+}
+
+
+
+function showPublish(type,message){
+  ['publishInfo','publishSuccess','publishError'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){el.classList.remove('show');el.textContent='';}
+  });
+  const target=document.getElementById(type==='success'?'publishSuccess':type==='error'?'publishError':'publishInfo');
+  if(target){target.textContent=message;target.classList.add('show');}
+}
+async function getSupabaseUser(){
+  const {data,error}=await supabaseClient.auth.getSession();
+  if(error){
+    console.warn('Supabase session check:', error);
+    return null;
+  }
+  return data?.session?.user || null;
+}
+async function updateSupabaseUi(){
+  const badge=document.getElementById('supabaseConnectionBadge');
+  if(!badge) return;
+
+  const isLocalFile=location.protocol==='file:';
+
+  try{
+    const user=await getSupabaseUser();
+
+    if(user){
+      badge.textContent=`Angemeldet: ${user.email}`;
+      badge.classList.add('online');
+      document.getElementById('signOutSupabase').hidden=false;
+      if(!document.getElementById('supabaseLoginEmail').value){
+        document.getElementById('supabaseLoginEmail').value=user.email||'';
+      }
+    }else{
+      badge.textContent=isLocalFile
+        ? 'Lokale Datei – Anmeldung über Webadresse erforderlich'
+        : 'Nicht angemeldet';
+      badge.classList.remove('online');
+      document.getElementById('signOutSupabase').hidden=true;
+    }
+  }catch(e){
+    console.error(e);
+    badge.textContent='Supabase nicht erreichbar';
+    badge.classList.remove('online');
+  }
+
+  const next=document.getElementById('continueAfterPublish');
+  if(next) next.disabled=!(roomSetupState.confirmed && publicationState.published);
+
+  if(publicationState.published){
+    showPublish(
+      'success',
+      `Projekt wurde am ${dateLabel(publicationState.publishedAt.slice(0,10))} in Supabase angelegt.`
+    );
+  }else if(isLocalFile){
+    showPublish(
+      'info',
+      'Die Seite ist aktuell als lokale Datei (file://) geöffnet. ' +
+      'Magic-Link-Anmeldung und Supabase-Veröffentlichung funktionieren zuverlässig erst über ' +
+      'https://lumina.volkerkusch.de/ oder einen lokalen Webserver.'
+    );
+  }
+}
+async function sendSupabaseMagicLink(){
+  const email=document.getElementById('supabaseLoginEmail').value.trim();
+  if(!email){
+    alert('Bitte E-Mail-Adresse eingeben.');
+    return;
+  }
+
+  const isLocalFile=location.protocol==='file:';
+  const redirectTo=isLocalFile
+    ? 'https://lumina.volkerkusch.de/'
+    : location.href.split('#')[0].split('?')[0];
+
+  showPublish('info','Anmeldelink wird versendet …');
+
+  const {error}=await supabaseClient.auth.signInWithOtp({
+    email,
+    options:{emailRedirectTo:redirectTo}
+  });
+
+  if(error){
+    showPublish('error',`Anmeldelink konnte nicht gesendet werden:\n${error.message}`);
+    return;
+  }
+
+  showPublish(
+    'success',
+    `Anmeldelink wurde an ${email} versendet.\n` +
+    (isLocalFile
+      ? 'Öffne den Link anschließend über die Webadresse von LUMINA, nicht über die lokale C:-Datei.'
+      : 'Öffne den Link in diesem Browser.')
+  );
+}
+function mapStatus(status){
+  return {'Geplant':'planned','In Arbeit':'in_progress','Blockiert':'blocked','Erledigt':'completed'}[status]||'planned';
+}
+async function publishProjectToSupabase(){
+  try{
+    if(!approvalState.approved){
+      alert('Bitte zuerst Punkt 9 freigeben.');
+      return;
+    }
+    if(!roomSetupState.confirmed){
+      alert('Bitte zuerst alle Datenräume bestätigen.');
+      return;
+    }
+    if(location.protocol==='file:'){
+      showPublish(
+        'error',
+        'Die Supabase-Veröffentlichung kann aus einer lokal geöffneten Datei nicht zuverlässig gestartet werden. ' +
+        'Bitte lade die HTML auf lumina.volkerkusch.de oder starte sie über http://localhost.'
+      );
+      return;
+    }
+
+    const user=await getSupabaseUser();
+    if(!user){
+      showPublish(
+        'error',
+        'Du bist noch nicht angemeldet. Bitte zuerst „Anmeldelink senden“ wählen und den Link in diesem Browser öffnen.'
+      );
+      return;
+    }
+
+    const a=collectAnswers();
+    const team=collectTeam().filter(m=>m.name&&m.email);
+    showPublish('info','Unternehmen wird angelegt …');
+    const {data:company,error:e1}=await supabaseClient.from('companies')
+      .insert({name:a.company,created_by:user.id}).select().single();
+    if(e1) throw e1;
+
+    const year=a.closingDate?.slice(0,4)||'';
+    const {data:project,error:e2}=await supabaseClient.from('projects').insert({
+      company_id:company.id,
+      name:`Jahresabschluss ${year}`.trim(),
+      accounting_standard:a.framework||null,
+      closing_scope:a.closingScope||null,
+      legal_form:a.legalForm||null,
+      number_of_entities:a.entities||1,
+      closing_date:a.closingDate||null,
+      book_close_date:a.bookCloseDate||null,
+      draft_date:a.draftDate||null,
+      audit_start_date:a.auditStartDate||null,
+      signing_date:a.signingDate||null,
+      disclosure_date:a.disclosureDate||null,
+      size_class_previous:a.sizeAssessment?.prev||null,
+      size_class_current:a.sizeAssessment?.curr||null,
+      effective_size_class:a.sizeAssessment?.effective||null,
+      special_scope:a.specialScope||[],
+      report_components:a.components||[],
+      systems:{erp:a.erp,consolidation_system:a.consolidationSystem,document_room:a.documentRoom,data_sources:a.sources,additional_systems:a.systems||[]},
+      risks:a.risks||[],
+      status:'rooms_ready',
+      approved_by_name:approvalState.approvedBy||null,
+      approved_by_role:approvalState.approvalRole||null,
+      approved_at:approvalState.approvedAt||null,
+      approval_comment:approvalState.approvalComment||null,
+      rooms_confirmed_at:roomSetupState.confirmedAt||null,
+      created_by:user.id
+    }).select().single();
+    if(e2) throw e2;
+
+    showPublish('info','Team wird angelegt …');
+    let members=[];
+    if(team.length){
+      const {data,error}=await supabaseClient.from('project_members').insert(team.map(m=>({
+        project_id:project.id,name:m.name,email:m.email.toLowerCase(),project_role:m.role,
+        deputy_name:m.deputy||null,deputy_email:m.deputyEmail?.toLowerCase()||null,
+        access_level:m.role==='CFO / Geschäftsführung'?'cfo':m.role==='Projektleitung Abschluss'?'manager':m.role==='Wirtschaftsprüfung'?'auditor':'member',
+        can_read:true,can_upload:true,
+        can_edit:['CFO / Geschäftsführung','Projektleitung Abschluss','Leiter Rechnungswesen'].includes(m.role),
+        can_approve:['CFO / Geschäftsführung','Leiter Rechnungswesen'].includes(m.role),
+        can_manage_members:['CFO / Geschäftsführung','Projektleitung Abschluss'].includes(m.role)
+      }))).select();
+      if(error) throw error;
+      members=data||[];
+    }
+    const byEmail=new Map(members.map(m=>[m.email.toLowerCase(),m]));
+
+    showPublish('info','Maßnahmen werden angelegt …');
+    const taskRows=generatedTasks.map(t=>{
+      const email=(getTaskEmail(t)||'').toLowerCase();
+      const member=byEmail.get(email);
+      return {
+        project_id:project.id,technical_id:t.id,task_number:Number(t.no)||null,
+        phase:t.phase,title:t.title,standard_role:t.role,
+        responsible_member_id:member?.id||null,responsible_name:t.person||null,
+        responsible_email:email||null,deputy_name:t.deputy||null,
+        deputy_email:t.deputyEmail?.toLowerCase()||null,due_date:t.due||null,
+        status:mapStatus(t.status),date_anchor:t.anchor||null,
+        date_offset_days:Number.isFinite(t.offset)?t.offset:null,is_custom:Boolean(t.custom)
+      };
+    });
+    const {data:dbTasks,error:e3}=await supabaseClient.from('tasks').insert(taskRows).select();
+    if(e3) throw e3;
+    const source=new Map(generatedTasks.map(t=>[t.id,t]));
+
+    for(let i=0;i<dbTasks.length;i++){
+      const dbTask=dbTasks[i], t=source.get(dbTask.technical_id);
+      showPublish('info',`Datenraum ${i+1} von ${dbTasks.length}: ${t?.title||dbTask.title}`);
+      t.databaseId=dbTask.id;
+      const {data:room,error:e4}=await supabaseClient.from('task_rooms').insert({
+        task_id:dbTask.id,room_name:`${t.no}. ${t.title}`,
+        room_status:'ready',confirmed_by:user.id,confirmed_at:roomSetupState.confirmedAt
+      }).select().single();
+      if(e4) throw e4;
+      t.databaseRoomId=room.id;
+      const folders=(t.roomStructure||defaultRoomStructure()).map((name,index)=>({
+        task_room_id:room.id,folder_number:index+1,folder_code:String(index+1).padStart(2,'0'),
+        folder_name:name,can_member_upload:true,can_auditor_read:t.role==='Wirtschaftsprüfung'
+      }));
+      const {data:dbFolders,error:e5}=await supabaseClient.from('task_room_folders').insert(folders).select();
+      if(e5) throw e5;
+      t.databaseFolders=dbFolders||[];
+    }
+
+    publicationState={published:true,companyId:company.id,projectId:project.id,publishedAt:new Date().toISOString(),publishedBy:user.email||''};
+    saveState();
+    showPublish('success',`Erfolgreich: ${dbTasks.length} Maßnahmen samt Datenräumen wurden in Supabase angelegt.`);
+    await updateSupabaseUi();
+  }catch(error){
+    console.error(error);
+    showPublish('error',`Supabase-Fehler:\n${error.message||error}`);
+  }
+}
+
+function tasksByRecipient(){
+  const groups=new Map();
+  generatedTasks.filter(t=>t.person).forEach(t=>{
+    const email=getTaskEmail(t);
+    const key=`${t.person}|||${email}`;
+    if(!groups.has(key)) groups.set(key,{name:t.person,email,role:t.role,tasks:[]});
+    groups.get(key).tasks.push(t);
+  });
+  return [...groups.values()].sort((a,b)=>a.name.localeCompare(b.name,'de'));
+}
+
+function mailIntroFor(group){
+  const a=collectAnswers();
+  const firstName=(group.name||'').trim().split(/\s+/)[0] || group.name || 'liebes Teammitglied';
+  const openText=group.tasks.length===1?'die folgende Aufgabe':'die folgenden Aufgaben';
+  return `Hallo ${firstName},
+
+vielen Dank, dass Du den Abschlussprozess von ${a.company||'unserem Unternehmen'} unterstützt.
+
+Im gemeinsam abgestimmten LUMINA-Abschlussplan wurden Dir ${openText} zugeordnet:`;
+}
+
+function mailOutroFor(group){
+  return `Bitte prüfe die Zuordnung und die vorgesehenen Termine kurz. Über die Links unter jeder Maßnahme kannst Du die Aufgabe direkt annehmen, ablehnen, eine Rückfrage stellen oder den zugehörigen Datenraum öffnen. Deine Rückmeldung wird in LUMINA direkt dem Vorgang zugeordnet und von Volker, KAI oder KIRA weiterbearbeitet.
+
+Der Abschlussplan wurde am ${dateLabel(approvalState.approvalDate)} durch ${approvalState.approvedBy} (${approvalState.approvalRole}) freigegeben.
+
+Vielen Dank für Deine Unterstützung und die gute Zusammenarbeit.
+
+Herzliche Grüße
+${approvalState.approvedBy}`;
+}
+
+function mailTextFor(group){
+  const tasks=group.tasks.slice().sort((x,y)=>(x.due||'').localeCompare(y.due||''));
+  const lines=tasks.map((t,i)=>{
+    const links=taskLinks(t);
+    return `${i+1}. ${t.title}
+✓ Aufgabe annehmen: ${links.accept}
+✕ Aufgabe ablehnen: ${links.decline}
+? Rückfrage: ${links.question}
+▣ Datenraum öffnen: ${links.dataroom}
+
+Fällig: ${dateLabel(t.due)}
+Phase: ${t.phase}
+Status: ${t.status||'Geplant'}`;
+  }).join('\n\n');
+
+  return `${mailIntroFor(group)}
+
+${lines}
+
+${mailOutroFor(group)}`;
+}
+
+function renderMailStep(){
+  const groups=tasksByRecipient();
+  document.getElementById('mailApprovalStatus').textContent=approvalState.approved
+    ? `Freigegeben am ${dateLabel(approvalState.approvalDate)}`
+    : 'Nicht freigegeben';
+  document.getElementById('mailRecipientCount').textContent=groups.length;
+  document.getElementById('mailTaskCount').textContent=groups.reduce((s,g)=>s+g.tasks.length,0);
+
+  document.getElementById('mailGrid').innerHTML=groups.map((g,idx)=>{
+    const body=mailTextFor(g);
+    const subject=`LUMINA-Abschlussplan – Deine Aufgaben für ${collectAnswers().company||'den Abschluss'}`;
+    return `<article class="mail-card">
+      <div class="mail-card-head">
+        <div>
+          <h3>${escapeHtml(g.name)}</h3>
+          <p>${escapeHtml(g.email||'Keine E-Mail-Adresse hinterlegt')} · ${g.tasks.length} Aufgabe${g.tasks.length===1?'':'n'}</p>
+        </div>
+        <span class="status-pill ${g.email?'':'warn'}">${g.email?'Versandbereit':'E-Mail fehlt'}</span>
+      </div>
+      <div class="mail-card-body">
+        <div class="mail-preview">
+          <div style="margin-bottom:18px">${escapeHtml(mailIntroFor(g))}</div>
+          ${g.tasks.map((t,taskIndex)=>{
+            const links=taskLinks(t);
+            return `<div class="mail-task-block">
+              <div class="mail-task-title">${taskIndex+1}. ${escapeHtml(t.title)}</div>
+              <div class="mail-task-links">
+                <a href="${escapeAttr(links.accept)}" target="_blank">✓ Aufgabe annehmen</a>
+                <span>·</span>
+                <a href="${escapeAttr(links.decline)}" target="_blank">✕ Aufgabe ablehnen</a>
+                <span>·</span>
+                <a href="${escapeAttr(links.question)}" target="_blank">? Rückfrage</a>
+                <span>·</span>
+                <a href="${escapeAttr(links.dataroom)}" target="_blank">▣ Datenraum öffnen</a>
+              </div>
+              <div class="mail-task-meta">Fällig: ${escapeHtml(dateLabel(t.due))} · Phase: ${escapeHtml(t.phase)} · Status: ${escapeHtml(t.status||'Geplant')}</div>
+            </div>`;
+          }).join('')}
+          <div style="margin-top:18px">${escapeHtml(mailOutroFor(g))}</div>
+        </div>
+        <div class="mail-actions">
+          <button type="button" class="btn btn-primary btn-small" data-mail-index="${idx}" ${g.email?'':'disabled'}>Outlook-Entwurf erstellen</button>
+          <button type="button" class="btn btn-secondary btn-small" data-copy-index="${idx}">Text kopieren</button>
+        </div>
+      </div>
+    </article>`;
+  }).join('');
+
+  document.querySelectorAll('[data-mail-index]').forEach(btn=>btn.addEventListener('click',()=>{
+    const g=groups[Number(btn.dataset.mailIndex)];
+    openMailForGroup(g);
+  }));
+  document.querySelectorAll('[data-copy-index]').forEach(btn=>btn.addEventListener('click',async()=>{
+    const g=groups[Number(btn.dataset.copyIndex)];
+    try{
+      await navigator.clipboard.writeText(mailTextFor(g));
+      btn.textContent='Kopiert';
+      setTimeout(()=>btn.textContent='Text kopieren',1400);
+    }catch(e){
+      alert('Der Text konnte nicht automatisch kopiert werden.');
+    }
+  }));
+}
+
+
+function htmlEscape(value){
+  return String(value??'').replace(/[&<>"']/g,ch=>({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[ch]));
+}
+function mailHtmlFor(group){
+  const a=collectAnswers();
+  const firstName=(group.name||'').trim().split(/\s+/)[0] || group.name || 'liebes Teammitglied';
+  const tasks=group.tasks.slice().sort((x,y)=>(x.due||'').localeCompare(y.due||''));
+  const openText=tasks.length===1?'die folgende Aufgabe':'die folgenden Aufgaben';
+
+  const taskHtml=tasks.map((t,i)=>{
+    const links=taskLinks(t);
+    return `<div style="margin:0 0 12px 0;padding:0 0 10px 0;border-bottom:1px solid #dfe4e1;">
+      <div style="font-weight:700;margin:0 0 4px 0;">${i+1}. ${htmlEscape(t.title)}</div>
+      <div style="margin:0 0 4px 0;line-height:1.35;">
+        <a href="${htmlEscape(links.accept)}" style="color:#248763;text-decoration:none;font-weight:700;">✓ Aufgabe annehmen</a>
+        &nbsp;·&nbsp;
+        <a href="${htmlEscape(links.decline)}" style="color:#248763;text-decoration:none;font-weight:700;">✕ Aufgabe ablehnen</a>
+        &nbsp;·&nbsp;
+        <a href="${htmlEscape(links.question)}" style="color:#248763;text-decoration:none;font-weight:700;">? Rückfrage</a>
+        &nbsp;·&nbsp;
+        <a href="${htmlEscape(links.dataroom)}" style="color:#248763;text-decoration:none;font-weight:700;">▣ Datenraum öffnen</a>
+      </div>
+      <div style="color:#68717a;font-size:13px;line-height:1.3;">
+        Fällig: ${htmlEscape(dateLabel(t.due))} · Phase: ${htmlEscape(t.phase)} · Status: ${htmlEscape(t.status||'Geplant')}
+      </div>
+    </div>`;
+  }).join('');
+
+  return `<!doctype html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family:Arial,Helvetica,sans-serif;color:#1d1f20;font-size:15px;line-height:1.5;">
+  <p>Hallo ${htmlEscape(firstName)},</p>
+  <p>vielen Dank, dass Du den Abschlussprozess von ${htmlEscape(a.company||'unserem Unternehmen')} unterstützt.</p>
+  <p>Im gemeinsam abgestimmten LUMINA-Abschlussplan wurden Dir ${openText} zugeordnet:</p>
+  ${taskHtml}
+  <p>Bitte prüfe die Zuordnung und die vorgesehenen Termine kurz. Über die Links unter jeder Maßnahme kannst Du die Aufgabe direkt annehmen, ablehnen, eine Rückfrage stellen oder den zugehörigen Datenraum öffnen. Deine Rückmeldung wird in LUMINA direkt dem Vorgang zugeordnet und von Volker, KAI oder KIRA weiterbearbeitet.</p>
+  <p>Der Abschlussplan wurde am ${htmlEscape(dateLabel(approvalState.approvalDate))} durch ${htmlEscape(approvalState.approvedBy)} (${htmlEscape(approvalState.approvalRole)}) freigegeben.</p>
+  <p>Vielen Dank für Deine Unterstützung und die gute Zusammenarbeit.</p>
+  <p>Herzliche Grüße<br>${htmlEscape(approvalState.approvedBy)}</p>
+</body>
+</html>`;
+}
+function downloadEmlForGroup(group){
+  if(!group?.email) return;
+  const a=collectAnswers();
+  const subject=`LUMINA-Abschlussplan – Deine Aufgaben für ${a.company||'den Abschluss'}`;
+  const htmlBody=mailHtmlFor(group);
+  const boundary='----=_LUMINA_'+Date.now();
+  const eml=[
+    `To: ${group.email}`,
+    `Subject: ${subject}`,
+    'MIME-Version: 1.0',
+    `Content-Type: multipart/alternative; boundary="${boundary}"`,
+    '',
+    `--${boundary}`,
+    'Content-Type: text/plain; charset="UTF-8"',
+    'Content-Transfer-Encoding: 8bit',
+    '',
+    mailTextFor(group),
+    '',
+    `--${boundary}`,
+    'Content-Type: text/html; charset="UTF-8"',
+    'Content-Transfer-Encoding: 8bit',
+    '',
+    htmlBody,
+    '',
+    `--${boundary}--`
+  ].join('\r\n');
+
+  const safe=(group.name||'Empfaenger').replace(/[\\/:*?"<>|]+/g,'-');
+  download(`LUMINA-Aufgaben-${safe}.eml`,eml,'message/rfc822;charset=utf-8');
+}
+
+function openMailForGroup(group){
+  downloadEmlForGroup(group);
+}
+
+
+document.getElementById('appBaseUrl').addEventListener('change',e=>{
+  appLinkSettings.baseUrl=normalizeBaseUrl(e.target.value);
+  saveState();renderRows();
+});
+document.getElementById('assistantMode').addEventListener('change',e=>{
+  appLinkSettings.assistantMode=e.target.value;saveState();renderRows();
+});
+document.getElementById('defaultRoomTemplate').addEventListener('change',e=>{
+  appLinkSettings.defaultRoomTemplate=e.target.value;
+  const templates={
+    standard:['01 Aufgabenbeschreibung','02 Eingangsdokumente','03 Arbeitspapiere','04 Rückfragen','05 Freigaben','06 Finale Unterlagen'],
+    audit:['01 PBC-Anforderung','02 Kundenupload','03 Prüferfragen','04 Antworten','05 Prüfungsnachweise','06 Feststellungen','07 Abschluss'],
+    reporting:['01 Datenbasis','02 Entwurf','03 Kommentierung','04 Freigabe','05 Final'],
+    custom:appLinkSettings.roomFolders
+  };
+  appLinkSettings.roomFolders=[...(templates[e.target.value]||appLinkSettings.roomFolders)];
+  renderRoomTemplateList();saveState();
+});
+document.getElementById('addRoomFolder').addEventListener('click',()=>{
+  appLinkSettings.roomFolders.push(`Neuer Ordner ${appLinkSettings.roomFolders.length+1}`);
+  renderRoomTemplateList();saveState();
+});
+
+
+document.getElementById('sendMagicLink').addEventListener('click',sendSupabaseMagicLink);
+document.getElementById('signOutSupabase').addEventListener('click',async()=>{
+  try{
+    await supabaseClient.auth.signOut();
+  }catch(e){
+    console.warn('Abmeldung:',e);
+  }
+  await updateSupabaseUi();
+});
+document.getElementById('publishToSupabase').addEventListener('click',publishProjectToSupabase);
+document.getElementById('continueAfterPublish').addEventListener('click',()=>{
+  if(!publicationState.published){alert('Bitte zuerst in Supabase anlegen.');return;}
+  renderMailStep();showStep(10);
+});
+
+document.getElementById('goToReview').addEventListener('click',()=>{renderReview();showStep(8);});
+document.getElementById('backToPlan').addEventListener('click',()=>showStep(7));
+document.getElementById('approvePlan').addEventListener('click',approvePlan);
+document.getElementById('backToReviewFromRooms').addEventListener('click',()=>{renderReview();showStep(8);});
+document.getElementById('markAllRoomsReady').addEventListener('click',()=>{
+  generatedTasks.forEach(task=>{
+    ensureTaskRoomStructure(task);
+    task.roomReady=true;
+  });
+  roomSetupState.confirmed=false;
+  document.getElementById('roomSetupConfirm').checked=false;
+  saveState();
+  renderRoomSetup();
+});
+
+document.getElementById('markAllRoomsOpen').addEventListener('click',()=>{
+  generatedTasks.forEach(task=>task.roomReady=false);
+  roomSetupState.confirmed=false;
+  document.getElementById('roomSetupConfirm').checked=false;
+  saveState();
+  renderRoomSetup();
+});
+
+document.getElementById('confirmRoomsAndContinue').addEventListener('click',confirmRoomSetup);
+document.getElementById('backToRooms').addEventListener('click',()=>{renderRoomSetup();showStep(9);});
+document.getElementById('openAllMails').addEventListener('click',()=>{
+  const groups=tasksByRecipient().filter(g=>g.email);
+  if(!approvalState.approved){alert('Bitte den Plan zuerst freigeben.');return;}
+  if(!roomSetupState.confirmed){alert('Bitte richten Sie zuerst die Datenräume ein und bestätigen Sie diese.');return;}
+  if(!publicationState.published){alert('Bitte veröffentlichen Sie das Projekt zuerst in Supabase.');return;}
+  if(!groups.length){alert('Es sind keine Empfänger mit E-Mail-Adresse vorhanden.');return;}
+  groups.forEach((g,i)=>setTimeout(()=>openMailForGroup(g),i*900));
+});
+
+function download(filename,content,type){
+  const blob=new Blob([content],{type});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click();URL.revokeObjectURL(a.href);
+}
+document.getElementById('downloadJson').addEventListener('click',()=>{
+  const team=collectTeam();
+  const massnahmen=generatedTasks.map(t=>{
+    const member=team.find(x=>x.name===t.person);
+    return {
+      nr:t.no,id:t.id,phase:t.phase,massnahme:t.title,rolle:t.role,zustaendig:t.person||'',
+      email:t.email||member?.email||'',stellvertretung:t.deputy||member?.deputy||'',
+      email_stellvertretung:t.deputyEmail||member?.deputyEmail||'',faellig:t.due||'',status:t.status||'',
+      terminbasis:t.anchor||'',terminversatz_kalendertage:Number.isFinite(t.offset)?t.offset:'',
+      benutzerdefiniert:t.custom===true
+    };
+  });
+  const exportData={
+    ueberschrift:`LUMINA-Maßnahmenliste – ${val('company')||'Abschlussplan'}`,
+    exportiert_am:new Date().toISOString(),
+    spalten:['Nr.','ID','Phase','Maßnahme','Rolle','Zuständig','E-Mail','Stellvertretung','E-Mail Stellvertretung','Fällig','Status','Terminbasis','Terminversatz Kalendertage','Benutzerdefiniert'],
+    massnahmen
+  };
+  download('lumina-massnahmenliste.json',JSON.stringify(exportData,null,2),'application/json;charset=utf-8');
+});
+document.getElementById('downloadCsv').addEventListener('click',()=>{
+  if(typeof XLSX==='undefined'){
+    alert('Die Excel-Bibliothek konnte nicht geladen werden. Bitte prüfen Sie die Internetverbindung und öffnen Sie die Datei erneut.');
+    return;
+  }
+
+  const a=collectAnswers();
+  const team=collectTeam();
+  const wb=XLSX.utils.book_new();
+
+  const labelMap={
+    HGB:'HGB',IFRS:'IFRS',HGB_IFRS:'HGB und IFRS',
+    single:'Einzelabschluss',group:'Konzernabschluss',single_group:'Einzel- und Konzernabschluss',
+    yes:'Ja',no:'Nein',
+    kapg:'Kapitalgesellschaft / § 264a HGB',other:'Andere Rechtsform',public:'Unternehmen von öffentlichem Interesse',
+    micro:'Kleinst',small:'Klein',medium:'Mittelgroß',large:'Groß',
+    balance:'Bilanz und GuV',notes:'Anhang',management_report:'Lagebericht',
+    cashflow:'Kapitalflussrechnung',equity:'Eigenkapitalspiegel',consolidation:'Konsolidierung',
+    disclosure:'Offenlegung',bank_reporting:'Banken-/Gesellschafterreporting',
+    esef:'ESEF',sustainability:'Nachhaltigkeitsbericht',
+    payroll:'Personalabrechnung',fixed_assets:'Anlagenbuchhaltung',treasury:'Treasury',
+    tax:'Steuersystem',controlling:'Controlling',excel:'Excel-Nebenrechnungen',
+    acquisition:'Erwerb oder Verkauf von Unternehmen',restructuring:'Restrukturierung',
+    litigation:'Rechtsstreitigkeiten',covenants:'Covenants / Finanzierung',
+    impairment:'Impairment-Risiken',pensions:'Pensionsverpflichtungen',
+    provisions:'Komplexe Rückstellungen',going_concern:'Going-Concern-Risiko',
+    new_policy:'Neue Bilanzierungsgrundsätze',auditor_change:'Wechsel des Wirtschaftsprüfers',
+    capital_market:'Kapitalmarktorientiert',public_interest:'Unternehmen von öffentlichem Interesse',
+    voluntary_large:'Freiwilliger Umfang wie große Kapitalgesellschaft',
+    voluntary_audit:'Freiwillige Abschlussprüfung',
+    voluntary_management_report:'Freiwilliger Lagebericht',
+    voluntary_kfr_ek:'Freiwillige KFR und Eigenkapitalspiegel'
+  };
+  const L=v=>labelMap[v]||v||'';
+  const list=v=>(v||[]).map(L).join(', ');
+
+  function excelDate(value){
+    if(!value) return '';
+    const d=new Date(value+'T12:00:00');
+    return Number.isNaN(d.getTime()) ? value : d;
+  }
+
+  function addSheet(name,title,headers,rows,widths,dateCols=[]){
+    const data=[[title],[],headers,...rows];
+    const ws=XLSX.utils.aoa_to_sheet(data);
+    ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:Math.max(0,headers.length-1)}}];
+    ws['!cols']=widths.map(w=>({wch:w}));
+    ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:2,c:0},e:{r:Math.max(2,data.length-1),c:headers.length-1}})};
+    ws['!freeze']={xSplit:0,ySplit:3,topLeftCell:'A4',activePane:'bottomLeft',state:'frozen'};
+    dateCols.forEach(col=>{
+      for(let r=3;r<data.length;r++){
+        const addr=XLSX.utils.encode_cell({r,c:col});
+        if(ws[addr] && ws[addr].v instanceof Date) ws[addr].z='dd.mm.yyyy';
+      }
+    });
+    XLSX.utils.book_append_sheet(wb,ws,name.substring(0,31));
+  }
+
+  addSheet(
+    '1 Abschluss',
+    `LUMINA – 1. Unternehmen und Abschluss – ${a.company||'Abschlussplan'}`,
+    ['Feld','Wert'],
+    [
+      ['Unternehmen',a.company],
+      ['Rechnungslegungsstandard',L(a.framework)],
+      ['Abschlussumfang',L(a.closingScope)],
+      ['Anzahl Gesellschaften',a.entities],
+      ['Rechtsform / Einordnung',L(a.legalForm)],
+      ['Abschlussprüfung',L(a.audit)]
+    ],
+    [34,55]
+  );
+
+  addSheet(
+    '2 Größenklasse',
+    `LUMINA – 2. Größenklasse und Berichtsumfang – ${a.company||'Abschlussplan'}`,
+    ['Bereich','Feld','Vorjahr / Wert 1','Aktuelles Jahr / Wert 2'],
+    [
+      ['Kennzahlen','Abschlussstichtag',excelDate(a.sizeDatePrev),excelDate(a.sizeDateCurr)],
+      ['Kennzahlen','Bilanzsumme in €',formatGermanNumber(a.balancePrev,2),formatGermanNumber(a.balanceCurr,2)],
+      ['Kennzahlen','Umsatzerlöse in €',formatGermanNumber(a.revenuePrev,2),formatGermanNumber(a.revenueCurr,2)],
+      ['Kennzahlen','Arbeitnehmer im Jahresdurchschnitt',formatGermanInteger(a.employeesPrev),formatGermanInteger(a.employeesCurr)],
+      ['Ergebnis','Kennzahlenklasse',L(a.sizeAssessment?.prev),L(a.sizeAssessment?.curr)],
+      ['Ergebnis','Für den Plan verwendete Größenklasse',L(a.sizeAssessment?.effective),''],
+      ['Ergebnis','Begründung',a.sizeAssessment?.explanation||'',''],
+      ['Sonderkriterien','Ausgewählte Sonderkriterien',list(a.specialScope),''],
+      ['Sonderkriterien','Bisherige rechtliche Größenklasse',L(a.previousLegalClass),''],
+      ['Sonderkriterien','Grund der Umfangserweiterung',a.scopeReason||'','']
+    ],
+    [20,39,34,34],
+    [2,3]
+  );
+
+  addSheet(
+    '3 Bestandteile',
+    `LUMINA – 3. Abschluss- und Berichtsbestandteile – ${a.company||'Abschlussplan'}`,
+    ['Nr.','Ausgewählter Bestandteil'],
+    (a.components||[]).map((x,i)=>[i+1,L(x)]),
+    [10,55]
+  );
+
+  addSheet(
+    '4 Systeme',
+    `LUMINA – 4. Systeme und Datenquellen – ${a.company||'Abschlussplan'}`,
+    ['Feld','Wert'],
+    [
+      ['ERP-System',a.erp],
+      ['Konsolidierungssystem',a.consolidationSystem],
+      ['Dokumentenablage / Datenraum',a.documentRoom],
+      ['Anzahl wesentlicher Datenquellen',a.sources],
+      ['Weitere Vorsysteme',list(a.systems)]
+    ],
+    [38,75]
+  );
+
+  addSheet(
+    '5 Team',
+    `LUMINA – 5. Team und Zuständigkeiten – ${a.company||'Abschlussplan'}`,
+    ['Nr.','Rolle','Name','E-Mail','Stellvertretung','E-Mail Stellvertretung'],
+    team.map((m,i)=>[i+1,m.role,m.name,m.email,m.deputy,m.deputyEmail]),
+    [8,31,27,36,27,36]
+  );
+
+  addSheet(
+    '6 Termine',
+    `LUMINA – 6. Meilensteine und Fristen – ${a.company||'Abschlussplan'}`,
+    ['Meilenstein','Termin'],
+    [
+      ['Abschlussstichtag',excelDate(a.closingDate)],
+      ['Buchungsschluss',excelDate(a.bookCloseDate)],
+      ['Abschlussentwurf',excelDate(a.draftDate)],
+      ['Prüfungsbeginn',excelDate(a.auditStartDate)],
+      ['Testat / finale Freigabe',excelDate(a.signingDate)],
+      ['Offenlegung / Veröffentlichung',excelDate(a.disclosureDate)]
+    ],
+    [42,22],
+    [1]
+  );
+
+  addSheet(
+    '7 Risiken',
+    `LUMINA – 7. Besonderheiten und Risiken – ${a.company||'Abschlussplan'}`,
+    ['Nr.','Besonderheit / Risiko'],
+    [
+      ...(a.risks||[]).map((x,i)=>[i+1,L(x)]),
+      ...(a.specialNote ? [['','Weitere Besonderheiten: '+a.specialNote]] : [])
+    ],
+    [8,90]
+  );
+
+  addSheet(
+    '8 Maßnahmenplan',
+    `LUMINA – 8. Maßnahmenplan – ${a.company||'Abschlussplan'}`,
+    ['Nr.','ID','Phase','Maßnahme','Rolle','Zuständig','E-Mail','Stellvertretung','E-Mail Stellvertretung','Fällig','Status','Terminbasis','Versatz Kalendertage','Benutzerdefiniert','Datenraumstruktur','Aufgabe annehmen','Aufgabe ablehnen','Rückfrage','Datenraum öffnen'],
+    generatedTasks.map(t=>{
+      const member=team.find(x=>x.name===t.person);
+      return [
+        t.no,t.id,t.phase,t.title,t.role,t.person||'',
+        t.email||member?.email||'',
+        t.deputy||member?.deputy||'',
+        t.deputyEmail||member?.deputyEmail||'',
+        excelDate(t.due),t.status||'',t.anchor||'',
+        Number.isFinite(t.offset)?t.offset:'',
+        t.custom?'Ja':'Nein',
+        (t.roomStructure||defaultRoomStructure()).join(' | '),
+        taskLinks(t).accept,taskLinks(t).decline,taskLinks(t).question,taskLinks(t).dataroom
+      ];
+    }),
+    [7,16,22,58,28,26,35,26,35,15,16,22,18,18,55,55,55,55,55],
+    [9]
+  );
+
+
+  addSheet(
+    '9 Review Freigabe',
+    `LUMINA – 9. Review und Freigabe – ${a.company||'Abschlussplan'}`,
+    ['Feld','Wert'],
+    [
+      ['Freigabestatus',approvalState.approved?'Freigegeben':'Nicht freigegeben'],
+      ['Freigegeben durch',approvalState.approvedBy||''],
+      ['Funktion',approvalState.approvalRole||''],
+      ['Freigabedatum',excelDate(approvalState.approvalDate)],
+      ['Freigabevermerk',approvalState.approvalComment||''],
+      ['Anzahl Maßnahmen',generatedTasks.length],
+      ['Noch offene Zuständigkeiten',generatedTasks.filter(t=>!t.person).length]
+    ],
+    [38,75],
+    [1]
+  );
+
+
+  addSheet(
+    '10 Datenräume',
+    `LUMINA – 10. Einrichtung der Datenräume – ${a.company||'Abschlussplan'}`,
+    ['Nr.','Maßnahmen-ID','Maßnahme','Zuständig','Datenraum eingerichtet','Ordnerstruktur','Datenraum-Link'],
+    generatedTasks.map(t=>[
+      t.no,t.id,t.title,t.person||'',
+      t.roomReady?'Ja':'Nein',
+      (t.roomStructure||defaultRoomStructure()).join(' | '),
+      taskLinks(t).dataroom
+    ]),
+    [8,18,58,28,22,95,70]
+  );
+
+  addSheet(
+    '11 E-Mail-Versand',
+    `LUMINA – 11. E-Mail-Versand – ${a.company||'Abschlussplan'}`,
+    ['Empfänger','E-Mail','Anzahl Aufgaben','Betreff','Anschreiben'],
+    tasksByRecipient().map(g=>[
+      g.name,g.email,g.tasks.length,
+      `LUMINA-Abschlussplan – Deine Aufgaben für ${a.company||'den Abschluss'}`,
+      mailTextFor(g)
+    ]),
+    [28,38,16,58,110]
+  );
+
+  const safe=(a.company||'Abschlussplan').replace(/[\\/:*?"<>|]+/g,'-').trim();
+  XLSX.writeFile(wb,`LUMINA-Abschlussplan-${safe}.xlsx`,{cellDates:true,compression:true});
+});
+document.getElementById('printPlan').addEventListener('click',()=>window.print());
+document.getElementById('editAnswers').addEventListener('click',()=>showStep(0));
+
+function restore(){
+  const raw=localStorage.getItem(STORAGE_KEY);
+  if(!raw){
+    baseTeam.forEach(r=>addTeamRow(...r));
+    const today=new Date(); const y=today.getFullYear()+1;
+    form.elements.closingDate.value=`${y}-12-31`;
+    form.elements.bookCloseDate.value=`${y+1}-01-15`;
+    form.elements.draftDate.value=`${y+1}-03-01`;
+    form.elements.auditStartDate.value=`${y+1}-03-15`;
+    form.elements.signingDate.value=`${y+1}-04-30`;
+    form.elements.disclosureDate.value=`${y+1}-12-31`;
+    form.elements.sizeDatePrev.value=`${y-1}-12-31`;
+    form.elements.sizeDateCurr.value=`${y}-12-31`;
+    installGermanNumberFormatting();
+    document.getElementById('appBaseUrl').value=appLinkSettings.baseUrl;
+    document.getElementById('assistantMode').value=appLinkSettings.assistantMode;
+    document.getElementById('defaultRoomTemplate').value=appLinkSettings.defaultRoomTemplate;
+    renderRoomTemplateList();
+    renderSizeAssessment(false);
+    return;
+  }
+  try{
+    const {answers:a,tasks,approval,appLinks,roomSetup,publication}=JSON.parse(raw);
+    Object.entries(a||{}).forEach(([k,v])=>{
+      if(['components','systems','risks','specialScope','team','sizeAssessment'].includes(k)) return;
+      const els=[...form.querySelectorAll(`[name="${k}"]`)];
+      if(!els.length)return;
+      if(els[0].type==='radio'){
+        const el=els.find(x=>x.value===v);if(el)el.checked=true;
+      }else if(!Array.isArray(v)) els[0].value=v??'';
+    });
+    ['components','systems','risks','specialScope'].forEach(k=>(a[k]||[]).forEach(v=>{
+      const el=form.querySelector(`[name="${k}"][value="${v}"]`);if(el)el.checked=true;
+    }));
+    (a.team?.length?a.team:baseTeam).forEach(r=>addTeamRow(r.role||r[0],r.name||r[1],r.email||r[2],r.deputy||r[3],r.deputyEmail||r[4]));
+    generatedTasks=tasks||[];
+    approvalState=approval||approvalState;
+    appLinkSettings=appLinks||appLinkSettings;
+    roomSetupState=roomSetup||roomSetupState;
+    publicationState=publication||publicationState;
+    installGermanNumberFormatting();
+    document.getElementById('appBaseUrl').value=appLinkSettings.baseUrl;
+    document.getElementById('assistantMode').value=appLinkSettings.assistantMode;
+    document.getElementById('defaultRoomTemplate').value=appLinkSettings.defaultRoomTemplate;
+    renderRoomTemplateList();
+    renderSizeAssessment(false);
+  }catch(e){
+    baseTeam.forEach(r=>addTeamRow(...r));
+  }
+}
+form.addEventListener('input',saveState);
+form.addEventListener('change',saveState);
+restore();
+supabaseClient.auth.onAuthStateChange(()=>updateSupabaseUi());
+updateSupabaseUi();
+renderRoomTemplateList();
+installGermanNumberFormatting();
+</script>
+</body>
+</html>
