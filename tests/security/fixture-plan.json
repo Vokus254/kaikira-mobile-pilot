@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "environment": "separate-supabase-test-project-only",
+  "productionProjectRefDenylist": [
+    "mslbzypjtvvznyewupco"
+  ],
+  "identities": [
+    { "key": "user_a", "label": "Nutzer A", "project": "A" },
+    { "key": "user_b", "label": "Nutzer B", "project": "B" },
+    { "key": "editor", "label": "Bearbeiter", "project": "A" },
+    { "key": "approver", "label": "Freigeber", "project": "A" },
+    { "key": "auditor", "label": "Prüfer", "project": "A" },
+    { "key": "admin", "label": "Admin", "project": "A" },
+    { "key": "anonymous", "label": "Anonymous", "project": null }
+  ],
+  "fixtures": {
+    "companies": ["A", "B"],
+    "projects": ["A", "B"],
+    "tasks": ["A", "B"],
+    "taskRooms": ["A", "B"],
+    "taskRoomFolders": ["A", "B"]
+  },
+  "writeGuard": {
+    "variable": "ALLOW_TEST_FIXTURE_WRITES",
+    "requiredValue": "I_UNDERSTAND_TEST_ONLY"
+  }
+}
