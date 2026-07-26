@@ -20,6 +20,9 @@
     header{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.94);border-bottom:1px solid var(--line);backdrop-filter:blur(14px)}
     .head{min-height:76px;display:flex;align-items:center;justify-content:space-between;gap:16px}
     .brand{display:flex;align-items:center;gap:12px;font-weight:850}
+    .nav{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-left:auto;margin-right:16px}
+    .nav button{border:0;background:transparent;padding:10px 12px;border-radius:10px;font-weight:800;color:var(--muted)}
+    .nav button:hover,.nav button.active{background:var(--soft);color:var(--brand-dark)}
     .mark{width:34px;height:34px;border-radius:10px;background:var(--brand);display:grid;place-items:center}
     .mark:before{content:"";width:13px;height:13px;border:2px solid #fff;transform:rotate(45deg);border-radius:2px}
     .btn{border:0;border-radius:11px;padding:11px 15px;font-weight:800}
@@ -81,6 +84,11 @@
 <header>
   <div class="shell head">
     <div class="brand"><div class="mark"></div><span>LUMINA Admin</span></div>
+    <nav class="nav">
+      <button onclick="location.href='/cockpit'">Cockpit</button>
+      <button onclick="location.href='/abschlussplaner'">Abschlussplaner</button>
+      <button class="active">Admin</button>
+    </nav>
     <div class="toolbar">
       <span id="authStatus" class="status">Nicht angemeldet</span>
       <button id="logoutBtn" class="btn btn-secondary btn-small" hidden>Abmelden</button>
@@ -95,7 +103,7 @@
         <h1>Admin-Cockpit</h1>
         <p class="lead">Freigegebene Abschlussprojekte aus Supabase laden und gezielt fortschreiben.</p>
       </div>
-      <button id="refreshBtn" class="btn btn-secondary">Aktualisieren</button>
+      <div class="toolbar"><button class="btn btn-secondary" onclick="location.href='/cockpit'">← Zum Cockpit</button><button id="refreshBtn" class="btn btn-secondary">Aktualisieren</button></div>
     </div>
 
     <div id="notice" class="notice"></div>
