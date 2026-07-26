@@ -56,6 +56,9 @@
       content:"";width:13px;height:13px;border:2px solid #fff;transform:rotate(45deg);border-radius:2px;
     }
     .header-note{font-size:.92rem;color:var(--muted)}
+    a.brand{text-decoration:none;color:inherit}
+    .header-actions{display:flex;align-items:center;gap:10px}
+    .header-cockpit{display:inline-flex;align-items:center;min-height:40px;padding:0 13px;border:1px solid var(--line);border-radius:10px;background:#eef2ef;color:var(--text);text-decoration:none;font-weight:800;font-size:.86rem}
     main{padding:52px 0 80px}
     .hero{
       display:grid;grid-template-columns:minmax(0,1.2fr) minmax(330px,.8fr);
@@ -349,15 +352,6 @@
     .publish-box.info{background:#fff;border:1px solid var(--line);color:var(--muted)}
     .publish-box.success{background:var(--brand-soft);color:var(--brand-dark);font-weight:750}
     .publish-box.error{background:var(--danger-soft);color:var(--danger);font-weight:700}
-  
-    .json-transfer-status{
-      position:fixed;right:24px;bottom:24px;z-index:1000;display:none;
-      max-width:460px;padding:14px 16px;border-radius:12px;box-shadow:var(--shadow);
-      font-weight:700;line-height:1.45
-    }
-    .json-transfer-status.show{display:block}
-    .json-transfer-status.success{background:var(--brand-soft);color:var(--brand-dark);border:1px solid #cfe6da}
-    .json-transfer-status.error{background:var(--danger-soft);color:var(--danger);border:1px solid #efcaca}
   </style>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -365,13 +359,8 @@
 <body>
 <header>
   <div class="shell header-inner">
-    <div class="brand"><div class="mark" aria-hidden="true"></div><span>LUMINA</span></div>
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-      <div class="header-note">Abschlussplaner · regelbasiertes Setup</div>
-      <button type="button" class="btn btn-secondary btn-small" id="jsonImportHeader">JSON importieren</button>
-      <button type="button" class="btn btn-primary btn-small" id="jsonExportHeader">JSON exportieren</button>
-      <input type="file" id="jsonImportFile" accept=".json,application/json" hidden>
-    </div>
+    <a class="brand" href="/" aria-label="Zur LUMINA Landingpage"><div class="mark" aria-hidden="true"></div><span>LUMINA</span></a>
+    <div class="header-actions"><a class="header-cockpit" href="/cockpit">← Zum Cockpit</a><div class="header-note">Abschlussplaner · regelbasiertes Setup</div></div>
   </div>
 </header>
 
@@ -805,7 +794,6 @@
 
           <div class="toolbar">
             <button type="button" class="btn btn-primary" id="addCustomTaskButton">+ Maßnahme hinzufügen</button>
-            <button type="button" class="btn btn-secondary" id="jsonImportPlan">JSON importieren</button>
             <button type="button" class="btn btn-primary" id="downloadJson">JSON exportieren</button>
             <button type="button" class="btn btn-secondary" id="downloadCsv" title="Exportiert die Punkte 1 bis 11 als elf formatierte Excel-Reiter">Excel exportieren</button>
             <button type="button" class="btn btn-secondary" id="printPlan">Plan drucken</button>
@@ -974,7 +962,7 @@
             <div>✉</div>
             <div>
               <strong>Persönlich und freundlich formuliert</strong>
-              Jede E-Mail wird als echtes Verfassen-Fenster im Standard-Mailprogramm geöffnet. Empfänger, Betreff, Anschreiben, Aufgaben und Links sind bereits vorbelegt.
+              Jede E-Mail wird als formatierter Outlook-Entwurf mit sprechenden Links erstellt. Die technischen URLs bleiben hinter den Linkbezeichnungen verborgen.
             </div>
           </div>
 
@@ -982,7 +970,7 @@
 
           <div class="actions">
             <button type="button" class="btn btn-secondary" id="backToRooms">Zurück zu den Datenräumen</button>
-            <button type="button" class="btn btn-primary" id="openAllMails">Alle E-Mails in Outlook öffnen</button>
+            <button type="button" class="btn btn-primary" id="openAllMails">Alle Outlook-Entwürfe erstellen</button>
           </div>
         </section>
       </form>
@@ -1144,35 +1132,13 @@ navEls.forEach((el,idx)=>{
   el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}});
 });
 
-function isValidDateInput(id){
-  const el=document.getElementById(id);
-  if(!el || !el.value) return false;
-  return !Number.isNaN(el.valueAsDate?.getTime?.() ?? NaN);
-}
-
 function validateStep(i){
-  const err=document.getElementById(`error-${i}`);
-  if(err) err.style.display='none';
-
+  const err=document.getElementById(`error-${i}`); if(err) err.style.display='none';
   let ok=true;
-
-  if(i===0){
-    ok=Boolean(
-      val('company').trim() &&
-      val('framework') &&
-      val('closingScope')
-    );
-  }
-
-  if(i===5){
-    ok=
-      isValidDateInput('closingDate') &&
-      isValidDateInput('draftDate') &&
-      isValidDateInput('signingDate');
-  }
-
+  if(i===0) ok=val('company').trim() && val('framework') && val('closingScope');
+  if(i===5) ok=val('closingDate') && val('draftDate') && val('signingDate');
   if(!ok && err) err.style.display='block';
-  return Boolean(ok);
+  return !!ok;
 }
 navEls.forEach((el,idx)=>el.addEventListener('click',()=>{
   saveState();
@@ -1185,20 +1151,6 @@ document.querySelectorAll('[data-next]').forEach(b=>b.addEventListener('click',(
     saveState(); showStep(currentStep+1);
   }
 }));
-['closingDate','draftDate','signingDate'].forEach(id=>{
-  const field=document.getElementById(id);
-  if(!field) return;
-  ['input','change'].forEach(eventName=>{
-    field.addEventListener(eventName,()=>{
-      const err=document.getElementById('error-5');
-      if(err && isValidDateInput('closingDate') && isValidDateInput('draftDate') && isValidDateInput('signingDate')){
-        err.style.display='none';
-      }
-      saveState();
-    });
-  });
-});
-
 document.querySelectorAll('[data-prev]').forEach(b=>b.addEventListener('click',()=>showStep(Math.max(0,currentStep-1))));
 navEls.forEach((item,index)=>item.addEventListener('click',()=>{ saveState(); if(index===7 && generatedTasks.length) renderPlan(); showStep(index); }));
 
@@ -2098,18 +2050,10 @@ function mailTextFor(group){
   const lines=tasks.map((t,i)=>{
     const links=taskLinks(t);
     return `${i+1}. ${t.title}
-
-✓ Aufgabe annehmen
-${links.accept}
-
-✕ Aufgabe ablehnen
-${links.decline}
-
-? Rückfrage
-${links.question}
-
-▣ Datenraum öffnen
-${links.dataroom}
+✓ Aufgabe annehmen: ${links.accept}
+✕ Aufgabe ablehnen: ${links.decline}
+? Rückfrage: ${links.question}
+▣ Datenraum öffnen: ${links.dataroom}
 
 Fällig: ${dateLabel(t.due)}
 Phase: ${t.phase}
@@ -2164,7 +2108,7 @@ function renderMailStep(){
           <div style="margin-top:18px">${escapeHtml(mailOutroFor(g))}</div>
         </div>
         <div class="mail-actions">
-          <button type="button" class="btn btn-primary btn-small" data-mail-index="${idx}" ${g.email?'':'disabled'}>E-Mail in Outlook öffnen</button>
+          <button type="button" class="btn btn-primary btn-small" data-mail-index="${idx}" ${g.email?'':'disabled'}>Outlook-Entwurf erstellen</button>
           <button type="button" class="btn btn-secondary btn-small" data-copy-index="${idx}">Text kopieren</button>
         </div>
       </div>
@@ -2230,26 +2174,42 @@ function mailHtmlFor(group){
   <p>Der Abschlussplan wurde am ${htmlEscape(dateLabel(approvalState.approvalDate))} durch ${htmlEscape(approvalState.approvedBy)} (${htmlEscape(approvalState.approvalRole)}) freigegeben.</p>
   <p>Vielen Dank für Deine Unterstützung und die gute Zusammenarbeit.</p>
   <p>Herzliche Grüße<br>${htmlEscape(approvalState.approvedBy)}</p>
-<div id="jsonTransferStatus" class="json-transfer-status"></div>
 </body>
 </html>`;
 }
-function buildMailtoForGroup(group){
-  if(!group?.email) return '';
-
+function downloadEmlForGroup(group){
+  if(!group?.email) return;
   const a=collectAnswers();
   const subject=`LUMINA-Abschlussplan – Deine Aufgaben für ${a.company||'den Abschluss'}`;
-  const body=mailTextFor(group);
+  const htmlBody=mailHtmlFor(group);
+  const boundary='----=_LUMINA_'+Date.now();
+  const eml=[
+    `To: ${group.email}`,
+    `Subject: ${subject}`,
+    'MIME-Version: 1.0',
+    `Content-Type: multipart/alternative; boundary="${boundary}"`,
+    '',
+    `--${boundary}`,
+    'Content-Type: text/plain; charset="UTF-8"',
+    'Content-Transfer-Encoding: 8bit',
+    '',
+    mailTextFor(group),
+    '',
+    `--${boundary}`,
+    'Content-Type: text/html; charset="UTF-8"',
+    'Content-Transfer-Encoding: 8bit',
+    '',
+    htmlBody,
+    '',
+    `--${boundary}--`
+  ].join('\r\n');
 
-  return `mailto:${encodeURIComponent(group.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  const safe=(group.name||'Empfaenger').replace(/[\\/:*?"<>|]+/g,'-');
+  download(`LUMINA-Aufgaben-${safe}.eml`,eml,'message/rfc822;charset=utf-8');
 }
 
 function openMailForGroup(group){
-  const mailtoUrl=buildMailtoForGroup(group);
-  if(!mailtoUrl) return;
-
-  // Öffnet ein echtes Verfassen-Fenster im eingestellten Standard-Mailprogramm.
-  window.location.href=mailtoUrl;
+  downloadEmlForGroup(group);
 }
 
 
@@ -2323,197 +2283,32 @@ document.getElementById('openAllMails').addEventListener('click',()=>{
   if(!roomSetupState.confirmed){alert('Bitte richten Sie zuerst die Datenräume ein und bestätigen Sie diese.');return;}
   if(!publicationState.published){alert('Bitte veröffentlichen Sie das Projekt zuerst in Supabase.');return;}
   if(!groups.length){alert('Es sind keine Empfänger mit E-Mail-Adresse vorhanden.');return;}
-  if(groups.length>1){
-    alert(`Es werden ${groups.length} Verfassen-Fenster nacheinander geöffnet. Der Browser oder Outlook kann für jedes Fenster eine Bestätigung verlangen.`);
-  }
-  groups.forEach((g,i)=>setTimeout(()=>openMailForGroup(g),i*1200));
+  groups.forEach((g,i)=>setTimeout(()=>openMailForGroup(g),i*900));
 });
 
 function download(filename,content,type){
   const blob=new Blob([content],{type});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click();URL.revokeObjectURL(a.href);
 }
-function showJsonTransferStatus(message,type='success'){
-  const el=document.getElementById('jsonTransferStatus');
-  if(!el) return;
-  el.textContent=message;
-  el.className=`json-transfer-status show ${type}`;
-  clearTimeout(showJsonTransferStatus._timer);
-  showJsonTransferStatus._timer=setTimeout(()=>{el.className='json-transfer-status';},4000);
-}
-
-function exportCompleteLuminaJson(){
-  saveState();
-
-  let stored={};
-  try{
-    stored=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}');
-  }catch(error){
-    console.warn('Lokaler Speicher konnte nicht gelesen werden:',error);
-  }
-
-  const payload={
-    meta:{
-      app:'LUMINA Abschlussplaner',
-      schemaVersion:1,
-      exportType:'complete-project-backup',
-      exportedAt:new Date().toISOString(),
-      storageKey:STORAGE_KEY
-    },
-    answers:stored.answers||collectAnswers(),
-    tasks:stored.tasks||generatedTasks,
-    approval:stored.approval||approvalState,
-    appLinks:stored.appLinks||appLinkSettings,
-    roomSetup:stored.roomSetup||roomSetupState,
-    publication:stored.publication||publicationState
+document.getElementById('downloadJson').addEventListener('click',()=>{
+  const team=collectTeam();
+  const massnahmen=generatedTasks.map(t=>{
+    const member=team.find(x=>x.name===t.person);
+    return {
+      nr:t.no,id:t.id,phase:t.phase,massnahme:t.title,rolle:t.role,zustaendig:t.person||'',
+      email:t.email||member?.email||'',stellvertretung:t.deputy||member?.deputy||'',
+      email_stellvertretung:t.deputyEmail||member?.deputyEmail||'',faellig:t.due||'',status:t.status||'',
+      terminbasis:t.anchor||'',terminversatz_kalendertage:Number.isFinite(t.offset)?t.offset:'',
+      benutzerdefiniert:t.custom===true
+    };
+  });
+  const exportData={
+    ueberschrift:`LUMINA-Maßnahmenliste – ${val('company')||'Abschlussplan'}`,
+    exportiert_am:new Date().toISOString(),
+    spalten:['Nr.','ID','Phase','Maßnahme','Rolle','Zuständig','E-Mail','Stellvertretung','E-Mail Stellvertretung','Fällig','Status','Terminbasis','Terminversatz Kalendertage','Benutzerdefiniert'],
+    massnahmen
   };
-
-  const company=(payload.answers?.company||'abschlussplan')
-    .toLowerCase()
-    .replace(/[^a-z0-9äöüß]+/gi,'-')
-    .replace(/^-+|-+$/g,'');
-
-  download(
-    `lumina-gesamtdaten-${company||'abschlussplan'}.json`,
-    JSON.stringify(payload,null,2),
-    'application/json;charset=utf-8'
-  );
-  showJsonTransferStatus('JSON-Gesamtdaten wurden exportiert.');
-}
-
-function applyImportedFormValue(name,value){
-  const controls=[...form.querySelectorAll(`[name="${name}"]`)];
-  if(!controls.length) return;
-
-  if(Array.isArray(value)){
-    controls.forEach(control=>{
-      if(control.type==='checkbox'){
-        control.checked=value.includes(control.value);
-      }
-    });
-    return;
-  }
-
-  if(controls[0].type==='radio'){
-    controls.forEach(control=>{
-      control.checked=control.value===String(value??'');
-    });
-    return;
-  }
-
-  if(controls[0].type==='checkbox'){
-    controls[0].checked=Boolean(value);
-    return;
-  }
-
-  controls[0].value=value??'';
-}
-
-function importCompleteLuminaJson(payload){
-  if(!payload || typeof payload!=='object'){
-    throw new Error('Ungültige JSON-Datei.');
-  }
-
-  const data=payload.answers ? payload : {
-    answers:payload,
-    tasks:payload.tasks||[],
-    approval:payload.approval||{},
-    appLinks:payload.appLinks||{},
-    roomSetup:payload.roomSetup||{},
-    publication:payload.publication||{}
-  };
-
-  const answers=data.answers||{};
-
-  Object.entries(answers).forEach(([key,value])=>{
-    if(['team','sizeAssessment'].includes(key)) return;
-    applyImportedFormValue(key,value);
-  });
-
-  const teamBody=document.getElementById('teamBody');
-  if(teamBody) teamBody.innerHTML='';
-
-  const importedTeam=Array.isArray(answers.team) ? answers.team : [];
-  (importedTeam.length ? importedTeam : baseTeam).forEach(member=>{
-    addTeamRow(
-      member.role||member[0]||'Sonstige',
-      member.name||member[1]||'',
-      member.email||member[2]||'',
-      member.deputy||member[3]||'',
-      member.deputyEmail||member[4]||''
-    );
-  });
-
-  generatedTasks=Array.isArray(data.tasks) ? data.tasks : [];
-  approvalState={...approvalState,...(data.approval||{})};
-  appLinkSettings={...appLinkSettings,...(data.appLinks||{})};
-  roomSetupState={...roomSetupState,...(data.roomSetup||{})};
-  publicationState={...publicationState,...(data.publication||{})};
-
-  generatedTasks.forEach(task=>{
-    if(typeof ensureTaskRoomStructure==='function') ensureTaskRoomStructure(task);
-    if(!Array.isArray(task.roomStructure) || !task.roomStructure.length){
-      task.roomStructure=defaultRoomStructure();
-    }
-    if(typeof task.roomReady!=='boolean') task.roomReady=false;
-  });
-
-  const appBaseUrl=document.getElementById('appBaseUrl');
-  const assistantMode=document.getElementById('assistantMode');
-  const defaultRoomTemplate=document.getElementById('defaultRoomTemplate');
-  if(appBaseUrl) appBaseUrl.value=appLinkSettings.baseUrl||'';
-  if(assistantMode) assistantMode.value=appLinkSettings.assistantMode||'auto';
-  if(defaultRoomTemplate) defaultRoomTemplate.value=appLinkSettings.defaultRoomTemplate||'standard';
-
-  if(typeof renderRoomTemplateList==='function') renderRoomTemplateList();
-  if(typeof installGermanNumberFormatting==='function') installGermanNumberFormatting();
-  if(typeof renderSizeAssessment==='function') renderSizeAssessment(false);
-
-  const error0=document.getElementById('error-0');
-  const error5=document.getElementById('error-5');
-  if(error0 && validateStep(0)) error0.style.display='none';
-  if(error5 && validateStep(5)) error5.style.display='none';
-
-  saveState();
-
-  if(typeof renderPlan==='function') renderPlan();
-  if(typeof renderReview==='function') renderReview();
-  if(typeof renderRoomSetup==='function') renderRoomSetup();
-  if(typeof updateSupabaseUi==='function') updateSupabaseUi();
-
-  showStep(0);
-  showJsonTransferStatus('JSON-Gesamtdaten wurden vollständig importiert.');
-}
-
-async function handleJsonImportFile(file){
-  if(!file) return;
-  const text=await file.text();
-  const payload=JSON.parse(text);
-  importCompleteLuminaJson(payload);
-}
-
-document.getElementById('downloadJson').addEventListener('click',exportCompleteLuminaJson);
-document.getElementById('jsonExportHeader').addEventListener('click',exportCompleteLuminaJson);
-
-document.getElementById('jsonImportHeader').addEventListener('click',()=>{
-  document.getElementById('jsonImportFile').click();
-});
-document.getElementById('jsonImportPlan').addEventListener('click',()=>{
-  document.getElementById('jsonImportFile').click();
-});
-
-document.getElementById('jsonImportFile').addEventListener('change',async event=>{
-  const file=event.target.files?.[0];
-  if(!file) return;
-
-  try{
-    await handleJsonImportFile(file);
-  }catch(error){
-    console.error(error);
-    showJsonTransferStatus(`JSON-Import fehlgeschlagen: ${error.message||error}`,'error');
-  }finally{
-    event.target.value='';
-  }
+  download('lumina-massnahmenliste.json',JSON.stringify(exportData,null,2),'application/json;charset=utf-8');
 });
 document.getElementById('downloadCsv').addEventListener('click',()=>{
   if(typeof XLSX==='undefined'){
@@ -2795,6 +2590,5 @@ updateSupabaseUi();
 renderRoomTemplateList();
 installGermanNumberFormatting();
 </script>
-<div id="jsonTransferStatus" class="json-transfer-status"></div>
 </body>
 </html>

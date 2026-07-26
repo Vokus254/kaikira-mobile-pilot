@@ -20,7 +20,7 @@
     .shell{max-width:1520px;margin:auto;padding:0 24px}
     header{position:sticky;top:0;z-index:40;background:rgba(255,255,255,.95);border-bottom:1px solid var(--line);backdrop-filter:blur(14px)}
     .head{min-height:76px;display:flex;align-items:center;justify-content:space-between;gap:16px}
-    .brand{display:flex;align-items:center;gap:12px;font-weight:900}
+    .brand{display:flex;align-items:center;gap:12px;font-weight:900;text-decoration:none;color:inherit}
     .mark{width:36px;height:36px;border-radius:11px;background:var(--brand);display:grid;place-items:center}
     .mark:after{content:"";width:14px;height:14px;border:2px solid #fff;transform:rotate(45deg);border-radius:2px}
     .nav{display:flex;gap:6px;flex-wrap:wrap}
@@ -96,7 +96,7 @@
 <body>
 <header>
   <div class="shell head">
-    <div class="brand"><div class="mark"></div><span>LUMINA</span></div>
+    <a class="brand" href="/" aria-label="Zur LUMINA Landingpage"><div class="mark"></div><span>LUMINA</span></a>
     <nav class="nav">
       <button class="active" data-view="cockpit">Cockpit</button>
       <button data-view="tasks">Aufgaben</button>

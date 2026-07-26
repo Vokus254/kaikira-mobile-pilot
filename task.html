@@ -17,7 +17,7 @@
     .shell{max-width:1100px;margin:auto;padding:0 22px}
     header{background:rgba(255,255,255,.94);border-bottom:1px solid var(--line)}
     .head{height:74px;display:flex;align-items:center;justify-content:space-between}
-    .brand{display:flex;align-items:center;gap:12px;font-weight:850}
+    .brand{display:flex;align-items:center;gap:12px;font-weight:850;text-decoration:none;color:inherit}
     .mark{width:34px;height:34px;border-radius:10px;background:var(--brand);display:grid;place-items:center}
     .mark:before{content:"";width:13px;height:13px;border:2px solid #fff;transform:rotate(45deg);border-radius:2px}
     main{padding:42px 0 70px}
@@ -43,6 +43,9 @@
     .file-list{display:grid;gap:8px;margin-top:10px}
     .file-row{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:9px 10px;border:1px solid var(--line);border-radius:9px}
     .small{font-size:.84rem;color:var(--muted)}
+    a.brand{text-decoration:none;color:inherit}
+    .head-actions{display:flex;align-items:center;gap:10px}
+    .cockpit-link{display:inline-flex;align-items:center;min-height:40px;padding:0 13px;border:1px solid var(--line);border-radius:10px;background:#eef2ef;color:var(--text);text-decoration:none;font-weight:800;font-size:.84rem}
     .question-box{display:none}.question-box.show{display:block}
     @media(max-width:680px){.hero,.content{padding:22px 18px}.head{height:auto;padding:14px 0}}
   </style>
@@ -50,8 +53,8 @@
 <body>
 <header>
   <div class="shell head">
-    <div class="brand"><div class="mark"></div><span>LUMINA</span></div>
-    <div class="small">Direkte Linkausführung</div>
+    <a class="brand" href="/" aria-label="Zur LUMINA Landingpage"><div class="mark"></div><span>LUMINA</span></a>
+    <div class="head-actions"><a class="cockpit-link" href="/cockpit">← Zum Cockpit</a><div class="small">Direkte Linkausführung</div></div>
   </div>
 </header>
 
@@ -310,20 +313,7 @@ async function openDataRoom(){
 async function uploadFile(folderId,file){
   if(!file) return;
 
-  const extensionMatch=file.name.match(/(\.[A-Za-z0-9]+)$/);
-  const extension=extensionMatch ? extensionMatch[1].toLowerCase() : "";
-  const baseName=extension ? file.name.slice(0,-extension.length) : file.name;
-
-  const safeBase=baseName
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g,"")
-    .replace(/ß/g,"ss")
-    .replace(/[^A-Za-z0-9._-]+/g,"_")
-    .replace(/_+/g,"_")
-    .replace(/^[_\.\-]+|[_\.\-]+$/g,"")
-    .slice(0,120) || "datei";
-
-  const safe=safeBase+extension;
+  const safe=file.name.replace(/[^\w.\-äöüÄÖÜß]/g,"_");
   const path=[currentTask.project_id,taskId,folderId,Date.now()+"-"+safe].join("/");
 
   setStatus("Datei wird hochgeladen …","info");
@@ -333,7 +323,7 @@ async function uploadFile(folderId,file){
     .upload(path,file,{upsert:false,contentType:file.type});
 
   if(uErr){
-    setStatus("Upload fehlgeschlagen: "+uErr.message+"\nVerwendeter Dateiname: "+safe,"err");
+    setStatus("Upload fehlgeschlagen: "+uErr.message,"err");
     return;
   }
 

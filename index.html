@@ -483,6 +483,7 @@
 
           <div class="login-divider" id="customerLoginDivider">bereits angemeldet</div>
           <a class="login-direct" id="customerCockpitLink" href="/cockpit">Zum geschützten Abschluss-Cockpit →</a>
+          <button class="login-direct" id="customerLogoutBtn" type="button" style="display:none;margin-top:10px;color:var(--red)">Aus LUMINA abmelden</button>
 
           <div class="login-footnote">Mit der Anmeldung akzeptieren Sie die Nutzung des geschützten Projektbereichs. Hinweise zur Verarbeitung Ihrer Daten finden Sie in der <a href="datenschutz.html">Datenschutzerklärung</a>.</div>
         </section>
@@ -583,6 +584,7 @@
     const customerSignedInBox = document.getElementById("customerSignedInBox");
     const customerSignedInEmail = document.getElementById("customerSignedInEmail");
     const customerLoginDivider = document.getElementById("customerLoginDivider");
+    const customerLogoutBtn = document.getElementById("customerLogoutBtn");
 
     function setCustomerStatus(message,type="info"){
       customerLoginStatus.textContent=message;
@@ -638,14 +640,28 @@
         customerLoginForm.style.display="none";
         customerLoginDivider.textContent="geschützter Zugang";
         customerCockpitLink.textContent="Zum Abschluss-Cockpit →";
+        customerLogoutBtn.style.display="flex";
       }else{
         customerSignedInBox.style.display="none";
         customerSignedInEmail.textContent="";
         customerLoginForm.style.display="block";
         customerLoginDivider.textContent="bereits angemeldet";
         customerCockpitLink.textContent="Zum geschützten Abschluss-Cockpit →";
+        customerLogoutBtn.style.display="none";
       }
     }
+
+    customerLogoutBtn?.addEventListener("click",async()=>{
+      if(!luminaSupabase)return;
+      customerLogoutBtn.disabled=true;
+      customerLogoutBtn.textContent="Abmeldung läuft …";
+      const {error}=await luminaSupabase.auth.signOut();
+      customerLogoutBtn.disabled=false;
+      customerLogoutBtn.textContent="Aus LUMINA abmelden";
+      if(error){setCustomerStatus("Die Abmeldung ist fehlgeschlagen: "+error.message,"error");return;}
+      setCustomerStatus("Sie wurden erfolgreich abgemeldet.","ok");
+      await refreshCustomerLoginState();
+    });
     luminaSupabase?.auth.onAuthStateChange(()=>refreshCustomerLoginState());
     refreshCustomerLoginState();
 
