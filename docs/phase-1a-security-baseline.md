@@ -100,9 +100,15 @@ Vorbereitet sind ausschließlich synthetische Identitäten:
 - Anonymous ohne Benutzerkonto,
 - Projekt A und Projekt B.
 
-Es ist derzeit keine ausdrücklich als Testinstanz freigegebene Supabase-Instanz
-konfiguriert. Deshalb wurden keine Benutzer und keine Fixtures erzeugt. Die
-erforderliche Einrichtung steht in `test-environment-setup.md`.
+Eine ausdrücklich getrennte Supabase-Testinstanz ist inzwischen konfiguriert.
+Dort wurden sechs synthetische Nutzer, sechs Projektmitgliedschaften, zwei
+Projekte und die zugehörigen synthetischen Fixtures idempotent erzeugt. Der
+zweite Fixture-Lauf endete ebenfalls mit Exit-Code 0. In Produktion wurden keine
+Benutzer oder Fixtures angelegt.
+
+Die anschließende RLS-Matrix führte alle 420 Fälle aus: 398 bestanden, 22
+weichen vom erwarteten Modell ab. Der Stand ist deshalb nicht grün und nicht als
+produktionsreif bewertet.
 
 ## Vercel-Doppelverknüpfung
 

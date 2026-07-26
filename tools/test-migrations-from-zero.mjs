@@ -8,15 +8,22 @@ const disabledFile = path.join(root, "supabase", "disabled_migrations", "2026072
 const activeMigrations = fs.readdirSync(migrationsDir).filter(name => name.endsWith(".sql")).sort();
 const baselinePath = path.join(migrationsDir, "202607260001_remote_schema_baseline.sql");
 const baseline = fs.readFileSync(baselinePath, "utf8");
+const allMigrations = activeMigrations
+  .map(name => fs.readFileSync(path.join(migrationsDir, name), "utf8"))
+  .join("\n");
+const policyCreates = (allMigrations.match(/^create policy /gim) || []).length;
+const policyDrops = (allMigrations.match(/^drop policy if exists /gim) || []).length;
 const staticInventory = {
   activeMigrations,
   disabledLegacyMigrationPresent: fs.existsSync(disabledFile),
   tableDefinitions: (baseline.match(/^create table /gm) || []).length,
   constraints: (baseline.match(/^alter table only /gm) || []).length,
   indexes: (baseline.match(/^CREATE (?:UNIQUE )?INDEX /gm) || []).length,
-  functions: (baseline.match(/^CREATE OR REPLACE FUNCTION /gm) || []).length,
+  functions: (allMigrations.match(/^create or replace function /gim) || []).length,
   triggers: (baseline.match(/^CREATE TRIGGER /gm) || []).length,
-  policies: (baseline.match(/^create policy /gm) || []).length,
+  policies: policyCreates - policyDrops,
+  policyCreates,
+  policyDrops,
   buckets: (baseline.match(/^insert into storage\.buckets /gm) || []).length,
 };
 

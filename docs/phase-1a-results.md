@@ -4,10 +4,11 @@ Stand: 2026-07-26
 
 ## Einordnung
 
-Phase 1A ist lokal vorbereitet. Sie ist noch nicht vollständig verifiziert und
-nicht remote angewandt. Insbesondere wurde die RLS-Matrix mangels freigegebener,
-getrennter Supabase-Testinstanz nicht live ausgeführt. Daher wird weder
-„sicher“ noch „produktionsreif“ behauptet.
+Phase 1A ist lokal vorbereitet und die Migration-from-zero ist bestanden. Eine
+ausdrücklich getrennte Supabase-Testinstanz wurde inzwischen eingerichtet; die
+RLS-Matrix wurde dort vollständig ausgeführt, endete aber mit 22 Abweichungen.
+Auf Produktion wurde nichts angewandt. Daher wird weder „sicher“ noch
+„produktionsreif“ behauptet.
 
 ## Phase-0-Übergabe
 
@@ -79,9 +80,11 @@ quarantänisiert. Es erfolgte weder `db push` noch `migration repair`.
 | `npm.cmd test` | 0 | Syntax 11/11, HTTP 9/9, RLS-Plan erzeugt |
 | `npm.cmd run test:migrations` (erster Phase-1A-Lauf) | 1 | `NOT_VERIFIED`; Docker war im Codex-PATH nicht erreichbar |
 | `npm.cmd run test:migrations` (abschließender Lauf) | 0 | `PASS`; leere lokale Datenbank vollständig migriert und numerisch geprüft |
-| `npm.cmd run test:env` | 1 | Erwartet `BLOCKED`; `.env.test` fehlt, keine Werte oder Netzwerkzugriffe |
-| `npm.cmd run test:fixtures` | 1 | `BLOCKED`; keine Testumgebung und keine Schreibfreigabe |
-| `npm.cmd run test:rls` | 1 | `BLOCKED`; 0 Fälle ausgeführt, keine Remote-Anwendung |
+| `npm.cmd run test:env` | 0 | `READY`; getrennte Testinstanz und Schreibguard bestätigt, keine Secrets ausgegeben |
+| `npm.cmd run test:fixtures` (Sandbox) | 1 | `fetch failed`; Netzwerk-Sandbox, kein neuer Remote-Teilbestand |
+| `npm.cmd run test:fixtures` (Testinstanz) | 0 | 6 Nutzer, 6 Mitgliedschaften und 2 Projekte vorbereitet |
+| `npm.cmd run test:fixtures` (Idempotenzlauf) | 0 | Erneut vollständig bestanden; `$LASTEXITCODE=0` |
+| `npm.cmd run test:rls` | 1 | 420 Fälle ausgeführt, 398 bestanden, 22 Abweichungen |
 | `npm.cmd run test:financial:legacy` | 1 | Bekannter Fehler: `projectData.trialBalance` nicht initialisiert |
 | `npx.cmd --yes vercel@latest build --yes --no-color` | kein Exit-Code | Ohne Ausgabe hängen geblieben und gezielt beendet; nicht verifiziert |
 | `git diff --check` | 0 | Keine Fehler im bereits erfassten Rename-Diff |
@@ -166,7 +169,7 @@ Backup gestoppt. Gegen die produktive Datenbank wurde nichts angewandt.
 
 ## Numerische RLS-Matrix
 
-Planstatus: `PLAN_ONLY`.
+Live-Status in der getrennten Testinstanz: `FAIL`.
 
 | Kennzahl | Wert |
 | --- | ---: |
@@ -179,14 +182,64 @@ Planstatus: `PLAN_ONLY`.
 | geplante ausführbare Fälle | 420 |
 | erwartete Erlaubnisse | 181 |
 | erwartete Ablehnungen | 239 |
-| tatsächlich ausgeführte Fälle | 0 |
-| bestandene / fehlgeschlagene Fälle | 0 / 0 |
-| tatsächlich sichtbare Zeilen | 0 |
-| tatsächlich abgelehnte Mutationen | 0 |
+| tatsächlich ausgeführte Fälle | 420 |
+| bestandene / fehlgeschlagene Fälle | 398 / 22 |
+| erwartete / tatsächlich sichtbare Zeilen | 72 / 74 |
+| erwartete / tatsächlich abgelehnte Mutationen | 185 / 181 |
 
 Die 98 UUID-Prüfungen sind Teil der Grund- und projektübergreifenden
 Fallmodellierung und werden deshalb nicht zusätzlich zu den 420 ausführbaren
 Fällen addiert.
+
+Die 22 Abweichungen verteilen sich auf `companies` (6), `projects` (9),
+`project_members` (4), `task_review_notes` (2) und Storage (1). Es wurde keine
+Policy automatisch verändert. Der Befund muss zwischen tatsächlicher
+Policy-Lücke, falscher Erwartung und möglicher Testadapter-Semantik getrennt
+analysiert werden.
+
+## Fixture-Korrektur und Teilbestandskontrolle
+
+Das tatsächliche Schema der getrennten Testinstanz wurde ohne `--linked`
+gelesen. `project_members` besitzt 17 Spalten. Die fünf Berechtigungsfelder
+`can_read`, `can_upload`, `can_edit`, `can_approve` und
+`can_manage_members` sind jeweils `NOT NULL` und besitzen Datenbank-Defaults.
+
+Der erste Bulk-Upsert enthielt heterogene Objekt-Keys: Sobald eine Rolle
+`can_approve` mitsendete, behandelte PostgREST das bei anderen Zeilen fehlende
+Feld als `NULL`, statt den Default anzuwenden. Deshalb schlug der Lauf mit der
+Not-null-Verletzung für `can_approve` fehl.
+
+Korrigiert wurden:
+
+- explizite Werte für alle fünf Berechtigungsfelder bei jeder Identität,
+- explizite fachliche Defaultwerte für alle weiteren Fixture-Nutzfelder mit
+  Not-null-Anforderung,
+- `defaultToNull: false` für alle Upserts,
+- eine statische Pflichtfeldprüfung vor jedem Tabellen-Upsert,
+- kontrollierte Bereinigung bekannter Fixture-IDs und Storage-Pfade vor jedem
+  Lauf,
+- erneute Bereinigung von Tabellen, Storage, Statusdatei und synthetischen
+  Auth-Nutzern bei einem Fixture-Fehler.
+
+Zwei aufeinanderfolgende Fixture-Läufe endeten mit Exit-Code 0. Die anschließend
+gespeicherte Rollenmatrix wurde read-only verifiziert. Nach der RLS-Matrix
+ergab die aggregierte Nachkontrolle exakt 0 temporäre `Matrix`-Artefakte.
+
+## Synthetische Rollenrechte
+
+| Identität | Projekt | Lesen | Upload | Bearbeiten | Freigeben | Mitglieder verwalten |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| Nutzer A | A | ja | nein | nein | nein | nein |
+| Nutzer B | B | ja | nein | nein | nein | nein |
+| Bearbeiter | A | ja | ja | ja | nein | nein |
+| Freigeber | A | ja | nein | nein | ja | nein |
+| Prüfer | A | ja | nein | nein | nein | nein |
+| Admin | A | ja | ja | ja | ja | ja |
+| Anonymous | keines | nein | nein | nein | nein | nein |
+
+Alle fünf Berechtigungsfelder werden für jede Identität explizit im
+Fixture-Plan geführt. Der Bulk-Upsert verwendet zusätzlich
+`defaultToNull: false`.
 
 ## Secret- und Konfigurationsbefund
 
@@ -204,20 +257,20 @@ Frontend-Dateien wegen der festgelegten Grenzen nicht geändert.
 - **Lokal geprüft:** Syntax, statische HTTP-Routen, numerischer RLS-Plan,
   Lockdatei/Audit, Migration-from-zero auf leerer lokaler Datenbank, statische
   Migrationsinventur und Git-Diff-Integrität.
-- **Nicht verifiziert:** lokaler Vercel-Build und Live-RLS.
-- **Remote angewandt:** nichts. Keine Migration, keine Fixtures, keine
-  Testnutzer, kein Deployment und keine Änderung der Migrationshistorie.
+- **Nicht grün:** lokaler Vercel-Build und Live-RLS mit 22 Abweichungen.
+- **Getrennte Testinstanz:** ausschließlich synthetische Nutzer, Basis-Fixtures
+  und temporäre Matrixfälle wurden geschrieben.
+- **Produktion:** keine Migration, keine Fixtures, keine Testnutzer, kein
+  Deployment und keine Änderung der Migrationshistorie.
 
 ## Offene Punkte
 
-1. Eine ausdrücklich getrennte Supabase-Testinstanz bereitstellen und die
-   Variablen aus `.env.test.example` lokal setzen.
-2. Baseline dort anwenden, synthetische Fixtures erzeugen und alle 420
-   RLS-Fälle ausführen.
-3. Erst bei grünem Live-Nachweis eine minimale Ersatzmigration für ungewollte
+1. Die 22 RLS-Abweichungen einzeln als Policy-Lücke, Erwartungsfehler oder
+   Testadapter-Effekt klassifizieren.
+2. Erst nach dieser Klassifikation eine minimale Ersatzmigration für ungewollte
    anonyme „Testzugriff“-Policies vorbereiten.
-4. Den Legacy-Finanztest anhand eines eindeutig bestätigten Einstiegspunkts
+3. Den Legacy-Finanztest anhand eines eindeutig bestätigten Einstiegspunkts
    reparieren; nicht spekulativ an die Landingpage koppeln.
-5. Den lokalen Vercel-Build erneut mit funktionierender CLI-Verbindung prüfen.
-6. Vor jeder Freigabe Remote-Schema und Migrationsliste erneut lesend auf Drift
+4. Den lokalen Vercel-Build erneut mit funktionierender CLI-Verbindung prüfen.
+5. Vor jeder Freigabe Remote-Schema und Migrationsliste erneut lesend auf Drift
    vergleichen.

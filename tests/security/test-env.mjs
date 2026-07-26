@@ -8,6 +8,7 @@ export function requireTestEnvironment({ requireWriteGuard = false } = {}) {
   const names = [
     "SUPABASE_TEST_URL",
     "SUPABASE_TEST_PROJECT_REF",
+    "SUPABASE_TEST_DB_URL",
     "SUPABASE_TEST_ANON_KEY",
     "SUPABASE_TEST_SERVICE_ROLE_KEY",
     "SUPABASE_TEST_USER_PASSWORD",
@@ -15,7 +16,8 @@ export function requireTestEnvironment({ requireWriteGuard = false } = {}) {
   const missing = names.filter(name => !process.env[name]);
   const ref = process.env.SUPABASE_TEST_PROJECT_REF || "";
   const url = process.env.SUPABASE_TEST_URL || "";
-  const denied = plan.productionProjectRefDenylist.find(item => item === ref || url.includes(item));
+  const dbUrl = process.env.SUPABASE_TEST_DB_URL || "";
+  const denied = plan.productionProjectRefDenylist.find(item => item === ref || url.includes(item) || dbUrl.includes(item));
   const writeGuardValid = !requireWriteGuard || process.env[plan.writeGuard.variable] === plan.writeGuard.requiredValue;
   if (missing.length || denied || !writeGuardValid) {
     const error = new Error("A separate, explicitly authorized Supabase test environment is required");
@@ -32,6 +34,7 @@ export function requireTestEnvironment({ requireWriteGuard = false } = {}) {
     root,
     plan,
     url,
+    dbUrl,
     projectRef: ref,
     anonKey: process.env.SUPABASE_TEST_ANON_KEY,
     serviceRoleKey: process.env.SUPABASE_TEST_SERVICE_ROLE_KEY,

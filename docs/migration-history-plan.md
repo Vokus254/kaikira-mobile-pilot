@@ -19,8 +19,10 @@ Dieser Plan ist vorbereitet, aber nicht remote ausgeführt.
 2. **Lokal erfüllt:** 13 Tabellen, 54 Policies und ein Storage-Bucket wurden
    nach dem Nullaufbau tatsächlich gezählt. Der vollständige Objektvergleich
    mit einer getrennten Remote-Testinstanz bleibt offen.
-3. **Offen:** Die vollständige RLS-Matrix in der getrennten Testinstanz grün
-   ausführen.
+3. **Teilweise erfüllt:** Die vollständige RLS-Matrix wurde in der getrennten
+   Testinstanz ausgeführt; 398 von 420 Fällen bestanden. Die 22 Abweichungen
+   müssen vor einer Freigabe geklärt und der Lauf anschließend grün wiederholt
+   werden.
 4. **Offen:** Bestätigen, dass seit der Erfassung kein Schema-Drift im
    produktiven Remote-Projekt entstanden ist.
 5. Backup- und Rollback-Verantwortung festlegen.

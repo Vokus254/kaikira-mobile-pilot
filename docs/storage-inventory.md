@@ -45,3 +45,19 @@ Die anonymen Testzugriffe sollten vor einem produktiven Sicherheitsfreigabeproze
 5. Die Admin-Löschung von Ordner-Metadaten wurde nicht als kaskadierende Storage-Objektlöschung verifiziert.
 6. Die konkurrierenden Bucketmodelle `lumina-datarooms` und `task-evidence` sind vor einer Migration fachlich und technisch zu konsolidieren.
 7. Upload, Download, Delete und RLS sind ohne Testbenutzer und ohne Datenmutation in Phase 0 „nicht verifiziert“.
+
+## Fortschreibung 2026-07-27: validiertes Test-Zielmodell
+
+Auf `LUMINA-RLS-TEST` wurden die beiden anonymen Storage-Testpolicies entfernt.
+SELECT bleibt an Projektmitgliedschaft und DELETE an Projektverwaltung gebunden.
+INSERT und UPDATE verlangen jetzt zusätzlich eine aktive eigene Mitgliedschaft
+mit `project_members.can_upload = true`.
+
+Die gezielten Nachweise bestätigen:
+
+- Anonymous kann ein frisches Objekt weder lesen, signieren noch hochladen.
+- Nutzer A mit `can_upload = false` kann weder anlegen noch ersetzen.
+- Bearbeiter mit `can_upload = true` kann anlegen und ersetzen.
+- Es blieben null temporäre Storage-Testobjekte zurück.
+
+Diese Änderung wurde nicht auf Produktion angewandt.

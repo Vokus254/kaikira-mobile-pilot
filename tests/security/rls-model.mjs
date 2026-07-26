@@ -11,6 +11,9 @@ const projectAAccess = new Set(["user_a", "editor", "approver", "auditor", "admi
 const projectAManagers = new Set(["user_a", "admin"]);
 const projectAEditors = new Set(["user_a", "editor", "admin"]);
 const authenticated = role => role !== "anonymous";
+const canUpload = (role, scope) => scope === "A"
+  ? new Set(["editor", "admin"]).has(role)
+  : false;
 
 export function expectedAllowed({ resource, operation, role, scope = "A" }) {
   const foreign = scope === "A" ? role === "user_b" : role !== "user_b";
@@ -20,6 +23,7 @@ export function expectedAllowed({ resource, operation, role, scope = "A" }) {
 
   if (resource === "companies") {
     if (operation === "insert") return authenticated(role);
+    if (operation === "delete") return false;
     return scope === "A" ? role === "user_a" : role === "user_b";
   }
   if (resource === "projects") {
@@ -30,6 +34,7 @@ export function expectedAllowed({ resource, operation, role, scope = "A" }) {
   }
   if (resource === "project_members") {
     if (operation === "select") return access && !foreign;
+    if (["update", "delete"].includes(operation) && role === "admin") return false;
     return manager;
   }
   if (resource === "tasks") {
@@ -42,12 +47,13 @@ export function expectedAllowed({ resource, operation, role, scope = "A" }) {
     return editor;
   }
   if (resource === "documents") {
-    if (["select", "insert"].includes(operation)) return true;
+    if (operation === "select") return access;
+    if (operation === "insert") return editor && authenticated(role);
     return editor && authenticated(role);
   }
   if (resource === "task_comments") {
     if (operation === "select") return access;
-    if (operation === "insert") return true;
+    if (operation === "insert") return access && authenticated(role);
     return false;
   }
   if (resource === "task_activity_events") {
@@ -71,14 +77,12 @@ export function expectedAllowed({ resource, operation, role, scope = "A" }) {
   }
   if (resource === "task_responses") {
     if (operation === "select") return access;
-    if (operation === "insert") return true;
+    if (operation === "insert") return access && authenticated(role);
     return false;
   }
   if (resource === "storage:lumina-datarooms") {
-    if (["select", "insert"].includes(operation)) return true;
-    if (operation === "update") return scope === "A"
-      ? new Set(["editor", "approver", "auditor", "admin"]).has(role)
-      : role === "user_b";
+    if (operation === "select") return access && authenticated(role);
+    if (["insert", "update"].includes(operation)) return canUpload(role, scope);
     if (operation === "delete") return manager;
   }
   return false;
@@ -95,6 +99,13 @@ export function planSummary() {
     cross.push({ resource, role: "user_b", operation: "select", scope: "A", expected: expectedAllowed({ resource, role: "user_b", operation: "select", scope: "A" }) });
   }
   const all = [...base, ...cross];
+  const identified = all.map((item, index) => ({
+    ...item,
+    caseId: `RLS-${String(index + 1).padStart(3, "0")}`,
+    project: item.scope,
+    directUuid: item.operation !== "insert",
+    foreignProject: item.scope === "A" ? item.role === "user_b" : item.role !== "user_b",
+  }));
   return {
     resources: resources.length,
     roles: roles.length,
@@ -103,8 +114,8 @@ export function planSummary() {
     directKnownUuidCases: base.filter(item => item.operation === "select").length,
     crossProjectCases: cross.length,
     plannedCases: all.length,
-    expectedAllowed: all.filter(item => item.expected).length,
-    expectedDenied: all.filter(item => !item.expected).length,
-    cases: all,
+    expectedAllowed: identified.filter(item => item.expected).length,
+    expectedDenied: identified.filter(item => !item.expected).length,
+    cases: identified,
   };
 }

@@ -13,8 +13,12 @@
     "test:rls:plan": "node tools/test-rls-matrix.mjs --plan",
     "test:env": "node --env-file-if-exists=.env.test tools/check-test-environment.mjs",
     "test:rls": "node --env-file-if-exists=.env.test tools/test-rls-matrix.mjs",
+    "test:rls:proofs": "node --env-file-if-exists=.env.test tools/test-security-target-model.mjs",
+    "test:artifacts": "node --env-file-if-exists=.env.test tools/check-test-artifacts.mjs",
     "test:fixtures": "node --env-file-if-exists=.env.test tools/prepare-test-fixtures.mjs",
     "test:migrations": "node tools/test-migrations-from-zero.mjs",
+    "test:migrations:list": "node --env-file-if-exists=.env.test tools/manage-test-migrations.mjs --list",
+    "test:migrations:push": "node --env-file-if-exists=.env.test tools/manage-test-migrations.mjs --push",
     "test:financial:legacy": "node tools/test-financial-pipeline.mjs"
   },
   "dependencies": {

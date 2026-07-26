@@ -7,6 +7,10 @@ bestanden. Für die 420 echten RLS-Fälle wird trotzdem ein eigenes
 Supabase-Cloud-Projekt benötigt. `LUMINA-FRAGEBOGEN` darf dafür weder verlinkt
 noch beschrieben werden.
 
+Aktueller Stand: Die getrennte Testinstanz ist eingerichtet. `test:env` und zwei
+aufeinanderfolgende Fixture-Läufe endeten mit Exit-Code 0. Die RLS-Matrix führte
+420 Fälle aus und endete mit 398 bestandenen sowie 22 abweichenden Fällen.
+
 ## 1. Neues Testprojekt anlegen
 
 Im Supabase-Dashboard ein vollständig neues Projekt anlegen, zum Beispiel
@@ -81,6 +85,12 @@ Erwartet werden sechs synthetische Auth-Nutzer, Anonymous als siebte Identität,
 Projekt A, Projekt B und ausschließlich synthetische Tabellen- und
 Storage-Fixtures. Der lokale Zustand wird in der ignorierten Datei
 `.test-state/fixtures.json` gespeichert.
+
+Der Aufbau ist idempotent: Vor jedem Lauf werden ausschließlich die bekannten
+synthetischen IDs und Storage-Pfade entfernt. Bei einem Fehler werden diese
+Datensätze, die Statusdatei und die synthetischen Auth-Nutzer erneut
+kontrolliert bereinigt. Ein zweiter erfolgreicher Lauf ist die verbindliche
+Idempotenzprüfung.
 
 ## 6. RLS-Matrix ausführen
 

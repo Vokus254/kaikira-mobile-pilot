@@ -1,17 +1,17 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "environment": "separate-supabase-test-project-only",
   "productionProjectRefDenylist": [
     "mslbzypjtvvznyewupco"
   ],
   "identities": [
-    { "key": "user_a", "label": "Nutzer A", "project": "A" },
-    { "key": "user_b", "label": "Nutzer B", "project": "B" },
-    { "key": "editor", "label": "Bearbeiter", "project": "A" },
-    { "key": "approver", "label": "Freigeber", "project": "A" },
-    { "key": "auditor", "label": "Prüfer", "project": "A" },
-    { "key": "admin", "label": "Admin", "project": "A" },
-    { "key": "anonymous", "label": "Anonymous", "project": null }
+    { "key": "user_a", "label": "Nutzer A", "project": "A", "projectRole": "Nutzer", "accessLevel": "member", "permissions": { "can_read": true, "can_upload": false, "can_edit": false, "can_approve": false, "can_manage_members": false } },
+    { "key": "user_b", "label": "Nutzer B", "project": "B", "projectRole": "Nutzer", "accessLevel": "member", "permissions": { "can_read": true, "can_upload": false, "can_edit": false, "can_approve": false, "can_manage_members": false } },
+    { "key": "editor", "label": "Bearbeiter", "project": "A", "projectRole": "Bearbeiter", "accessLevel": "member", "permissions": { "can_read": true, "can_upload": true, "can_edit": true, "can_approve": false, "can_manage_members": false } },
+    { "key": "approver", "label": "Freigeber", "project": "A", "projectRole": "Freigeber", "accessLevel": "member", "permissions": { "can_read": true, "can_upload": false, "can_edit": false, "can_approve": true, "can_manage_members": false } },
+    { "key": "auditor", "label": "Prüfer", "project": "A", "projectRole": "Prüfer", "accessLevel": "auditor", "permissions": { "can_read": true, "can_upload": false, "can_edit": false, "can_approve": false, "can_manage_members": false } },
+    { "key": "admin", "label": "Projektadministrator A", "project": "A", "projectRole": "Projektadministrator", "accessLevel": "admin", "permissions": { "can_read": true, "can_upload": true, "can_edit": true, "can_approve": true, "can_manage_members": true } },
+    { "key": "anonymous", "label": "Anonymous", "project": null, "projectRole": null, "accessLevel": null, "permissions": { "can_read": false, "can_upload": false, "can_edit": false, "can_approve": false, "can_manage_members": false } }
   ],
   "fixtures": {
     "companies": ["A", "B"],

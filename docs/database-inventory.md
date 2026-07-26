@@ -95,3 +95,19 @@ Ein späterer Reparaturschritt benötigt zuerst eine belastbare Baseline-Migrati
 - Auth-Flows mit realen Benutzerkonten.
 - Datenqualität, Datensätze und Produktionsvolumen; es wurden bewusst keine fachlichen Daten ausgelesen.
 - Wiederherstellbarkeit des Remote-Schemas ausschließlich aus Git.
+
+## Fortschreibung 2026-07-27: globale Administration
+
+Eine echte globale Administratorrolle ist im aktuellen Schema weiterhin nicht
+nachgewiesen. Der synthetische Admin der Sicherheitsfixtures ist ausschließlich
+Projektadministrator von Projekt A und darf keine Mitgliedschaften in Projekt B
+verwalten. Es wurde keine breite projektübergreifende RLS-Policy vorbereitet.
+
+Eine spätere globale Administration soll bevorzugt über eine eng autorisierte
+Security-Definer-RPC oder Edge Function mit serverseitiger Rollenprüfung,
+Audit-Protokollierung und projektgenauer Eingabevalidierung erfolgen.
+
+Offener Punkt „Projektmitglieder verwalten“: Direkte UPDATE- und
+DELETE-Mutationen auf fremde `project_members`-Zeilen bleiben für Browserclients
+gesperrt. Eine sichere, projektgebundene Verwaltungs-RPC oder Edge Function ist
+als separates Arbeitspaket erforderlich und wurde in Phase 1A nicht umgesetzt.
