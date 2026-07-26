@@ -1,0 +1,8 @@
+.vercel/
+.env*
+!.env.test.example
+node_modules/
+.test-state/
+supabase/.temp/
+supabase/.branches/
+supabase/.cache/
