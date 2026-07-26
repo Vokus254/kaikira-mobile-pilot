@@ -103,6 +103,25 @@
     .event-clickable:hover{transform:translateY(-1px);border-color:#91c6ab;box-shadow:0 8px 20px rgba(22,66,46,.08)}
     .event-clickable:focus-visible{outline:3px solid rgba(47,143,91,.25);outline-offset:2px}
 
+
+    .management-cockpit{padding:0;margin-bottom:18px;overflow:hidden}
+    .management-head{display:flex;justify-content:space-between;align-items:center;gap:18px;padding:18px 20px;border-bottom:1px solid var(--line)}
+    .management-head h2{margin:0 0 4px;font-size:1.25rem}
+    .role-tabs{display:flex;gap:7px;flex-wrap:wrap}.role-tab{border:1px solid var(--line);background:#fff;padding:9px 13px;border-radius:11px;font-weight:800}.role-tab.active{background:#202223;color:#fff;border-color:#202223}
+    .management-kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;padding:14px}
+    .management-kpi{border:1px solid var(--line);background:#fff;border-radius:13px;padding:14px;text-align:left;color:inherit;min-height:118px}.management-kpi:hover{border-color:#9bcbb2;box-shadow:0 8px 20px rgba(22,66,46,.08)}
+    .management-kpi span,.management-kpi small{display:block;color:var(--muted)}.management-kpi strong{display:block;font-size:1.65rem;margin:8px 0}.management-kpi.critical strong{color:var(--red)}
+    .progress{height:7px;background:#e6e9e7;border-radius:99px;overflow:hidden;margin:8px 0}.progress i{display:block;height:100%;width:0;background:var(--brand);border-radius:99px}
+    .process-card{margin:0 14px 14px;border:1px solid var(--line);border-radius:14px;padding:14px 16px}.process-head{display:flex;justify-content:space-between;gap:12px;align-items:center}.process-head h3{margin:0}
+    .process-steps{display:grid;grid-template-columns:repeat(6,1fr);gap:0;margin-top:18px}.process-step{position:relative;text-align:center;padding:0 6px;cursor:pointer}.process-step:before{content:"";position:absolute;left:0;right:0;top:17px;height:2px;background:#d8dedb;z-index:0}.process-step:first-child:before{left:50%}.process-step:last-child:before{right:50%}.process-step.done:before,.process-step.active:before{background:var(--brand)}
+    .step-dot{position:relative;z-index:1;width:36px;height:36px;border-radius:50%;margin:auto;background:#fff;border:1px solid #cbd2ce;display:grid;place-items:center;font-weight:900}.process-step.done .step-dot{background:var(--brand);color:#fff;border-color:var(--brand)}.process-step.active .step-dot{background:#202223;color:#fff;border:4px solid #e4e7e5}.process-step strong{display:block;font-size:.82rem;margin-top:8px}.process-step small{color:var(--muted);font-size:.72rem}
+    .management-grid{display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:10px;padding:0 14px 14px}.management-panel{border:1px solid var(--line);border-radius:14px;padding:15px;display:flex;flex-direction:column;min-height:260px}.management-panel h3{margin:0 0 12px}.panel-action{margin-top:auto;border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px;font-weight:850}.panel-action:hover{background:var(--soft)}
+    .bottleneck{padding:13px;border-radius:12px;background:var(--red-soft);color:#7d2323;cursor:pointer}.bottleneck strong{display:block;font-size:1rem;margin-bottom:5px}.empty-state{background:var(--soft2);color:var(--muted)}
+    .role-row,.status-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 2px;border-bottom:1px solid var(--line);cursor:pointer}.role-row:last-child,.status-row:last-child{border-bottom:0}.role-left{display:flex;align-items:center;gap:9px}.mini-avatar{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#edf1ef;font-size:.72rem;font-weight:900}.count-badge{padding:4px 8px;border-radius:99px;background:#eef2ff;color:#4155b8;font-size:.74rem;font-weight:850}.status-dot{width:12px;height:12px;border-radius:50%;border:1px solid #b8c0bc}.status-dot.done{border-color:var(--brand);box-shadow:inset 0 0 0 3px #fff;background:var(--brand)}.status-dot.active{border-color:#d49b26;box-shadow:inset 0 0 0 3px #fff;background:#d49b26}
+    .operational-dashboard{margin-top:18px}
+    @media(max-width:1100px){.management-kpis{grid-template-columns:repeat(2,1fr)}.management-grid{grid-template-columns:1fr}.process-steps{overflow:auto;grid-template-columns:repeat(6,minmax(150px,1fr))}}
+    @media(max-width:700px){.management-head{align-items:flex-start;flex-direction:column}.management-kpis{grid-template-columns:1fr}.process-head{align-items:flex-start;flex-direction:column}}
+
 </style>
 </head>
 <body>
@@ -157,7 +176,50 @@
   </section>
 
   <section id="view-cockpit" class="view active">
-    <div class="dashboard">
+    <section class="card management-cockpit">
+      <div class="management-head">
+        <div><h2 id="managementTitle">LUMINA Abschluss-Cockpit</h2><div id="managementSubtitle" class="small">CFO-Sicht · Gesamtstatus und Entscheidungsbedarf</div></div>
+        <div class="role-tabs" aria-label="Rollenansichten">
+          <button class="role-tab active" data-role-view="cfo">CFO</button>
+          <button class="role-tab" data-role-view="accounting">Buchhaltung</button>
+          <button class="role-tab" data-role-view="advisor">Berater</button>
+          <button class="role-tab" data-role-view="auditor">Prüfer</button>
+        </div>
+      </div>
+
+      <div class="management-kpis">
+        <button class="management-kpi" onclick="openMetric('done')"><span>Abschlussfortschritt</span><strong id="kpiProgress">0 %</strong><div class="progress"><i id="kpiProgressBar"></i></div><small id="kpiProgressHint">Noch keine Aufgaben geladen</small></button>
+        <button class="management-kpi" onclick="openMetric('tasks')"><span>Offene Aufgaben</span><strong id="kpiOpen">0</strong><small id="kpiOpenHint">Aktueller Bestand</small></button>
+        <button class="management-kpi critical" onclick="openCriticalTasks()"><span>Kritische Punkte</span><strong id="kpiCritical">0</strong><small id="kpiCriticalHint">Überfällig, blockiert oder abgelehnt</small></button>
+        <button class="management-kpi" onclick="activateView('rooms')"><span>Prüfungsreife</span><strong id="kpiReadiness">0 %</strong><small id="kpiReadinessHint">Aufgaben und Nachweise</small></button>
+        <button class="management-kpi" onclick="openReleaseTasks()"><span>Freigabe in</span><strong id="kpiRelease">–</strong><small>Tagen</small></button>
+      </div>
+
+      <div class="process-card">
+        <div class="process-head"><h3>Prozessfortschritt</h3><span id="processSummary" class="small">Projekt wird geladen …</span></div>
+        <div id="processSteps" class="process-steps"></div>
+      </div>
+
+      <div class="management-grid">
+        <section class="management-panel">
+          <h3>Nächster Engpass</h3>
+          <div id="bottleneckBox" class="bottleneck empty-state">Noch kein Engpass ermittelt.</div>
+          <button class="panel-action" onclick="openBottleneck()">Details anzeigen →</button>
+        </section>
+        <section class="management-panel">
+          <h3>Wer ist dran?</h3>
+          <div id="whoIsNext"></div>
+          <button class="panel-action" onclick="activateView('tasks')">Alle Aufgaben →</button>
+        </section>
+        <section class="management-panel">
+          <h3>Status im Überblick</h3>
+          <div id="statusOverview"></div>
+          <button class="panel-action" onclick="activateView('tasks')">Statusdetails →</button>
+        </section>
+      </div>
+    </section>
+
+    <div class="dashboard operational-dashboard">
       <div class="card section">
         <div class="toolbar" style="justify-content:space-between;margin-bottom:12px">
           <h2>Aktivitätsfeed</h2>
@@ -165,19 +227,9 @@
         </div>
         <div id="feed" class="feed"></div>
       </div>
-
       <div class="rightcol">
-        <section class="card assistant kai">
-          <div class="assistant-head"><div class="avatar">KAI</div><div><h2>Kommunikationsassistent</h2><div class="small">Erklärt, erinnert und koordiniert</div></div></div>
-          <p id="kaiSummary">Noch kein Projekt ausgewählt.</p>
-          <div id="kaiInsights" class="insights"></div>
-        </section>
-
-        <section class="card assistant kira">
-          <div class="assistant-head"><div class="avatar">KIRA</div><div><h2>Prüfungsassistentin</h2><div class="small">Sichtet Lieferungen und markiert Prüfungsbedarf</div></div></div>
-          <p id="kiraSummary">Noch keine Datenlieferungen geladen.</p>
-          <div id="kiraInsights" class="insights"></div>
-        </section>
+        <section class="card assistant kai"><div class="assistant-head"><div class="avatar">KAI</div><div><h2>Kommunikationsassistent</h2><div class="small">Erklärt, erinnert und koordiniert</div></div></div><p id="kaiSummary">Noch kein Projekt ausgewählt.</p><div id="kaiInsights" class="insights"></div></section>
+        <section class="card assistant kira"><div class="assistant-head"><div class="avatar">KIRA</div><div><h2>Prüfungsassistentin</h2><div class="small">Sichtet Lieferungen und markiert Prüfungsbedarf</div></div></div><p id="kiraSummary">Noch keine Datenlieferungen geladen.</p><div id="kiraInsights" class="insights"></div></section>
       </div>
     </div>
   </section>
@@ -219,6 +271,7 @@ const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 
 let user=null,projects=[],currentProject=null,tasks=[],rooms=[],folders=[],documents=[],comments=[],responses=[],notifications=[],activities=[];
+let managementRole="cfo",bottleneckTask=null;
 let quickTaskFilter="";
 const statusMap={planned:"Geplant",invited:"Eingeladen",accepted:"Angenommen",declined:"Abgelehnt",in_progress:"In Bearbeitung",question:"Rückfrage",blocked:"Blockiert",submitted:"Eingereicht",in_review:"In Prüfung",approved:"Freigegeben",completed:"Erledigt",rooms_ready:"Datenräume bereit"};
 
@@ -313,7 +366,7 @@ function buildActivities(){
 }
 
 function renderAll(){
-  renderMetrics();renderFeed();renderAssistants();renderTaskFilters();renderTasks();renderRooms();renderCommunication();
+  renderMetrics();renderManagementCockpit();renderFeed();renderAssistants();renderTaskFilters();renderTasks();renderRooms();renderCommunication();
 }
 
 function renderMetrics(){
@@ -327,6 +380,43 @@ function renderMetrics(){
   document.getElementById("mDeclined").textContent=tasks.filter(t=>t.status==="declined").length;
   document.getElementById("mOverdue").textContent=overdue;
 }
+
+
+function isDone(t){return ["completed","approved"].includes(t.status)}
+function phaseGroup(t){const p=(t.phase||"").toLowerCase(),title=(t.title||"").toLowerCase();if(/kick|vorbereit|projekt/.test(p+title))return 0;if(/susa|salden|hauptbuch|nebenbuch/.test(p+title))return 1;if(/mapping|konten|zuordn/.test(p+title))return 2;if(/bilanz|guv|abschlussarbeit|buchung/.test(p+title))return 3;if(/anhang|lagebericht|bericht/.test(p+title))return 4;return 5}
+function managementPhases(){return ["Kick-off","SuSa","Mapping","Bilanz / GuV","Anhang / Lagebericht","Prüfung / Freigabe"]}
+function daysUntil(date){if(!date)return null;return Math.ceil((new Date(date+"T12:00:00")-new Date())/86400000)}
+function renderManagementCockpit(){
+  if(!currentProject)return;
+  document.getElementById("managementTitle").textContent=`LUMINA Abschluss-Cockpit ${currentProject.closing_date?String(currentProject.closing_date).slice(0,4):""}`;
+  const total=tasks.length,done=tasks.filter(isDone).length,open=Math.max(0,total-done),today=new Date().toISOString().slice(0,10);
+  const critical=tasks.filter(t=>!isDone(t)&&((t.due_date&&t.due_date<today)||["blocked","declined"].includes(t.status)));
+  const progress=total?Math.round(done/total*100):0;
+  const tasksWithRoom=tasks.filter(t=>roomOfTask(t.id));const tasksWithFiles=tasks.filter(t=>{const r=roomOfTask(t.id);if(!r)return false;const fids=folders.filter(f=>f.task_room_id===r.id).map(f=>f.id);return documents.some(d=>fids.includes(d.folder_id))}).length;
+  const readiness=total?Math.min(100,Math.round((done/total*.65+(tasksWithFiles/total)*.35)*100)):0;
+  const finalDate=[...tasks].map(t=>t.due_date).filter(Boolean).sort().pop()||currentProject.closing_date;const release=daysUntil(finalDate);
+  document.getElementById("kpiProgress").textContent=progress+" %";document.getElementById("kpiProgressBar").style.width=progress+"%";document.getElementById("kpiProgressHint").textContent=`${done} von ${total} Aufgaben abgeschlossen`;
+  document.getElementById("kpiOpen").textContent=open;document.getElementById("kpiCritical").textContent=critical.length;document.getElementById("kpiReadiness").textContent=readiness+" %";document.getElementById("kpiRelease").textContent=release==null?"–":Math.max(0,release);
+  const phaseNames=managementPhases();const groups=phaseNames.map((_,i)=>tasks.filter(t=>phaseGroup(t)===i));let firstOpen=groups.findIndex(g=>g.some(t=>!isDone(t)));if(firstOpen<0)firstOpen=5;
+  document.getElementById("processSteps").innerHTML=phaseNames.map((name,i)=>{const g=groups[i],gd=g.filter(isDone).length,complete=g.length&&gd===g.length,active=i===firstOpen;return `<div class="process-step ${complete?"done":active?"active":""}" onclick="openPhase(${i})"><div class="step-dot">${complete?"✓":i+1}</div><strong>${name}</strong><small>${complete?"Abgeschlossen":active?"In Arbeit":g.length?`${gd}/${g.length} erledigt`:"Geplant"}</small></div>`}).join("");
+  document.getElementById("processSummary").textContent=firstOpen>=0?`${phaseNames[firstOpen]} ist aktuell im Fokus`:"Abschlussprozess vollständig";
+  bottleneckTask=critical.sort((a,b)=>(a.due_date||"9999").localeCompare(b.due_date||"9999"))[0]||tasks.filter(t=>!isDone(t)).sort((a,b)=>(a.due_date||"9999").localeCompare(b.due_date||"9999"))[0]||null;
+  const box=document.getElementById("bottleneckBox");if(bottleneckTask){const d=daysUntil(bottleneckTask.due_date);box.className="bottleneck";box.innerHTML=`<strong>⚠ ${esc(bottleneckTask.title)}</strong><div>Verantwortlich: ${esc(bottleneckTask.responsible_name||"noch offen")} · ${d==null?"ohne Termin":d<0?`${Math.abs(d)} Tage überfällig`:`fällig in ${d} Tagen`}</div>`}else{box.className="bottleneck empty-state";box.textContent="Aktuell ist kein Engpass erkennbar."}
+  renderWhoIsNext();renderStatusOverview(groups,phaseNames);
+}
+function roleLabel(){return managementRole==="accounting"?"Buchhaltung":managementRole==="advisor"?"Berater":managementRole==="auditor"?"Prüfer":"CFO"}
+function renderWhoIsNext(){
+  let open=tasks.filter(t=>!isDone(t));if(managementRole==="accounting")open=open.filter(t=>/buch|rechnung|controll|treasury|steuer/i.test(`${t.responsible_name||""} ${t.phase||""}`));if(managementRole==="advisor")open=open.filter(t=>/berater|beratung|projektleitung/i.test(t.responsible_name||""));if(managementRole==="auditor")open=open.filter(t=>/prüf|wirtschaft/i.test(`${t.responsible_name||""} ${t.phase||""}`));
+  const map=new Map();open.forEach(t=>{const n=t.responsible_name||"Noch nicht zugeordnet";map.set(n,(map.get(n)||0)+1)});const rows=[...map.entries()].sort((a,b)=>b[1]-a[1]).slice(0,4);document.getElementById("whoIsNext").innerHTML=rows.map(([n,c])=>`<div class="role-row" onclick="openPerson('${esc(n).replace(/'/g,"\'")}')"><div class="role-left"><div class="mini-avatar">${esc(n.split(/\s+/).map(x=>x[0]).join("").slice(0,2).toUpperCase())}</div><span>${esc(n)}</span></div><span class="count-badge">${c} ${c===1?"Aufgabe":"Aufgaben"}</span></div>`).join("")||'<div class="empty">Keine offenen Aufgaben in dieser Rollenansicht.</div>';
+  document.getElementById("managementSubtitle").textContent=`${roleLabel()}-Sicht · Gesamtstatus und Entscheidungsbedarf`;
+}
+function renderStatusOverview(groups,names){document.getElementById("statusOverview").innerHTML=groups.map((g,i)=>{const done=g.filter(isDone).length,cls=g.length&&done===g.length?"done":done?"active":"";const label=g.length&&done===g.length?"abgeschlossen":done?"in Arbeit":"geplant";return `<div class="status-row" onclick="openPhase(${i})"><div class="role-left"><span class="status-dot ${cls}"></span><span>${names[i]} ${label}</span></div></div>`}).join("")}
+function setManagementRole(role){managementRole=role;document.querySelectorAll("[data-role-view]").forEach(b=>b.classList.toggle("active",b.dataset.roleView===role));renderManagementCockpit()}
+function openPhase(i){activateView("tasks");quickTaskFilter="";document.getElementById("taskPhase").value="";document.getElementById("taskSearch").value="";const ids=new Set(tasks.filter(t=>phaseGroup(t)===i).map(t=>t.id));document.getElementById("taskBody").innerHTML=tasks.filter(t=>ids.has(t.id)).map(t=>{const r=roomOfTask(t.id),fids=r?folders.filter(f=>f.task_room_id===r.id).map(f=>f.id):[],dc=documents.filter(d=>fids.includes(d.folder_id)).length,qc=comments.filter(c=>c.task_id===t.id).length;return `<tr><td>${t.task_number||""}</td><td>${esc(t.phase)}</td><td><strong>${esc(t.title)}</strong></td><td>${esc(t.responsible_name||"Offen")}</td><td>${dateOnly(t.due_date)}</td><td><span class="pill ${t.status}">${label(t.status)}</span></td><td>${dc}</td><td>${qc}</td><td><button class="btn btn-secondary btn-small" onclick="openRoom('${t.id}')">Öffnen</button></td></tr>`}).join("")||'<tr><td colspan="9" class="empty">Keine Aufgaben in dieser Phase.</td></tr>';setTimeout(()=>document.getElementById("view-tasks").scrollIntoView({behavior:"smooth"}),50)}
+function openPerson(name){activateView("tasks");document.getElementById("taskPerson").value=name;renderTasks();setTimeout(()=>document.getElementById("view-tasks").scrollIntoView({behavior:"smooth"}),50)}
+function openCriticalTasks(){activateView("tasks");quickTaskFilter="overdue";renderTasks();setTimeout(()=>document.getElementById("view-tasks").scrollIntoView({behavior:"smooth"}),50)}
+function openReleaseTasks(){activateView("tasks");document.getElementById("taskSearch").value="freigabe";renderTasks();setTimeout(()=>document.getElementById("view-tasks").scrollIntoView({behavior:"smooth"}),50)}
+function openBottleneck(){if(bottleneckTask)openTaskArea(bottleneckTask.id,"overview")}
 
 function eventHtml(a){
   const icon=a.type==="file"?"DOC":a.type==="question"?"?":a.type==="response"?"✓":"•";
@@ -461,6 +551,7 @@ function openRoom(taskId){
   openTaskArea(taskId,"dataroom");
 }
 
+document.querySelectorAll("[data-role-view]").forEach(btn=>btn.addEventListener("click",()=>setManagementRole(btn.dataset.roleView)));
 document.querySelectorAll("[data-view]").forEach(btn=>btn.addEventListener("click",()=>{
   activateView(btn.dataset.view);
   document.querySelectorAll(".metric").forEach(x=>x.classList.remove("active"));
