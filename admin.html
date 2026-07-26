@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>LUMINA | Admin-Cockpit</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root{
+      --bg:#f6f7f5;--surface:#fff;--soft:#eef8f3;--quiet:#fbfcfb;--text:#1d1f20;
+      --muted:#68717a;--line:#dfe4e1;--brand:#36a57c;--brand-dark:#248763;
+      --warning:#a46b00;--warning-soft:#fff7df;--danger:#b04444;--danger-soft:#fff0f0;
+      --shadow:0 18px 46px rgba(24,39,32,.08)
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;background:linear-gradient(180deg,#fafbf9,var(--bg));color:var(--text)}
+    button,input,select,textarea{font:inherit}
+    button{cursor:pointer}
+    .shell{max-width:1500px;margin:auto;padding:0 24px}
+    header{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.94);border-bottom:1px solid var(--line);backdrop-filter:blur(14px)}
+    .head{min-height:76px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+    .brand{display:flex;align-items:center;gap:12px;font-weight:850}
+    .mark{width:34px;height:34px;border-radius:10px;background:var(--brand);display:grid;place-items:center}
+    .mark:before{content:"";width:13px;height:13px;border:2px solid #fff;transform:rotate(45deg);border-radius:2px}
+    .btn{border:0;border-radius:11px;padding:11px 15px;font-weight:800}
+    .btn-primary{background:var(--brand);color:#fff}.btn-primary:hover{background:var(--brand-dark)}
+    .btn-secondary{background:#edf1ef;color:#303633}
+    .btn-danger{background:var(--danger-soft);color:var(--danger)}
+    .btn-small{padding:8px 11px;font-size:.85rem}
+    main{padding:34px 0 70px}
+    .topbar{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:24px}
+    h1{margin:0 0 8px;font-size:clamp(2.2rem,5vw,4rem);letter-spacing:-.05em;line-height:1}
+    .lead{margin:0;color:var(--muted)}
+    .status{padding:10px 13px;border-radius:999px;background:var(--warning-soft);color:var(--warning);font-weight:800;font-size:.82rem}
+    .status.online{background:var(--soft);color:var(--brand-dark)}
+    .login-card,.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}
+    .login-card{padding:20px;margin-bottom:22px}
+    .login-grid{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:end}
+    .field{display:grid;gap:7px}.field label{font-weight:760;font-size:.9rem}
+    input,select,textarea{width:100%;border:1px solid var(--line);border-radius:11px;padding:11px 12px;background:#fff;color:var(--text)}
+    textarea{min-height:90px;resize:vertical}
+    .layout{display:grid;grid-template-columns:300px minmax(0,1fr);gap:20px}
+    .projects{padding:18px;align-self:start;position:sticky;top:100px}
+    .projects h2,.card h2{margin:0 0 14px;font-size:1.05rem}
+    .project-list{display:grid;gap:9px}
+    .project-item{border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff;cursor:pointer}
+    .project-item:hover,.project-item.active{border-color:var(--brand);background:var(--soft)}
+    .project-item strong{display:block;margin-bottom:4px}
+    .small{font-size:.82rem;color:var(--muted)}
+    .workspace{display:grid;gap:18px}
+    .summary{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+    .metric{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px}
+    .metric span{display:block;color:var(--muted);font-size:.77rem;margin-bottom:6px}
+    .metric strong{font-size:1.35rem}
+    .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .filters{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px}
+    table{width:100%;border-collapse:collapse;min-width:1180px}
+    th,td{padding:10px 9px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;font-size:.82rem}
+    th{font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);background:var(--quiet);position:sticky;top:0}
+    td input,td select{padding:7px 8px;font-size:.81rem}
+    .pill{display:inline-flex;padding:5px 8px;border-radius:999px;background:#eef1ef;font-size:.75rem;font-weight:800}
+    .pill.accepted,.pill.completed,.pill.approved{background:var(--soft);color:var(--brand-dark)}
+    .pill.declined,.pill.blocked{background:var(--danger-soft);color:var(--danger)}
+    .pill.question{background:var(--warning-soft);color:var(--warning)}
+    .detail{display:none;padding:18px}.detail.show{display:block}
+    .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .folder-list{display:grid;gap:8px;margin-top:12px}
+    .folder-row{display:grid;grid-template-columns:44px 1fr auto;gap:8px;align-items:center}
+    .folder-no{height:40px;display:grid;place-items:center;border:1px solid var(--line);border-radius:10px;background:var(--quiet);font-weight:800;color:var(--muted)}
+    .notice{display:none;margin-bottom:16px;padding:13px 15px;border-radius:12px;white-space:pre-wrap}
+    .notice.show{display:block}.notice.ok{background:var(--soft);color:var(--brand-dark)}.notice.err{background:var(--danger-soft);color:var(--danger)}.notice.info{background:#f7faf8;color:var(--muted);border:1px solid var(--line)}
+    .modal{position:fixed;inset:0;background:rgba(20,30,25,.35);display:none;align-items:center;justify-content:center;padding:20px;z-index:100}
+    .modal.show{display:flex}
+    .modal-card{width:min(720px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:18px;padding:20px;box-shadow:var(--shadow)}
+    @media(max-width:1100px){.layout{grid-template-columns:1fr}.projects{position:static}.summary{grid-template-columns:repeat(3,1fr)}}
+    @media(max-width:700px){.shell{padding:0 14px}.login-grid,.filters,.detail-grid{grid-template-columns:1fr}.summary{grid-template-columns:repeat(2,1fr)}.topbar{display:block}.status{display:inline-flex;margin-top:12px}}
+  </style>
+</head>
+<body>
+<header>
+  <div class="shell head">
+    <div class="brand"><div class="mark"></div><span>LUMINA Admin</span></div>
+    <div class="toolbar">
+      <span id="authStatus" class="status">Nicht angemeldet</span>
+      <button id="logoutBtn" class="btn btn-secondary btn-small" hidden>Abmelden</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="shell">
+    <div class="topbar">
+      <div>
+        <h1>Admin-Cockpit</h1>
+        <p class="lead">Freigegebene Abschlussprojekte aus Supabase laden und gezielt fortschreiben.</p>
+      </div>
+      <button id="refreshBtn" class="btn btn-secondary">Aktualisieren</button>
+    </div>
+
+    <div id="notice" class="notice"></div>
+
+    <section id="loginCard" class="login-card">
+      <div class="login-grid">
+        <div class="field">
+          <label for="loginEmail">Anmelde-E-Mail</label>
+          <input id="loginEmail" type="email" placeholder="v.kusch@web.de">
+        </div>
+        <button id="sendMagicLink" class="btn btn-primary">Anmeldelink senden</button>
+        <button id="checkSessionBtn" class="btn btn-secondary">Sitzung prüfen</button>
+      </div>
+    </section>
+
+    <section class="layout">
+      <aside class="card projects">
+        <h2>Projekte</h2>
+        <div id="projectList" class="project-list"><div class="small">Bitte anmelden.</div></div>
+      </aside>
+
+      <div class="workspace">
+        <section class="summary" id="summary">
+          <div class="metric"><span>Maßnahmen</span><strong id="mTasks">0</strong></div>
+          <div class="metric"><span>Datenräume</span><strong id="mRooms">0</strong></div>
+          <div class="metric"><span>Teamrollen</span><strong id="mMembers">0</strong></div>
+          <div class="metric"><span>Abgelehnt</span><strong id="mDeclined">0</strong></div>
+          <div class="metric"><span>Rückfragen</span><strong id="mQuestions">0</strong></div>
+          <div class="metric"><span>Überfällig</span><strong id="mOverdue">0</strong></div>
+        </section>
+
+        <section class="card" style="padding:18px">
+          <div class="toolbar" style="justify-content:space-between;margin-bottom:14px">
+            <div>
+              <h2 id="projectTitle">Kein Projekt ausgewählt</h2>
+              <div id="projectMeta" class="small"></div>
+            </div>
+            <div class="toolbar">
+              <button id="newTaskBtn" class="btn btn-primary" disabled>+ Neue Maßnahme</button>
+              <button id="exportProjectBtn" class="btn btn-secondary" disabled>Projekt-JSON</button>
+            </div>
+          </div>
+
+          <div class="filters">
+            <select id="filterPhase"><option value="">Alle Phasen</option></select>
+            <select id="filterPerson"><option value="">Alle Zuständigen</option></select>
+            <select id="filterStatus"><option value="">Alle Status</option></select>
+            <input id="filterSearch" type="text" placeholder="Maßnahme suchen">
+          </div>
+
+          <div class="table-wrap" style="margin-top:14px">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nr.</th><th>Phase</th><th>Maßnahme</th><th>Zuständig</th><th>E-Mail</th>
+                  <th>Stellvertretung</th><th>Fällig</th><th>Status</th><th>Datenraum</th><th>Aktion</th>
+                </tr>
+              </thead>
+              <tbody id="taskBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="detailCard" class="card detail">
+          <div class="toolbar" style="justify-content:space-between">
+            <div>
+              <h2 id="detailTitle">Datenraum bearbeiten</h2>
+              <div id="detailMeta" class="small"></div>
+            </div>
+            <button id="closeDetail" class="btn btn-secondary btn-small">Schließen</button>
+          </div>
+          <div class="detail-grid" style="margin-top:16px">
+            <div class="field">
+              <label>Zuständige Person</label>
+              <select id="detailResponsible"></select>
+            </div>
+            <div class="field">
+              <label>Fälligkeit</label>
+              <input id="detailDue" type="date">
+            </div>
+            <div class="field">
+              <label>Status</label>
+              <select id="detailStatus"></select>
+            </div>
+            <div class="field">
+              <label>Stellvertretung</label>
+              <input id="detailDeputy" type="text">
+            </div>
+          </div>
+
+          <div class="toolbar" style="margin-top:14px">
+            <button id="saveTaskChanges" class="btn btn-primary">Aufgabe speichern</button>
+            <button id="openRoomLink" class="btn btn-secondary">Datenraum öffnen</button>
+          </div>
+
+          <div style="margin-top:22px">
+            <h2>Ordnerstruktur</h2>
+            <div id="folderList" class="folder-list"></div>
+            <div class="toolbar" style="margin-top:12px">
+              <button id="addFolderBtn" class="btn btn-secondary">+ Ordner ergänzen</button>
+              <button id="saveFoldersBtn" class="btn btn-primary">Ordner speichern</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div id="taskModal" class="modal">
+  <div class="modal-card">
+    <div class="toolbar" style="justify-content:space-between">
+      <h2 style="margin:0">Neue Maßnahme</h2>
+      <button id="closeTaskModal" class="btn btn-secondary btn-small">Schließen</button>
+    </div>
+    <div class="detail-grid" style="margin-top:16px">
+      <div class="field"><label>Phase</label><input id="newPhase" type="text" value="10. Ergänzende Maßnahmen"></div>
+      <div class="field"><label>Fälligkeit</label><input id="newDue" type="date"></div>
+      <div class="field" style="grid-column:1/-1"><label>Maßnahme</label><input id="newTitle" type="text"></div>
+      <div class="field"><label>Standardrolle</label><input id="newRole" type="text" value="Projektleitung Abschluss"></div>
+      <div class="field"><label>Zuständig</label><select id="newResponsible"></select></div>
+    </div>
+    <div class="field" style="margin-top:14px"><label>Datenraumordner, eine Zeile je Ordner</label><textarea id="newFolders">01 Aufgabenbeschreibung
+02 Eingangsdokumente
+03 Arbeitspapiere
+04 Rückfragen
+05 Freigaben
+06 Finale Unterlagen</textarea></div>
+    <div class="toolbar" style="justify-content:flex-end;margin-top:16px">
+      <button id="createTaskBtn" class="btn btn-primary">Maßnahme und Datenraum anlegen</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL="https://mslbzypjtvvznyewupco.supabase.co";
+const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1zbGJ6eXBqdHZ2em55ZXd1cGNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5OTA3NDAsImV4cCI6MjEwMDU2Njc0MH0.6f9QUtpaSLUrKVkH3rUYCcZecqwMHrdledZMtoCdRQo";
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+
+let user=null,projects=[],currentProject=null,tasks=[],members=[],rooms=[],folders=[],comments=[];
+let selectedTask=null,selectedRoom=null;
+
+const statusOptions=[
+  ["planned","Geplant"],["invited","Eingeladen"],["accepted","Angenommen"],["declined","Abgelehnt"],
+  ["in_progress","In Bearbeitung"],["question","Rückfrage"],["blocked","Blockiert"],["submitted","Eingereicht"],
+  ["in_review","In Prüfung"],["approved","Freigegeben"],["completed","Erledigt"]
+];
+
+function notice(msg,type="info"){
+  const el=document.getElementById("notice");
+  el.textContent=msg;el.className=`notice show ${type}`;
+  clearTimeout(notice.t);notice.t=setTimeout(()=>el.className="notice",4500);
+}
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function deDate(v){if(!v)return "";return new Intl.DateTimeFormat("de-DE").format(new Date(v+"T12:00:00"))}
+function statusLabel(v){return statusOptions.find(x=>x[0]===v)?.[1]||v}
+function uniq(arr){return [...new Set(arr.filter(Boolean))].sort((a,b)=>a.localeCompare(b,"de"))}
+
+async function sessionUser(){
+  const {data,error}=await sb.auth.getSession();
+  if(error) return null;
+  return data.session?.user||null;
+}
+
+async function updateAuth(){
+  user=await sessionUser();
+  const status=document.getElementById("authStatus");
+  status.textContent=user?`Angemeldet: ${user.email}`:"Nicht angemeldet";
+  status.classList.toggle("online",Boolean(user));
+  document.getElementById("logoutBtn").hidden=!user;
+  document.getElementById("loginCard").hidden=Boolean(user);
+  if(user) await loadProjects();
+}
+
+async function loadProjects(){
+  const {data,error}=await sb.from("projects")
+    .select("id,name,status,closing_date,company_id,companies(name),created_at")
+    .order("created_at",{ascending:false});
+  if(error){notice("Projekte konnten nicht geladen werden: "+error.message,"err");return}
+  projects=data||[];
+  renderProjects();
+  if(!currentProject && projects.length) selectProject(projects[0].id);
+}
+
+function renderProjects(){
+  const list=document.getElementById("projectList");
+  list.innerHTML=projects.map(p=>`
+    <div class="project-item ${currentProject?.id===p.id?"active":""}" data-project="${p.id}">
+      <strong>${esc(p.companies?.name||p.name)}</strong>
+      <div class="small">${esc(p.name)} · ${statusLabel(p.status)}</div>
+    </div>`).join("")||'<div class="small">Keine Projekte gefunden.</div>';
+  list.querySelectorAll("[data-project]").forEach(el=>el.addEventListener("click",()=>selectProject(el.dataset.project)));
+}
+
+async function selectProject(id){
+  currentProject=projects.find(p=>p.id===id);
+  renderProjects();
+  document.getElementById("projectTitle").textContent=currentProject?.companies?.name||currentProject?.name||"Projekt";
+  document.getElementById("projectMeta").textContent=`${currentProject?.name||""} · Abschlussstichtag ${deDate(currentProject?.closing_date)} · Status ${statusLabel(currentProject?.status)}`;
+  document.getElementById("newTaskBtn").disabled=false;
+  document.getElementById("exportProjectBtn").disabled=false;
+  await Promise.all([loadMembers(),loadTasks(),loadComments()]);
+}
+
+async function loadMembers(){
+  const {data,error}=await sb.from("project_members")
+    .select("*").eq("project_id",currentProject.id).order("name");
+  if(error){notice("Team konnte nicht geladen werden: "+error.message,"err");return}
+  members=data||[];
+}
+
+async function loadTasks(){
+  const {data,error}=await sb.from("tasks")
+    .select("*").eq("project_id",currentProject.id).order("task_number");
+  if(error){notice("Maßnahmen konnten nicht geladen werden: "+error.message,"err");return}
+  tasks=data||[];
+
+  const taskIds=tasks.map(t=>t.id);
+  rooms=[];
+  folders=[];
+  if(taskIds.length){
+    const {data:r,error:re}=await sb.from("task_rooms").select("*").in("task_id",taskIds);
+    if(re){notice("Datenräume konnten nicht geladen werden: "+re.message,"err");return}
+    rooms=r||[];
+    const roomIds=rooms.map(x=>x.id);
+    if(roomIds.length){
+      const {data:f,error:fe}=await sb.from("task_room_folders").select("*").in("task_room_id",roomIds).order("folder_number");
+      if(fe){notice("Ordner konnten nicht geladen werden: "+fe.message,"err");return}
+      folders=f||[];
+    }
+  }
+  renderFilters();
+  renderTasks();
+  renderSummary();
+}
+
+async function loadComments(){
+  const taskIds=tasks.map(t=>t.id);
+  if(!taskIds.length){comments=[];return}
+  const {data}=await sb.from("task_comments").select("id,task_id,comment_type,created_at").in("task_id",taskIds);
+  comments=data||[];
+  renderSummary();
+}
+
+function renderFilters(){
+  const phase=document.getElementById("filterPhase");
+  const person=document.getElementById("filterPerson");
+  const status=document.getElementById("filterStatus");
+  const phaseVal=phase.value,personVal=person.value,statusVal=status.value;
+  phase.innerHTML='<option value="">Alle Phasen</option>'+uniq(tasks.map(t=>t.phase)).map(v=>`<option>${esc(v)}</option>`).join("");
+  person.innerHTML='<option value="">Alle Zuständigen</option>'+uniq(tasks.map(t=>t.responsible_name)).map(v=>`<option>${esc(v)}</option>`).join("");
+  status.innerHTML='<option value="">Alle Status</option>'+statusOptions.map(([v,l])=>`<option value="${v}">${l}</option>`).join("");
+  phase.value=phaseVal;person.value=personVal;status.value=statusVal;
+}
+
+function filteredTasks(){
+  const phase=document.getElementById("filterPhase").value;
+  const person=document.getElementById("filterPerson").value;
+  const status=document.getElementById("filterStatus").value;
+  const search=document.getElementById("filterSearch").value.trim().toLowerCase();
+  return tasks.filter(t=>
+    (!phase||t.phase===phase)&&
+    (!person||t.responsible_name===person)&&
+    (!status||t.status===status)&&
+    (!search||`${t.title} ${t.phase} ${t.responsible_name||""}`.toLowerCase().includes(search))
+  );
+}
+
+function memberOptions(selectedEmail=""){
+  return '<option value="">Noch offen</option>'+members.map(m=>`
+    <option value="${esc(m.email)}" ${m.email===selectedEmail?"selected":""}>
+      ${esc(m.name||m.email)} · ${esc(m.project_role)}
+    </option>`).join("");
+}
+
+function renderTasks(){
+  const body=document.getElementById("taskBody");
+  body.innerHTML=filteredTasks().map(t=>{
+    const room=rooms.find(r=>r.task_id===t.id);
+    return `<tr>
+      <td>${t.task_number??""}</td>
+      <td>${esc(t.phase)}</td>
+      <td><strong>${esc(t.title)}</strong></td>
+      <td><select data-person="${t.id}">${memberOptions(t.responsible_email||"")}</select></td>
+      <td>${esc(t.responsible_email||"")}</td>
+      <td><input data-deputy="${t.id}" value="${esc(t.deputy_name||"")}"></td>
+      <td><input type="date" data-due="${t.id}" value="${t.due_date||""}"></td>
+      <td><select data-status="${t.id}">${statusOptions.map(([v,l])=>`<option value="${v}" ${v===t.status?"selected":""}>${l}</option>`).join("")}</select></td>
+      <td><span class="pill ${room?.room_status||""}">${room?"Vorhanden":"Fehlt"}</span></td>
+      <td><button class="btn btn-secondary btn-small" data-edit="${t.id}">Bearbeiten</button></td>
+    </tr>`;
+  }).join("");
+
+  body.querySelectorAll("[data-person]").forEach(el=>el.addEventListener("change",()=>quickSave(el.dataset.person)));
+  body.querySelectorAll("[data-deputy]").forEach(el=>el.addEventListener("change",()=>quickSave(el.dataset.deputy)));
+  body.querySelectorAll("[data-due]").forEach(el=>el.addEventListener("change",()=>quickSave(el.dataset.due)));
+  body.querySelectorAll("[data-status]").forEach(el=>el.addEventListener("change",()=>quickSave(el.dataset.status)));
+  body.querySelectorAll("[data-edit]").forEach(el=>el.addEventListener("click",()=>openDetail(el.dataset.edit)));
+}
+
+async function quickSave(taskId){
+  const tr=[...document.querySelectorAll("#taskBody tr")].find(row=>row.querySelector(`[data-edit="${taskId}"]`));
+  if(!tr)return;
+  const email=tr.querySelector(`[data-person="${taskId}"]`).value;
+  const member=members.find(m=>m.email===email);
+  const payload={
+    responsible_member_id:member?.id||null,
+    responsible_name:member?.name||null,
+    responsible_email:member?.email||null,
+    deputy_name:tr.querySelector(`[data-deputy="${taskId}"]`).value.trim()||null,
+    due_date:tr.querySelector(`[data-due="${taskId}"]`).value||null,
+    status:tr.querySelector(`[data-status="${taskId}"]`).value
+  };
+  const {error}=await sb.from("tasks").update(payload).eq("id",taskId);
+  if(error){notice("Änderung konnte nicht gespeichert werden: "+error.message,"err");return}
+  Object.assign(tasks.find(t=>t.id===taskId),payload);
+  notice("Änderung gespeichert.","ok");
+  renderSummary();
+}
+
+function renderSummary(){
+  const today=new Date().toISOString().slice(0,10);
+  document.getElementById("mTasks").textContent=tasks.length;
+  document.getElementById("mRooms").textContent=rooms.length;
+  document.getElementById("mMembers").textContent=members.length;
+  document.getElementById("mDeclined").textContent=tasks.filter(t=>t.status==="declined").length;
+  document.getElementById("mQuestions").textContent=comments.filter(c=>c.comment_type==="question").length;
+  document.getElementById("mOverdue").textContent=tasks.filter(t=>t.due_date&&t.due_date<today&&!["completed","approved"].includes(t.status)).length;
+}
+
+async function openDetail(taskId){
+  selectedTask=tasks.find(t=>t.id===taskId);
+  selectedRoom=rooms.find(r=>r.task_id===taskId)||null;
+  document.getElementById("detailCard").classList.add("show");
+  document.getElementById("detailTitle").textContent=selectedTask.title;
+  document.getElementById("detailMeta").textContent=`${selectedTask.phase} · ${selectedTask.technical_id}`;
+  document.getElementById("detailResponsible").innerHTML=memberOptions(selectedTask.responsible_email||"");
+  document.getElementById("detailDue").value=selectedTask.due_date||"";
+  document.getElementById("detailDeputy").value=selectedTask.deputy_name||"";
+  document.getElementById("detailStatus").innerHTML=statusOptions.map(([v,l])=>`<option value="${v}" ${v===selectedTask.status?"selected":""}>${l}</option>`).join("");
+  renderFolderEditor();
+  document.getElementById("detailCard").scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+function renderFolderEditor(){
+  const list=document.getElementById("folderList");
+  const roomFolders=selectedRoom?folders.filter(f=>f.task_room_id===selectedRoom.id):[];
+  list.innerHTML=roomFolders.map((f,i)=>`
+    <div class="folder-row" data-folder-row="${f.id}">
+      <div class="folder-no">${String(i+1).padStart(2,"0")}</div>
+      <input value="${esc(f.folder_name)}" data-folder-name="${f.id}">
+      <button class="btn btn-danger btn-small" data-remove-folder="${f.id}">Entfernen</button>
+    </div>`).join("")||'<div class="small">Noch keine Ordner vorhanden.</div>';
+  list.querySelectorAll("[data-remove-folder]").forEach(btn=>btn.addEventListener("click",()=>removeFolder(btn.dataset.removeFolder)));
+}
+
+function removeFolder(id){
+  const folder=folders.find(f=>f.id===id);
+  folder._delete=true;
+  renderFolderEditorLocal();
+}
+
+function renderFolderEditorLocal(){
+  const list=document.getElementById("folderList");
+  const roomFolders=selectedRoom?folders.filter(f=>f.task_room_id===selectedRoom.id&&!f._delete):[];
+  list.innerHTML=roomFolders.map((f,i)=>`
+    <div class="folder-row" data-folder-row="${f.id}">
+      <div class="folder-no">${String(i+1).padStart(2,"0")}</div>
+      <input value="${esc(f.folder_name)}" data-folder-name="${f.id}">
+      <button class="btn btn-danger btn-small" data-remove-folder="${f.id}">Entfernen</button>
+    </div>`).join("");
+  list.querySelectorAll("[data-remove-folder]").forEach(btn=>btn.addEventListener("click",()=>removeFolder(btn.dataset.removeFolder)));
+}
+
+document.getElementById("addFolderBtn").addEventListener("click",()=>{
+  if(!selectedRoom){notice("Für diese Aufgabe existiert noch kein Datenraum.","err");return}
+  folders.push({id:"new-"+crypto.randomUUID(),task_room_id:selectedRoom.id,folder_name:"Neuer Ordner",folder_number:999,_new:true});
+  renderFolderEditorLocal();
+});
+
+document.getElementById("saveFoldersBtn").addEventListener("click",async()=>{
+  if(!selectedRoom)return;
+  const visible=[...document.querySelectorAll("[data-folder-row]")];
+  for(let i=0;i<visible.length;i++){
+    const row=visible[i],id=row.dataset.folderRow,name=row.querySelector("input").value.trim();
+    const f=folders.find(x=>x.id===id); if(f){f.folder_name=name;f.folder_number=i+1}
+  }
+
+  const deletes=folders.filter(f=>f.task_room_id===selectedRoom.id&&f._delete&&!f._new);
+  for(const f of deletes){
+    const {count}=await sb.from("documents").select("*",{count:"exact",head:true}).eq("folder_id",f.id);
+    if(count>0){notice(`Ordner „${f.folder_name}“ enthält Dateien und wurde nicht gelöscht.`,"err");return}
+    const {error}=await sb.from("task_room_folders").delete().eq("id",f.id);
+    if(error){notice(error.message,"err");return}
+  }
+
+  const active=folders.filter(f=>f.task_room_id===selectedRoom.id&&!f._delete);
+  for(const f of active){
+    if(f._new){
+      const {data,error}=await sb.from("task_room_folders").insert({
+        task_room_id:selectedRoom.id,folder_number:f.folder_number,folder_code:String(f.folder_number).padStart(2,"0"),
+        folder_name:f.folder_name,can_member_upload:true,can_auditor_read:false
+      }).select().single();
+      if(error){notice(error.message,"err");return}
+      Object.assign(f,data,{_new:false});
+    }else{
+      const {error}=await sb.from("task_room_folders").update({
+        folder_number:f.folder_number,folder_name:f.folder_name,folder_code:String(f.folder_number).padStart(2,"0")
+      }).eq("id",f.id);
+      if(error){notice(error.message,"err");return}
+    }
+  }
+  folders=folders.filter(f=>!f._delete);
+  notice("Ordnerstruktur gespeichert.","ok");
+  renderFolderEditor();
+});
+
+document.getElementById("saveTaskChanges").addEventListener("click",async()=>{
+  const email=document.getElementById("detailResponsible").value;
+  const member=members.find(m=>m.email===email);
+  const payload={
+    responsible_member_id:member?.id||null,responsible_name:member?.name||null,responsible_email:member?.email||null,
+    due_date:document.getElementById("detailDue").value||null,status:document.getElementById("detailStatus").value,
+    deputy_name:document.getElementById("detailDeputy").value.trim()||null
+  };
+  const {error}=await sb.from("tasks").update(payload).eq("id",selectedTask.id);
+  if(error){notice(error.message,"err");return}
+  Object.assign(selectedTask,payload);notice("Aufgabe gespeichert.","ok");renderTasks();renderSummary();
+});
+
+document.getElementById("openRoomLink").addEventListener("click",()=>{
+  if(!selectedTask)return;
+  window.open(`https://lumina.volkerkusch.de/task?task=${encodeURIComponent(selectedTask.id)}&action=dataroom&project=${encodeURIComponent(currentProject.id)}&company=${encodeURIComponent(currentProject.companies?.name||"")}`,"_blank");
+});
+
+document.getElementById("newTaskBtn").addEventListener("click",()=>{
+  document.getElementById("newResponsible").innerHTML=memberOptions("");
+  document.getElementById("taskModal").classList.add("show");
+});
+document.getElementById("closeTaskModal").addEventListener("click",()=>document.getElementById("taskModal").classList.remove("show"));
+
+document.getElementById("createTaskBtn").addEventListener("click",async()=>{
+  const title=document.getElementById("newTitle").value.trim();
+  if(!title){notice("Bitte Maßnahme eingeben.","err");return}
+  const email=document.getElementById("newResponsible").value;
+  const member=members.find(m=>m.email===email);
+  const nextNo=Math.max(0,...tasks.map(t=>Number(t.task_number)||0))+1;
+  const technicalId=`CUSTOM-${Date.now()}`;
+  const {data:task,error:tErr}=await sb.from("tasks").insert({
+    project_id:currentProject.id,technical_id:technicalId,task_number:nextNo,
+    phase:document.getElementById("newPhase").value.trim(),title,
+    standard_role:document.getElementById("newRole").value.trim(),
+    responsible_member_id:member?.id||null,responsible_name:member?.name||null,responsible_email:member?.email||null,
+    due_date:document.getElementById("newDue").value||null,status:"planned",is_custom:true
+  }).select().single();
+  if(tErr){notice(tErr.message,"err");return}
+
+  const {data:room,error:rErr}=await sb.from("task_rooms").insert({
+    task_id:task.id,room_name:`${nextNo}. ${title}`,room_status:"ready",confirmed_by:user.id,confirmed_at:new Date().toISOString()
+  }).select().single();
+  if(rErr){notice(rErr.message,"err");return}
+
+  const names=document.getElementById("newFolders").value.split("\n").map(x=>x.trim()).filter(Boolean);
+  const {error:fErr}=await sb.from("task_room_folders").insert(names.map((name,i)=>({
+    task_room_id:room.id,folder_number:i+1,folder_code:String(i+1).padStart(2,"0"),
+    folder_name:name,can_member_upload:true,can_auditor_read:false
+  })));
+  if(fErr){notice(fErr.message,"err");return}
+
+  document.getElementById("taskModal").classList.remove("show");
+  notice("Neue Maßnahme und Datenraum wurden angelegt.","ok");
+  await loadTasks();
+});
+
+document.getElementById("exportProjectBtn").addEventListener("click",()=>{
+  const payload={project:currentProject,members,tasks,rooms,folders,comments,exportedAt:new Date().toISOString()};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`lumina-admin-${currentProject.id}.json`;a.click();URL.revokeObjectURL(a.href);
+});
+
+["filterPhase","filterPerson","filterStatus"].forEach(id=>document.getElementById(id).addEventListener("change",renderTasks));
+document.getElementById("filterSearch").addEventListener("input",renderTasks);
+document.getElementById("closeDetail").addEventListener("click",()=>document.getElementById("detailCard").classList.remove("show"));
+document.getElementById("refreshBtn").addEventListener("click",()=>currentProject?selectProject(currentProject.id):loadProjects());
+
+document.getElementById("sendMagicLink").addEventListener("click",async()=>{
+  const email=document.getElementById("loginEmail").value.trim();
+  if(!email){notice("Bitte E-Mail-Adresse eingeben.","err");return}
+  const redirectTo=location.href.split("#")[0].split("?")[0];
+  const {error}=await sb.auth.signInWithOtp({email,options:{emailRedirectTo:redirectTo}});
+  if(error){notice(error.message,"err");return}
+  notice("Anmeldelink wurde versendet.","ok");
+});
+document.getElementById("checkSessionBtn").addEventListener("click",updateAuth);
+document.getElementById("logoutBtn").addEventListener("click",async()=>{await sb.auth.signOut();currentProject=null;tasks=[];members=[];rooms=[];folders=[];await updateAuth()});
+
+sb.auth.onAuthStateChange(()=>updateAuth());
+updateAuth();
+</script>
+</body>
+</html>
