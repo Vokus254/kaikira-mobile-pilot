@@ -466,6 +466,11 @@
           <h3 id="customerLoginTitle">Sicher anmelden</h3>
           <p>Geben Sie Ihre freigeschaltete E-Mail-Adresse ein. Sie erhalten einen einmalig nutzbaren Anmeldelink.</p>
 
+          <div id="customerSignedInBox" style="display:none;margin-bottom:18px;padding:14px;border:1px solid #cfe7dd;border-radius:12px;background:var(--green-soft)">
+            <strong style="display:block;color:var(--green-dark);margin-bottom:5px">Sie sind bereits angemeldet.</strong>
+            <span id="customerSignedInEmail" class="small muted"></span>
+          </div>
+
           <form id="customerLoginForm">
             <div class="login-field">
               <label for="customerLoginEmail">Geschäftliche E-Mail-Adresse</label>
@@ -476,8 +481,8 @@
 
           <div class="login-status" id="customerLoginStatus" aria-live="polite"></div>
 
-          <div class="login-divider">bereits angemeldet</div>
-          <a class="login-direct" id="customerCockpitLink" href="/cockpit">Direkt zum Abschluss-Cockpit</a>
+          <div class="login-divider" id="customerLoginDivider">bereits angemeldet</div>
+          <a class="login-direct" id="customerCockpitLink" href="/cockpit">Zum geschützten Abschluss-Cockpit →</a>
 
           <div class="login-footnote">Mit der Anmeldung akzeptieren Sie die Nutzung des geschützten Projektbereichs. Hinweise zur Verarbeitung Ihrer Daten finden Sie in der <a href="datenschutz.html">Datenschutzerklärung</a>.</div>
         </section>
@@ -575,6 +580,9 @@
     const customerLoginSubmit = document.getElementById("customerLoginSubmit");
     const customerLoginStatus = document.getElementById("customerLoginStatus");
     const customerCockpitLink = document.getElementById("customerCockpitLink");
+    const customerSignedInBox = document.getElementById("customerSignedInBox");
+    const customerSignedInEmail = document.getElementById("customerSignedInEmail");
+    const customerLoginDivider = document.getElementById("customerLoginDivider");
 
     function setCustomerStatus(message,type="info"){
       customerLoginStatus.textContent=message;
@@ -591,11 +599,7 @@
       customerLoginOverlay.setAttribute("aria-hidden","true");
       document.body.classList.remove("menu-open");
     }
-    customerLoginBtn?.addEventListener("click",async()=>{
-      if(luminaSupabase){
-        const {data}=await luminaSupabase.auth.getSession();
-        if(data.session){window.location.href="/cockpit";return;}
-      }
+    customerLoginBtn?.addEventListener("click",()=>{
       openCustomerLogin();
     });
     customerLoginClose?.addEventListener("click",closeCustomerLogin);
@@ -624,14 +628,22 @@
       if(!luminaSupabase)return;
       const {data}=await luminaSupabase.auth.getSession();
       const session=data.session;
+
+      customerLoginBtn.textContent="Geschützter Kundenbereich";
+      customerLoginBtn.classList.toggle("authenticated",Boolean(session));
+
       if(session){
-        customerLoginBtn.textContent="Zum Abschluss-Cockpit";
-        customerLoginBtn.classList.add("authenticated");
-        customerCockpitLink.textContent="Cockpit jetzt öffnen →";
+        customerSignedInBox.style.display="block";
+        customerSignedInEmail.textContent=session.user?.email||"Aktive LUMINA-Sitzung";
+        customerLoginForm.style.display="none";
+        customerLoginDivider.textContent="geschützter Zugang";
+        customerCockpitLink.textContent="Zum Abschluss-Cockpit →";
       }else{
-        customerLoginBtn.textContent="Geschützter Kundenbereich";
-        customerLoginBtn.classList.remove("authenticated");
-        customerCockpitLink.textContent="Direkt zum Abschluss-Cockpit";
+        customerSignedInBox.style.display="none";
+        customerSignedInEmail.textContent="";
+        customerLoginForm.style.display="block";
+        customerLoginDivider.textContent="bereits angemeldet";
+        customerCockpitLink.textContent="Zum geschützten Abschluss-Cockpit →";
       }
     }
     luminaSupabase?.auth.onAuthStateChange(()=>refreshCustomerLoginState());
