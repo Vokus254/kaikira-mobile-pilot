@@ -201,7 +201,7 @@
 
 <script>
 const SUPABASE_URL="https://mslbzypjtvvznyewupco.supabase.co";
-const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJIUzI1NiIsInJlZiI6Im1zbGJ6eXBqdHZ2em55ZXd1cGNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5OTA3NDAsImV4cCI6MjEwMDU2Njc0MH0.6f9QUtpaSLUrKVkH3rUYCcZecqwMHrdledZMtoCdRQo";
+const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1zbGJ6eXBqdHZ2em55ZXd1cGNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5OTA3NDAsImV4cCI6MjEwMDU2Njc0MH0.6f9QUtpaSLUrKVkH3rUYCcZecqwMHrdledZMtoCdRQo";
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 
 let user=null,projects=[],currentProject=null,tasks=[],rooms=[],folders=[],documents=[],comments=[],responses=[],notifications=[],activities=[];
@@ -232,7 +232,7 @@ async function updateAuth(){
 
 async function loadProjects(){
   const {data,error}=await sb.from("projects").select("id,name,status,closing_date,company_id,companies(name),created_at").order("created_at",{ascending:false});
-  if(error){showNotice("Projekte konnten nicht geladen werden: "+error.message,"err");return}
+  if(error){document.getElementById("projectSelect").innerHTML='<option value="">Projekte konnten nicht geladen werden</option>';showNotice("Projekte konnten nicht geladen werden: "+error.message,"err");return}
   projects=data||[];
   const sel=document.getElementById("projectSelect");
   sel.innerHTML='<option value="">Projekt auswählen</option>'+projects.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join("");
