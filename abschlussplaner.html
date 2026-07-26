@@ -349,6 +349,15 @@
     .publish-box.info{background:#fff;border:1px solid var(--line);color:var(--muted)}
     .publish-box.success{background:var(--brand-soft);color:var(--brand-dark);font-weight:750}
     .publish-box.error{background:var(--danger-soft);color:var(--danger);font-weight:700}
+  
+    .json-transfer-status{
+      position:fixed;right:24px;bottom:24px;z-index:1000;display:none;
+      max-width:460px;padding:14px 16px;border-radius:12px;box-shadow:var(--shadow);
+      font-weight:700;line-height:1.45
+    }
+    .json-transfer-status.show{display:block}
+    .json-transfer-status.success{background:var(--brand-soft);color:var(--brand-dark);border:1px solid #cfe6da}
+    .json-transfer-status.error{background:var(--danger-soft);color:var(--danger);border:1px solid #efcaca}
   </style>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -357,7 +366,12 @@
 <header>
   <div class="shell header-inner">
     <div class="brand"><div class="mark" aria-hidden="true"></div><span>LUMINA</span></div>
-    <div class="header-note">Abschlussplaner · regelbasiertes Setup</div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <div class="header-note">Abschlussplaner · regelbasiertes Setup</div>
+      <button type="button" class="btn btn-secondary btn-small" id="jsonImportHeader">JSON importieren</button>
+      <button type="button" class="btn btn-primary btn-small" id="jsonExportHeader">JSON exportieren</button>
+      <input type="file" id="jsonImportFile" accept=".json,application/json" hidden>
+    </div>
   </div>
 </header>
 
@@ -791,6 +805,7 @@
 
           <div class="toolbar">
             <button type="button" class="btn btn-primary" id="addCustomTaskButton">+ Maßnahme hinzufügen</button>
+            <button type="button" class="btn btn-secondary" id="jsonImportPlan">JSON importieren</button>
             <button type="button" class="btn btn-primary" id="downloadJson">JSON exportieren</button>
             <button type="button" class="btn btn-secondary" id="downloadCsv" title="Exportiert die Punkte 1 bis 11 als elf formatierte Excel-Reiter">Excel exportieren</button>
             <button type="button" class="btn btn-secondary" id="printPlan">Plan drucken</button>
@@ -2171,6 +2186,7 @@ function mailHtmlFor(group){
   <p>Der Abschlussplan wurde am ${htmlEscape(dateLabel(approvalState.approvalDate))} durch ${htmlEscape(approvalState.approvedBy)} (${htmlEscape(approvalState.approvalRole)}) freigegeben.</p>
   <p>Vielen Dank für Deine Unterstützung und die gute Zusammenarbeit.</p>
   <p>Herzliche Grüße<br>${htmlEscape(approvalState.approvedBy)}</p>
+<div id="jsonTransferStatus" class="json-transfer-status"></div>
 </body>
 </html>`;
 }
@@ -2287,25 +2303,182 @@ function download(filename,content,type){
   const blob=new Blob([content],{type});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click();URL.revokeObjectURL(a.href);
 }
-document.getElementById('downloadJson').addEventListener('click',()=>{
-  const team=collectTeam();
-  const massnahmen=generatedTasks.map(t=>{
-    const member=team.find(x=>x.name===t.person);
-    return {
-      nr:t.no,id:t.id,phase:t.phase,massnahme:t.title,rolle:t.role,zustaendig:t.person||'',
-      email:t.email||member?.email||'',stellvertretung:t.deputy||member?.deputy||'',
-      email_stellvertretung:t.deputyEmail||member?.deputyEmail||'',faellig:t.due||'',status:t.status||'',
-      terminbasis:t.anchor||'',terminversatz_kalendertage:Number.isFinite(t.offset)?t.offset:'',
-      benutzerdefiniert:t.custom===true
-    };
-  });
-  const exportData={
-    ueberschrift:`LUMINA-Maßnahmenliste – ${val('company')||'Abschlussplan'}`,
-    exportiert_am:new Date().toISOString(),
-    spalten:['Nr.','ID','Phase','Maßnahme','Rolle','Zuständig','E-Mail','Stellvertretung','E-Mail Stellvertretung','Fällig','Status','Terminbasis','Terminversatz Kalendertage','Benutzerdefiniert'],
-    massnahmen
+function showJsonTransferStatus(message,type='success'){
+  const el=document.getElementById('jsonTransferStatus');
+  if(!el) return;
+  el.textContent=message;
+  el.className=`json-transfer-status show ${type}`;
+  clearTimeout(showJsonTransferStatus._timer);
+  showJsonTransferStatus._timer=setTimeout(()=>{el.className='json-transfer-status';},4000);
+}
+
+function exportCompleteLuminaJson(){
+  saveState();
+
+  let stored={};
+  try{
+    stored=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}');
+  }catch(error){
+    console.warn('Lokaler Speicher konnte nicht gelesen werden:',error);
+  }
+
+  const payload={
+    meta:{
+      app:'LUMINA Abschlussplaner',
+      schemaVersion:1,
+      exportType:'complete-project-backup',
+      exportedAt:new Date().toISOString(),
+      storageKey:STORAGE_KEY
+    },
+    answers:stored.answers||collectAnswers(),
+    tasks:stored.tasks||generatedTasks,
+    approval:stored.approval||approvalState,
+    appLinks:stored.appLinks||appLinkSettings,
+    roomSetup:stored.roomSetup||roomSetupState,
+    publication:stored.publication||publicationState
   };
-  download('lumina-massnahmenliste.json',JSON.stringify(exportData,null,2),'application/json;charset=utf-8');
+
+  const company=(payload.answers?.company||'abschlussplan')
+    .toLowerCase()
+    .replace(/[^a-z0-9äöüß]+/gi,'-')
+    .replace(/^-+|-+$/g,'');
+
+  download(
+    `lumina-gesamtdaten-${company||'abschlussplan'}.json`,
+    JSON.stringify(payload,null,2),
+    'application/json;charset=utf-8'
+  );
+  showJsonTransferStatus('JSON-Gesamtdaten wurden exportiert.');
+}
+
+function applyImportedFormValue(name,value){
+  const controls=[...form.querySelectorAll(`[name="${name}"]`)];
+  if(!controls.length) return;
+
+  if(Array.isArray(value)){
+    controls.forEach(control=>{
+      if(control.type==='checkbox'){
+        control.checked=value.includes(control.value);
+      }
+    });
+    return;
+  }
+
+  if(controls[0].type==='radio'){
+    controls.forEach(control=>{
+      control.checked=control.value===String(value??'');
+    });
+    return;
+  }
+
+  if(controls[0].type==='checkbox'){
+    controls[0].checked=Boolean(value);
+    return;
+  }
+
+  controls[0].value=value??'';
+}
+
+function importCompleteLuminaJson(payload){
+  if(!payload || typeof payload!=='object'){
+    throw new Error('Ungültige JSON-Datei.');
+  }
+
+  const data=payload.answers ? payload : {
+    answers:payload,
+    tasks:payload.tasks||[],
+    approval:payload.approval||{},
+    appLinks:payload.appLinks||{},
+    roomSetup:payload.roomSetup||{},
+    publication:payload.publication||{}
+  };
+
+  const answers=data.answers||{};
+
+  Object.entries(answers).forEach(([key,value])=>{
+    if(['team','sizeAssessment'].includes(key)) return;
+    applyImportedFormValue(key,value);
+  });
+
+  const teamBody=document.getElementById('teamBody');
+  if(teamBody) teamBody.innerHTML='';
+
+  const importedTeam=Array.isArray(answers.team) ? answers.team : [];
+  (importedTeam.length ? importedTeam : baseTeam).forEach(member=>{
+    addTeamRow(
+      member.role||member[0]||'Sonstige',
+      member.name||member[1]||'',
+      member.email||member[2]||'',
+      member.deputy||member[3]||'',
+      member.deputyEmail||member[4]||''
+    );
+  });
+
+  generatedTasks=Array.isArray(data.tasks) ? data.tasks : [];
+  approvalState={...approvalState,...(data.approval||{})};
+  appLinkSettings={...appLinkSettings,...(data.appLinks||{})};
+  roomSetupState={...roomSetupState,...(data.roomSetup||{})};
+  publicationState={...publicationState,...(data.publication||{})};
+
+  generatedTasks.forEach(task=>{
+    if(typeof ensureTaskRoomStructure==='function') ensureTaskRoomStructure(task);
+    if(!Array.isArray(task.roomStructure) || !task.roomStructure.length){
+      task.roomStructure=defaultRoomStructure();
+    }
+    if(typeof task.roomReady!=='boolean') task.roomReady=false;
+  });
+
+  const appBaseUrl=document.getElementById('appBaseUrl');
+  const assistantMode=document.getElementById('assistantMode');
+  const defaultRoomTemplate=document.getElementById('defaultRoomTemplate');
+  if(appBaseUrl) appBaseUrl.value=appLinkSettings.baseUrl||'';
+  if(assistantMode) assistantMode.value=appLinkSettings.assistantMode||'auto';
+  if(defaultRoomTemplate) defaultRoomTemplate.value=appLinkSettings.defaultRoomTemplate||'standard';
+
+  if(typeof renderRoomTemplateList==='function') renderRoomTemplateList();
+  if(typeof installGermanNumberFormatting==='function') installGermanNumberFormatting();
+  if(typeof renderSizeAssessment==='function') renderSizeAssessment(false);
+
+  saveState();
+
+  if(typeof renderPlan==='function') renderPlan();
+  if(typeof renderReview==='function') renderReview();
+  if(typeof renderRoomSetup==='function') renderRoomSetup();
+  if(typeof updateSupabaseUi==='function') updateSupabaseUi();
+
+  showStep(0);
+  showJsonTransferStatus('JSON-Gesamtdaten wurden vollständig importiert.');
+}
+
+async function handleJsonImportFile(file){
+  if(!file) return;
+  const text=await file.text();
+  const payload=JSON.parse(text);
+  importCompleteLuminaJson(payload);
+}
+
+document.getElementById('downloadJson').addEventListener('click',exportCompleteLuminaJson);
+document.getElementById('jsonExportHeader').addEventListener('click',exportCompleteLuminaJson);
+
+document.getElementById('jsonImportHeader').addEventListener('click',()=>{
+  document.getElementById('jsonImportFile').click();
+});
+document.getElementById('jsonImportPlan').addEventListener('click',()=>{
+  document.getElementById('jsonImportFile').click();
+});
+
+document.getElementById('jsonImportFile').addEventListener('change',async event=>{
+  const file=event.target.files?.[0];
+  if(!file) return;
+
+  try{
+    await handleJsonImportFile(file);
+  }catch(error){
+    console.error(error);
+    showJsonTransferStatus(`JSON-Import fehlgeschlagen: ${error.message||error}`,'error');
+  }finally{
+    event.target.value='';
+  }
 });
 document.getElementById('downloadCsv').addEventListener('click',()=>{
   if(typeof XLSX==='undefined'){
@@ -2587,5 +2760,6 @@ updateSupabaseUi();
 renderRoomTemplateList();
 installGermanNumberFormatting();
 </script>
+<div id="jsonTransferStatus" class="json-transfer-status"></div>
 </body>
 </html>
