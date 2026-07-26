@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>LUMINA | Abschluss-Cockpit</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root{
+      --bg:#f5f7f5;--surface:#fff;--soft:#edf8f3;--soft2:#f8faf9;--text:#1e2021;
+      --muted:#69737b;--line:#dde4df;--brand:#40a77e;--brand-dark:#287f61;
+      --blue:#386f9d;--blue-soft:#edf5fb;--amber:#9a6800;--amber-soft:#fff6dc;
+      --red:#aa4242;--red-soft:#fff0f0;--shadow:0 18px 48px rgba(24,39,32,.08)
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;background:linear-gradient(180deg,#fbfcfb,var(--bg));color:var(--text)}
+    button,input,select,textarea{font:inherit}
+    button{cursor:pointer}
+    .shell{max-width:1520px;margin:auto;padding:0 24px}
+    header{position:sticky;top:0;z-index:40;background:rgba(255,255,255,.95);border-bottom:1px solid var(--line);backdrop-filter:blur(14px)}
+    .head{min-height:76px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+    .brand{display:flex;align-items:center;gap:12px;font-weight:900}
+    .mark{width:36px;height:36px;border-radius:11px;background:var(--brand);display:grid;place-items:center}
+    .mark:after{content:"";width:14px;height:14px;border:2px solid #fff;transform:rotate(45deg);border-radius:2px}
+    .nav{display:flex;gap:6px;flex-wrap:wrap}
+    .nav button{border:0;background:transparent;padding:10px 12px;border-radius:10px;font-weight:800;color:var(--muted)}
+    .nav button.active,.nav button:hover{background:var(--soft);color:var(--brand-dark)}
+    .btn{border:0;border-radius:11px;padding:11px 15px;font-weight:850}
+    .btn-primary{background:var(--brand);color:white}.btn-primary:hover{background:var(--brand-dark)}
+    .btn-secondary{background:#edf1ef;color:#303633}
+    .btn-small{padding:8px 11px;font-size:.84rem}
+    .status{padding:9px 12px;border-radius:999px;background:var(--amber-soft);color:var(--amber);font-weight:850;font-size:.8rem}
+    .status.online{background:var(--soft);color:var(--brand-dark)}
+    main{padding:30px 0 70px}
+    .hero{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:20px}
+    h1{font-size:clamp(2.2rem,5vw,4rem);letter-spacing:-.055em;line-height:1;margin:0 0 8px}
+    .lead{margin:0;color:var(--muted)}
+    .card{background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}
+    .login{padding:18px;margin-bottom:20px}
+    .login-grid{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:end}
+    .field{display:grid;gap:7px}.field label{font-size:.88rem;font-weight:800}
+    input,select,textarea{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--text)}
+    .projectbar{display:grid;grid-template-columns:minmax(260px,480px) 1fr auto;gap:12px;align-items:end;padding:16px;margin-bottom:18px}
+    .metrics{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:18px}
+    .metric{padding:15px;background:#fff;border:1px solid var(--line);border-radius:15px}
+    .metric span{display:block;color:var(--muted);font-size:.76rem;margin-bottom:5px}
+    .metric strong{font-size:1.45rem}
+    .view{display:none}.view.active{display:block}
+    .dashboard{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(320px,.85fr);gap:18px}
+    .section{padding:18px}
+    .section h2{margin:0 0 14px;font-size:1.08rem}
+    .toolbar{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+    .feed{display:grid;gap:9px}
+    .event{display:grid;grid-template-columns:42px 1fr auto;gap:12px;padding:12px;border:1px solid var(--line);border-radius:13px;background:#fff}
+    .event-icon{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-weight:900;background:var(--soft);color:var(--brand-dark)}
+    .event-icon.file{background:var(--blue-soft);color:var(--blue)}
+    .event-icon.question{background:var(--amber-soft);color:var(--amber)}
+    .event-icon.declined{background:var(--red-soft);color:var(--red)}
+    .event strong{display:block;margin-bottom:3px}
+    .small{font-size:.8rem;color:var(--muted)}
+    .rightcol{display:grid;gap:18px;align-content:start}
+    .assistant{padding:18px}
+    .assistant-head{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+    .avatar{width:48px;height:48px;border-radius:15px;display:grid;place-items:center;font-weight:950;font-size:1.2rem}
+    .kai .avatar{background:var(--blue-soft);color:var(--blue)}
+    .kira .avatar{background:var(--soft);color:var(--brand-dark)}
+    .assistant h2{margin:0;font-size:1.1rem}
+    .assistant p{margin:0;color:var(--muted);line-height:1.5}
+    .insights{display:grid;gap:8px;margin-top:13px}
+    .insight{padding:11px 12px;border-radius:12px;background:var(--soft2);border:1px solid var(--line);font-size:.87rem}
+    .tabs-panel{padding:18px}
+    .filters{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:13px}
+    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px}
+    table{width:100%;border-collapse:collapse;min-width:1100px}
+    th,td{padding:10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;font-size:.82rem}
+    th{background:var(--soft2);color:var(--muted);font-size:.74rem;text-transform:uppercase;letter-spacing:.04em;position:sticky;top:0}
+    .pill{display:inline-flex;padding:5px 8px;border-radius:999px;background:#edf1ef;font-size:.74rem;font-weight:850}
+    .pill.accepted,.pill.approved,.pill.completed{background:var(--soft);color:var(--brand-dark)}
+    .pill.declined,.pill.blocked{background:var(--red-soft);color:var(--red)}
+    .pill.question{background:var(--amber-soft);color:var(--amber)}
+    .rooms-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+    .room-card{padding:15px;border:1px solid var(--line);border-radius:14px;background:#fff}
+    .room-card h3{margin:0 0 7px;font-size:.97rem}
+    .room-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:12px 0}
+    .room-meta div{padding:8px;background:var(--soft2);border-radius:9px;text-align:center}
+    .room-meta strong{display:block}
+    .comm-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    .notice{display:none;padding:13px 15px;border-radius:12px;margin-bottom:16px;white-space:pre-wrap}
+    .notice.show{display:block}.notice.ok{background:var(--soft);color:var(--brand-dark)}.notice.err{background:var(--red-soft);color:var(--red)}.notice.info{background:var(--blue-soft);color:var(--blue)}
+    .empty{padding:22px;text-align:center;color:var(--muted)}
+    @media(max-width:1150px){.metrics{grid-template-columns:repeat(3,1fr)}.dashboard,.comm-grid{grid-template-columns:1fr}.rooms-grid{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:760px){.shell{padding:0 14px}.head{align-items:flex-start;padding:12px 0;flex-direction:column}.hero,.projectbar{display:block}.projectbar>*{margin-bottom:10px}.login-grid,.filters{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,1fr)}.rooms-grid{grid-template-columns:1fr}.event{grid-template-columns:42px 1fr}.event time{grid-column:2}}
+  </style>
+</head>
+<body>
+<header>
+  <div class="shell head">
+    <div class="brand"><div class="mark"></div><span>LUMINA</span></div>
+    <nav class="nav">
+      <button class="active" data-view="cockpit">Cockpit</button>
+      <button data-view="tasks">Aufgaben</button>
+      <button data-view="rooms">Datenräume</button>
+      <button data-view="communication">Kommunikation</button>
+      <button onclick="location.href='/admin'">Admin</button>
+    </nav>
+    <div class="toolbar">
+      <span id="authStatus" class="status">Nicht angemeldet</span>
+      <button id="logoutBtn" class="btn btn-secondary btn-small" hidden>Abmelden</button>
+    </div>
+  </div>
+</header>
+
+<main>
+<div class="shell">
+  <div class="hero">
+    <div><h1>Abschluss-Cockpit</h1><p class="lead">Transparenz über Aufgaben, Datenlieferungen, Rückfragen und Prüfungsbedarf.</p></div>
+    <button id="refreshBtn" class="btn btn-secondary">Aktualisieren</button>
+  </div>
+
+  <div id="notice" class="notice"></div>
+
+  <section id="loginCard" class="card login">
+    <div class="login-grid">
+      <div class="field"><label>Anmelde-E-Mail</label><input id="loginEmail" type="email" placeholder="v.kusch@web.de"></div>
+      <button id="sendMagicLink" class="btn btn-primary">Anmeldelink senden</button>
+      <button id="checkSession" class="btn btn-secondary">Sitzung prüfen</button>
+    </div>
+  </section>
+
+  <section class="card projectbar">
+    <div class="field"><label>Abschlussprojekt</label><select id="projectSelect"><option value="">Bitte anmelden</option></select></div>
+    <div><strong id="projectTitle">Kein Projekt ausgewählt</strong><div id="projectMeta" class="small"></div></div>
+    <button id="openAdmin" class="btn btn-secondary">Projekt verwalten</button>
+  </section>
+
+  <section class="metrics">
+    <div class="metric"><span>Aufgaben</span><strong id="mTasks">0</strong></div>
+    <div class="metric"><span>Erledigt/Freigegeben</span><strong id="mDone">0</strong></div>
+    <div class="metric"><span>Neue Dateien</span><strong id="mFiles">0</strong></div>
+    <div class="metric"><span>Offene Rückfragen</span><strong id="mQuestions">0</strong></div>
+    <div class="metric"><span>Abgelehnt</span><strong id="mDeclined">0</strong></div>
+    <div class="metric"><span>Überfällig</span><strong id="mOverdue">0</strong></div>
+  </section>
+
+  <section id="view-cockpit" class="view active">
+    <div class="dashboard">
+      <div class="card section">
+        <div class="toolbar" style="justify-content:space-between;margin-bottom:12px">
+          <h2>Aktivitätsfeed</h2>
+          <select id="feedFilter" style="width:auto"><option value="">Alle Aktivitäten</option><option value="file">Dateien</option><option value="question">Rückfragen</option><option value="response">Antworten</option></select>
+        </div>
+        <div id="feed" class="feed"></div>
+      </div>
+
+      <div class="rightcol">
+        <section class="card assistant kai">
+          <div class="assistant-head"><div class="avatar">KAI</div><div><h2>Kommunikationsassistent</h2><div class="small">Erklärt, erinnert und koordiniert</div></div></div>
+          <p id="kaiSummary">Noch kein Projekt ausgewählt.</p>
+          <div id="kaiInsights" class="insights"></div>
+        </section>
+
+        <section class="card assistant kira">
+          <div class="assistant-head"><div class="avatar">KIRA</div><div><h2>Prüfungsassistentin</h2><div class="small">Sichtet Lieferungen und markiert Prüfungsbedarf</div></div></div>
+          <p id="kiraSummary">Noch keine Datenlieferungen geladen.</p>
+          <div id="kiraInsights" class="insights"></div>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <section id="view-tasks" class="view">
+    <div class="card tabs-panel">
+      <div class="filters">
+        <select id="taskPhase"><option value="">Alle Phasen</option></select>
+        <select id="taskPerson"><option value="">Alle Zuständigen</option></select>
+        <select id="taskStatus"><option value="">Alle Status</option></select>
+        <input id="taskSearch" placeholder="Aufgabe suchen">
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Nr.</th><th>Phase</th><th>Aufgabe</th><th>Zuständig</th><th>Fällig</th><th>Status</th><th>Dateien</th><th>Rückfragen</th><th>Datenraum</th></tr></thead><tbody id="taskBody"></tbody></table>
+      </div>
+    </div>
+  </section>
+
+  <section id="view-rooms" class="view">
+    <div class="card tabs-panel">
+      <div class="toolbar" style="justify-content:space-between;margin-bottom:14px"><h2 style="margin:0">Datenräume</h2><input id="roomSearch" style="max-width:360px" placeholder="Datenraum suchen"></div>
+      <div id="roomsGrid" class="rooms-grid"></div>
+    </div>
+  </section>
+
+  <section id="view-communication" class="view">
+    <div class="comm-grid">
+      <div class="card section"><h2>Offene Rückfragen</h2><div id="questionsList" class="feed"></div></div>
+      <div class="card section"><h2>Neue Datenlieferungen</h2><div id="deliveriesList" class="feed"></div></div>
+    </div>
+  </section>
+</div>
+</main>
+
+<script>
+const SUPABASE_URL="https://mslbzypjtvvznyewupco.supabase.co";
+const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJIUzI1NiIsInJlZiI6Im1zbGJ6eXBqdHZ2em55ZXd1cGNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5OTA3NDAsImV4cCI6MjEwMDU2Njc0MH0.6f9QUtpaSLUrKVkH3rUYCcZecqwMHrdledZMtoCdRQo";
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+
+let user=null,projects=[],currentProject=null,tasks=[],rooms=[],folders=[],documents=[],comments=[],responses=[],notifications=[],activities=[];
+const statusMap={planned:"Geplant",invited:"Eingeladen",accepted:"Angenommen",declined:"Abgelehnt",in_progress:"In Bearbeitung",question:"Rückfrage",blocked:"Blockiert",submitted:"Eingereicht",in_review:"In Prüfung",approved:"Freigegeben",completed:"Erledigt",rooms_ready:"Datenräume bereit"};
+
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function label(v){return statusMap[v]||v||"–"}
+function dt(v){if(!v)return "–";try{return new Intl.DateTimeFormat("de-DE",{dateStyle:"short",timeStyle:"short"}).format(new Date(v))}catch{return v}}
+function dateOnly(v){if(!v)return "–";try{return new Intl.DateTimeFormat("de-DE").format(new Date(v+"T12:00:00"))}catch{return v}}
+function uniq(a){return [...new Set(a.filter(Boolean))].sort((x,y)=>x.localeCompare(y,"de"))}
+function pick(o,keys,fallback=""){for(const k of keys)if(o&&o[k]!=null&&o[k]!=="")return o[k];return fallback}
+function showNotice(msg,type="info"){const el=document.getElementById("notice");el.textContent=msg;el.className=`notice show ${type}`;clearTimeout(showNotice.t);showNotice.t=setTimeout(()=>el.className="notice",4500)}
+
+async function query(table,select="*"){
+  const {data,error}=await sb.from(table).select(select);
+  if(error){console.warn(table,error.message);return []}
+  return data||[];
+}
+
+async function updateAuth(){
+  const {data}=await sb.auth.getSession(); user=data.session?.user||null;
+  document.getElementById("authStatus").textContent=user?`Angemeldet: ${user.email}`:"Nicht angemeldet";
+  document.getElementById("authStatus").classList.toggle("online",!!user);
+  document.getElementById("logoutBtn").hidden=!user;
+  document.getElementById("loginCard").hidden=!!user;
+  if(user)await loadProjects();
+}
+
+async function loadProjects(){
+  const {data,error}=await sb.from("projects").select("id,name,status,closing_date,company_id,companies(name),created_at").order("created_at",{ascending:false});
+  if(error){showNotice("Projekte konnten nicht geladen werden: "+error.message,"err");return}
+  projects=data||[];
+  const sel=document.getElementById("projectSelect");
+  sel.innerHTML='<option value="">Projekt auswählen</option>'+projects.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join("");
+  const remembered=localStorage.getItem("luminaCockpitProject");
+  const chosen=projects.find(p=>p.id===remembered)||projects[0];
+  if(chosen){sel.value=chosen.id;await selectProject(chosen.id)}
+}
+
+async function selectProject(id){
+  currentProject=projects.find(p=>p.id===id); if(!currentProject)return;
+  localStorage.setItem("luminaCockpitProject",id);
+  document.getElementById("projectTitle").textContent=currentProject.name;
+  document.getElementById("projectMeta").textContent=`${currentProject.companies?.name||""} · Abschlussstichtag ${dateOnly(currentProject.closing_date)} · ${label(currentProject.status)}`;
+  await loadProjectData();
+}
+
+async function loadProjectData(){
+  const {data:t,error}=await sb.from("tasks").select("*").eq("project_id",currentProject.id).order("task_number");
+  if(error){showNotice("Aufgaben konnten nicht geladen werden: "+error.message,"err");return}
+  tasks=t||[];
+  const ids=tasks.map(x=>x.id);
+
+  rooms=[];folders=[];documents=[];comments=[];responses=[];notifications=[];
+  if(ids.length){
+    const [r,c,resp,n]=await Promise.all([
+      sb.from("task_rooms").select("*").in("task_id",ids),
+      sb.from("task_comments").select("*").in("task_id",ids).order("created_at",{ascending:false}),
+      sb.from("task_responses").select("*").in("task_id",ids).order("created_at",{ascending:false}),
+      sb.from("task_notifications").select("*").in("task_id",ids).order("created_at",{ascending:false})
+    ]);
+    rooms=r.data||[]; comments=c.data||[]; responses=resp.data||[]; notifications=n.data||[];
+
+    const roomIds=rooms.map(x=>x.id);
+    if(roomIds.length){
+      const f=await sb.from("task_room_folders").select("*").in("task_room_id",roomIds).order("folder_number");
+      folders=f.data||[];
+      const folderIds=folders.map(x=>x.id);
+      if(folderIds.length){
+        const d=await sb.from("documents").select("*").in("folder_id",folderIds).order("created_at",{ascending:false});
+        documents=d.data||[];
+      }
+    }
+  }
+  buildActivities();renderAll();
+}
+
+function taskOf(id){return tasks.find(t=>t.id===id)}
+function roomOfTask(id){return rooms.find(r=>r.task_id===id)}
+function folderOf(id){return folders.find(f=>f.id===id)}
+function taskForFolder(folderId){const f=folderOf(folderId);const r=f&&rooms.find(x=>x.id===f.task_room_id);return r&&taskOf(r.task_id)}
+function docName(d){return pick(d,["original_name","file_name","filename","name"],"Datei")}
+function docTime(d){return pick(d,["uploaded_at","created_at","inserted_at"])}
+function commentText(c){return pick(c,["comment_text","body","message","text"],"Rückfrage")}
+function responseType(r){return pick(r,["response_type","action","response","status"],"response")}
+
+function buildActivities(){
+  activities=[];
+  documents.forEach(d=>{const t=taskForFolder(d.folder_id);activities.push({type:"file",time:docTime(d),title:`Datei hochgeladen: ${docName(d)}`,detail:t?`${t.title} · ${folderOf(d.folder_id)?.folder_name||""}`:"Datenraum",task:t,raw:d})});
+  comments.forEach(c=>{const t=taskOf(c.task_id);activities.push({type:"question",time:c.created_at,title:"Rückfrage gestellt",detail:`${t?.title||"Aufgabe"} · ${commentText(c)}`,task:t,raw:c})});
+  responses.forEach(r=>{const t=taskOf(r.task_id),rt=responseType(r);activities.push({type:"response",subtype:rt,time:r.created_at,title:`Aufgabe ${label(rt).toLowerCase()}`,detail:t?.title||"Aufgabe",task:t,raw:r})});
+  notifications.forEach(n=>activities.push({type:"notification",time:n.created_at,title:pick(n,["title","notification_type","type"],"Benachrichtigung"),detail:pick(n,["message","body"],""),task:taskOf(n.task_id),raw:n}));
+  activities.sort((a,b)=>new Date(b.time||0)-new Date(a.time||0));
+}
+
+function renderAll(){
+  renderMetrics();renderFeed();renderAssistants();renderTaskFilters();renderTasks();renderRooms();renderCommunication();
+}
+
+function renderMetrics(){
+  const today=new Date().toISOString().slice(0,10);
+  const done=tasks.filter(t=>["completed","approved"].includes(t.status)).length;
+  const overdue=tasks.filter(t=>t.due_date&&t.due_date<today&&!["completed","approved"].includes(t.status)).length;
+  document.getElementById("mTasks").textContent=tasks.length;
+  document.getElementById("mDone").textContent=done;
+  document.getElementById("mFiles").textContent=documents.length;
+  document.getElementById("mQuestions").textContent=comments.length;
+  document.getElementById("mDeclined").textContent=tasks.filter(t=>t.status==="declined").length;
+  document.getElementById("mOverdue").textContent=overdue;
+}
+
+function eventHtml(a){
+  const icon=a.type==="file"?"DOC":a.type==="question"?"?":a.type==="response"?"✓":"•";
+  const cls=a.type==="response"&&a.subtype==="declined"?"declined":a.type;
+  return `<div class="event"><div class="event-icon ${cls}">${icon}</div><div><strong>${esc(a.title)}</strong><div class="small">${esc(a.detail)}</div></div><time class="small">${dt(a.time)}</time></div>`;
+}
+function renderFeed(){
+  const filter=document.getElementById("feedFilter").value;
+  const list=activities.filter(a=>!filter||a.type===filter).slice(0,30);
+  document.getElementById("feed").innerHTML=list.map(eventHtml).join("")||'<div class="empty">Noch keine Aktivitäten vorhanden.</div>';
+}
+
+function renderAssistants(){
+  const declined=tasks.filter(t=>t.status==="declined");
+  const today=new Date().toISOString().slice(0,10);
+  const overdue=tasks.filter(t=>t.due_date&&t.due_date<today&&!["completed","approved"].includes(t.status));
+  const unassigned=tasks.filter(t=>!t.responsible_email);
+  const noFiles=tasks.filter(t=>{const r=roomOfTask(t.id);if(!r)return true;const fids=folders.filter(f=>f.task_room_id===r.id).map(f=>f.id);return !documents.some(d=>fids.includes(d.folder_id))});
+
+  document.getElementById("kaiSummary").textContent=`KAI sieht ${comments.length} Rückfragen, ${declined.length} abgelehnte Zuständigkeiten und ${overdue.length} überfällige Aufgaben.`;
+  const kai=[];
+  if(declined.length)kai.push(`${declined.length} abgelehnte Zuständigkeit(en) neu zuordnen.`);
+  if(overdue.length)kai.push(`${overdue.length} überfällige Aufgabe(n) erinnern oder eskalieren.`);
+  if(unassigned.length)kai.push(`${unassigned.length} Aufgabe(n) haben noch keine verantwortliche Person.`);
+  if(!kai.length)kai.push("Aktuell besteht kein unmittelbarer Kommunikationsbedarf.");
+  document.getElementById("kaiInsights").innerHTML=kai.map(x=>`<div class="insight">${esc(x)}</div>`).join("");
+
+  const xlsx=documents.filter(d=>/\.xlsx?$/i.test(docName(d))).length;
+  const docs=documents.filter(d=>/\.docx?$/i.test(docName(d))).length;
+  document.getElementById("kiraSummary").textContent=`KIRA hat ${documents.length} Datenlieferung(en) im Prüfungsmonitor. Davon ${xlsx} Excel- und ${docs} Word-Datei(en).`;
+  const kira=[];
+  if(documents.length)kira.push(`${documents.length} Datei(en) sind fachlich noch zu sichten; der Pilot führt zunächst eine technische Klassifizierung durch.`);
+  if(noFiles.length)kira.push(`${noFiles.length} Datenraum/Datenräume enthalten noch keine Datei.`);
+  if(xlsx)kira.push(`${xlsx} Excel-Datei(en) eignen sich später für Vollständigkeits-, Summen- und Abweichungsprüfungen.`);
+  if(!documents.length)kira.push("Noch keine Datenlieferung zur Prüfung vorhanden.");
+  document.getElementById("kiraInsights").innerHTML=kira.map(x=>`<div class="insight">${esc(x)}</div>`).join("");
+}
+
+function renderTaskFilters(){
+  const p=document.getElementById("taskPhase"),u=document.getElementById("taskPerson"),s=document.getElementById("taskStatus");
+  const pv=p.value,uv=u.value,sv=s.value;
+  p.innerHTML='<option value="">Alle Phasen</option>'+uniq(tasks.map(t=>t.phase)).map(x=>`<option>${esc(x)}</option>`).join("");
+  u.innerHTML='<option value="">Alle Zuständigen</option>'+uniq(tasks.map(t=>t.responsible_name)).map(x=>`<option>${esc(x)}</option>`).join("");
+  s.innerHTML='<option value="">Alle Status</option>'+uniq(tasks.map(t=>t.status)).map(x=>`<option value="${x}">${label(x)}</option>`).join("");
+  p.value=pv;u.value=uv;s.value=sv;
+}
+function filteredTasks(){
+  const p=document.getElementById("taskPhase").value,u=document.getElementById("taskPerson").value,s=document.getElementById("taskStatus").value,q=document.getElementById("taskSearch").value.toLowerCase();
+  return tasks.filter(t=>(!p||t.phase===p)&&(!u||t.responsible_name===u)&&(!s||t.status===s)&&(!q||`${t.title} ${t.phase}`.toLowerCase().includes(q)));
+}
+function renderTasks(){
+  document.getElementById("taskBody").innerHTML=filteredTasks().map(t=>{
+    const r=roomOfTask(t.id),fids=r?folders.filter(f=>f.task_room_id===r.id).map(f=>f.id):[],dc=documents.filter(d=>fids.includes(d.folder_id)).length,qc=comments.filter(c=>c.task_id===t.id).length;
+    return `<tr><td>${t.task_number||""}</td><td>${esc(t.phase)}</td><td><strong>${esc(t.title)}</strong></td><td>${esc(t.responsible_name||"Offen")}</td><td>${dateOnly(t.due_date)}</td><td><span class="pill ${t.status}">${label(t.status)}</span></td><td>${dc}</td><td>${qc}</td><td><button class="btn btn-secondary btn-small" onclick="openRoom('${t.id}')">Öffnen</button></td></tr>`
+  }).join("")||'<tr><td colspan="9" class="empty">Keine Aufgaben gefunden.</td></tr>';
+}
+
+function renderRooms(){
+  const q=document.getElementById("roomSearch").value.toLowerCase();
+  const list=tasks.filter(t=>{const r=roomOfTask(t.id);return r&&(!q||`${t.title} ${r.room_name}`.toLowerCase().includes(q))});
+  document.getElementById("roomsGrid").innerHTML=list.map(t=>{
+    const r=roomOfTask(t.id),rf=folders.filter(f=>f.task_room_id===r.id),fids=rf.map(f=>f.id),docs=documents.filter(d=>fids.includes(d.folder_id)),last=docs.map(docTime).filter(Boolean).sort().reverse()[0];
+    return `<div class="room-card"><h3>${esc(t.title)}</h3><div class="small">${esc(t.phase)} · ${esc(t.responsible_name||"Noch offen")}</div><div class="room-meta"><div><strong>${rf.length}</strong><span class="small">Ordner</span></div><div><strong>${docs.length}</strong><span class="small">Dateien</span></div><div><strong>${last?dt(last).split(",")[0]:"–"}</strong><span class="small">Letzte Lieferung</span></div></div><button class="btn btn-secondary btn-small" onclick="openRoom('${t.id}')">Datenraum öffnen</button></div>`
+  }).join("")||'<div class="empty">Keine Datenräume gefunden.</div>';
+}
+
+function renderCommunication(){
+  document.getElementById("questionsList").innerHTML=comments.slice(0,30).map(c=>eventHtml({type:"question",time:c.created_at,title:taskOf(c.task_id)?.title||"Rückfrage",detail:commentText(c)})).join("")||'<div class="empty">Keine Rückfragen vorhanden.</div>';
+  document.getElementById("deliveriesList").innerHTML=documents.slice(0,30).map(d=>{const t=taskForFolder(d.folder_id);return eventHtml({type:"file",time:docTime(d),title:docName(d),detail:`${t?.title||"Datenraum"} · ${folderOf(d.folder_id)?.folder_name||""}`})}).join("")||'<div class="empty">Keine Datenlieferungen vorhanden.</div>';
+}
+
+function openRoom(taskId){
+  window.open(`/task?task=${encodeURIComponent(taskId)}&action=dataroom&project=${encodeURIComponent(currentProject.id)}&company=${encodeURIComponent(currentProject.companies?.name||"")}`,"_blank");
+}
+
+document.querySelectorAll("[data-view]").forEach(btn=>btn.addEventListener("click",()=>{
+  document.querySelectorAll("[data-view]").forEach(x=>x.classList.remove("active"));btn.classList.add("active");
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  document.getElementById("view-"+btn.dataset.view).classList.add("active");
+}));
+document.getElementById("projectSelect").addEventListener("change",e=>selectProject(e.target.value));
+document.getElementById("feedFilter").addEventListener("change",renderFeed);
+["taskPhase","taskPerson","taskStatus"].forEach(id=>document.getElementById(id).addEventListener("change",renderTasks));
+document.getElementById("taskSearch").addEventListener("input",renderTasks);
+document.getElementById("roomSearch").addEventListener("input",renderRooms);
+document.getElementById("refreshBtn").addEventListener("click",()=>currentProject?selectProject(currentProject.id):loadProjects());
+document.getElementById("openAdmin").addEventListener("click",()=>location.href="/admin");
+document.getElementById("sendMagicLink").addEventListener("click",async()=>{
+  const email=document.getElementById("loginEmail").value.trim();if(!email){showNotice("Bitte E-Mail-Adresse eingeben.","err");return}
+  const {error}=await sb.auth.signInWithOtp({email,options:{emailRedirectTo:location.origin+"/cockpit"}});
+  if(error){showNotice(error.message,"err");return}showNotice("Anmeldelink wurde versendet.","ok");
+});
+document.getElementById("checkSession").addEventListener("click",updateAuth);
+document.getElementById("logoutBtn").addEventListener("click",async()=>{await sb.auth.signOut();location.reload()});
+sb.auth.onAuthStateChange(()=>updateAuth());
+updateAuth();
+</script>
+</body>
+</html>
