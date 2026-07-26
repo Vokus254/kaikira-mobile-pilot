@@ -240,7 +240,89 @@
       .hero-grid,.split,.roi-shell,.contact-grid{grid-template-columns:1fr}.cockpit{transform:none}.benefit-grid{grid-template-columns:1fr 1fr}.pain-grid,.process-grid{grid-template-columns:1fr}.proof-grid{grid-template-columns:1fr 1fr}.nav-links{display:none;position:fixed;inset:70px 0 auto 0;background:var(--bg);padding:25px 16px;border-bottom:1px solid var(--line);flex-direction:column;align-items:flex-start}.nav-links.open{display:flex}.menu-btn{display:block}.demo-embed-toolbar{align-items:flex-start;flex-direction:column}.demo-embed-frame{min-height:1140px}.target-box{align-items:flex-start;flex-direction:column}}
     @media(max-width:620px){
       .container{width:min(var(--max),calc(100% - 22px))}.section{padding:72px 0}.hero{padding-top:56px}h1{font-size:42px}.field-grid,.contact-form,.benefit-grid,.result-grid{grid-template-columns:1fr}.field.full,.privacy{grid-column:auto}.proof-grid{grid-template-columns:1fr 1fr}.proof-item strong{font-size:21px}.metric-grid{grid-template-columns:1fr 1fr}.flow{grid-template-columns:repeat(5,70px);overflow:auto;padding-bottom:5px}.cockpit-bottom{grid-template-columns:1fr}.hero-actions .btn{width:100%}.demo-embed-frame{min-height:1280px}.footer{flex-direction:column;align-items:flex-start}}
+
+    /* Geschützter Kundenbereich */
+    .customer-btn{
+      background:#fff;color:var(--text);border-color:var(--line);
+      box-shadow:0 6px 20px rgba(25,30,35,.05)
+    }
+    .customer-btn:hover{background:var(--surface-2)}
+    .customer-btn.authenticated{
+      background:var(--green-soft);border-color:#cfe7dd;color:var(--green-dark)
+    }
+    .login-overlay{
+      position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;
+      padding:22px;background:rgba(20,26,24,.54);backdrop-filter:blur(10px)
+    }
+    .login-overlay.open{display:flex}
+    .login-modal{
+      width:min(920px,100%);max-height:calc(100vh - 44px);overflow:auto;
+      background:#fff;border:1px solid rgba(255,255,255,.7);border-radius:24px;
+      box-shadow:0 28px 90px rgba(15,25,21,.24);position:relative
+    }
+    .login-close{
+      position:absolute;right:17px;top:17px;width:38px;height:38px;border:1px solid var(--line);
+      border-radius:11px;background:#fff;color:var(--muted);font-size:22px;line-height:1;z-index:2
+    }
+    .login-close:hover{background:var(--surface-2);color:var(--text)}
+    .login-layout{display:grid;grid-template-columns:.92fr 1.08fr}
+    .login-brand-panel{
+      padding:42px;background:
+      radial-gradient(circle at 15% 15%,rgba(16,163,127,.20),transparent 40%),
+      linear-gradient(155deg,#18201d,#202b27 58%,#19372e);
+      color:#fff;min-height:520px;display:flex;flex-direction:column;justify-content:space-between
+    }
+    .login-brand{
+      display:flex;align-items:center;gap:11px;font-weight:850;font-size:19px
+    }
+    .login-brand .logo-mark{width:34px;height:34px}
+    .login-brand-panel h2{font-size:40px;line-height:1.05;letter-spacing:-.045em;margin:38px 0 17px}
+    .login-brand-panel p{color:#c8d1cd;line-height:1.6}
+    .login-benefits{display:grid;gap:11px;margin-top:28px}
+    .login-benefit{display:grid;grid-template-columns:25px 1fr;gap:10px;color:#e1e8e5;font-size:14px}
+    .login-benefit::before{
+      content:"✓";width:22px;height:22px;border-radius:50%;display:grid;place-items:center;
+      background:rgba(255,255,255,.12);color:#7de0bd;font-weight:900;font-size:12px
+    }
+    .login-security{font-size:11px;color:#96a6a0;line-height:1.55;margin-top:28px}
+    .login-form-panel{padding:54px 48px 42px;display:flex;flex-direction:column;justify-content:center}
+    .login-form-panel .eyebrow{align-self:flex-start;margin-bottom:20px}
+    .login-form-panel h3{font-size:30px;margin-bottom:10px}
+    .login-form-panel > p{color:var(--muted);line-height:1.6;margin-bottom:25px}
+    .login-field{display:grid;gap:8px;margin-bottom:14px}
+    .login-field label{font-size:13px;font-weight:750;color:#4f565d}
+    .login-field input{
+      width:100%;height:50px;border:1px solid var(--line);border-radius:11px;
+      padding:0 14px;background:#fff;color:var(--text)
+    }
+    .login-field input:focus{border-color:var(--green);box-shadow:0 0 0 4px rgba(16,163,127,.10);outline:0}
+    .login-submit{width:100%;margin-top:4px}
+    .login-divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:#92989d;font-size:12px}
+    .login-divider::before,.login-divider::after{content:"";height:1px;background:var(--line);flex:1}
+    .login-direct{
+      display:flex;align-items:center;justify-content:center;min-height:48px;border:1px solid var(--line);
+      border-radius:11px;text-decoration:none;font-weight:750;background:#fff
+    }
+    .login-direct:hover{background:var(--surface-2)}
+    .login-status{
+      min-height:42px;margin-top:16px;padding:11px 12px;border-radius:10px;
+      font-size:12px;line-height:1.5;display:none
+    }
+    .login-status.show{display:block}
+    .login-status.ok{background:var(--green-soft);color:var(--green-dark)}
+    .login-status.error{background:var(--red-soft);color:var(--red)}
+    .login-status.info{background:var(--blue-soft);color:var(--blue)}
+    .login-footnote{margin-top:19px;font-size:11px;color:var(--muted);line-height:1.5}
+    .login-footnote a{color:var(--green-dark)}
+    @media(max-width:760px){
+      .login-layout{grid-template-columns:1fr}
+      .login-brand-panel{min-height:auto;padding:30px}
+      .login-brand-panel h2{font-size:32px;margin-top:28px}
+      .login-form-panel{padding:38px 26px 30px}
+      .customer-btn{display:none}
+    }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <header class="nav-wrap">
@@ -249,7 +331,11 @@
       <nav class="nav-links" id="navLinks" aria-label="Hauptnavigation">
         <a href="#nutzen">Nutzen</a><a href="#roi">Potenzialrechner</a><a href="#demo">Demo</a><a href="#prozess">Pilotprojekt</a><a href="#kontakt">Kontakt</a>
       </nav>
-      <div style="display:flex;gap:9px;align-items:center"><a class="btn green" href="#kontakt">Erstgespräch</a><button class="menu-btn" id="menuBtn" aria-label="Menü öffnen" aria-expanded="false" aria-controls="navLinks">☰</button></div>
+      <div style="display:flex;gap:9px;align-items:center">
+        <button class="btn customer-btn" id="customerLoginBtn" type="button">Geschützter Kundenbereich</button>
+        <a class="btn green" href="#kontakt">Erstgespräch</a>
+        <button class="menu-btn" id="menuBtn" aria-label="Menü öffnen" aria-expanded="false" aria-controls="navLinks">☰</button>
+      </div>
     </div>
   </header>
 
@@ -356,6 +442,49 @@
     <section class="section contact-section" id="kontakt"><div class="container contact-grid"><div><span class="eyebrow">Unverbindlicher Austausch</span><h2>Wie viel Ruhe und Transparenz würde Ihr Abschluss gewinnen?</h2><p class="lead">Beschreiben Sie kurz Ihre Situation. Sie erhalten eine persönliche Rückmeldung – ohne automatisierte Verkaufsstrecke.</p><div class="check-list"><div class="check">30-minütiges CFO-orientiertes Erstgespräch</div><div class="check">Einordnung Ihres Abschlussprozesses</div><div class="check">Erste Einschätzung zu Pilotumfang und Business Case</div></div><p class="small muted">Kontakt: Volker Kusch · Interim Rechnungswesen · über 30 Jahre Erfahrung in Abschluss, Konsolidierung und Prüfungsbegleitung.</p></div><div class="contact-card"><form id="contactForm" class="contact-form"><div class="field"><label for="name">Name *</label><input id="name" name="name" required autocomplete="name"></div><div class="field"><label for="company">Unternehmen *</label><input id="company" name="company" required autocomplete="organization"></div><div class="field"><label for="email">Geschäftliche E-Mail *</label><input id="email" name="email" type="email" required autocomplete="email"></div><div class="field"><label for="role">Funktion</label><select id="role" name="role"><option>CFO / Kaufmännische Leitung</option><option>Leitung Rechnungswesen</option><option>Bilanzbuchhaltung</option><option>Geschäftsführung</option><option>Sonstige</option></select></div><div class="field full"><label for="message">Worum geht es bei Ihrem Abschlussprozess?</label><textarea id="message" name="message" placeholder="Zum Beispiel: Terminprobleme, viele Statusrunden, hohe Prüfungsnacharbeiten, fehlende Transparenz …"></textarea></div><label class="privacy"><input id="privacy" type="checkbox" required><span>Ich stimme zu, dass meine Angaben zur Bearbeitung meiner Anfrage verwendet werden. Weitere Informationen gehören in die Datenschutzerklärung der produktiven Website.</span></label><div class="field full"><button class="btn green full" type="submit">Pilotgespräch anfragen</button></div><div class="form-status" id="formStatus" aria-live="polite"></div></form></div></div></section>
   </main>
 
+
+  <div class="login-overlay" id="customerLoginOverlay" aria-hidden="true">
+    <div class="login-modal" role="dialog" aria-modal="true" aria-labelledby="customerLoginTitle">
+      <button class="login-close" id="customerLoginClose" type="button" aria-label="Anmeldung schließen">×</button>
+      <div class="login-layout">
+        <section class="login-brand-panel">
+          <div>
+            <div class="login-brand"><span class="logo-mark" aria-hidden="true"></span><span>LUMINA</span></div>
+            <h2>Ihr geschützter Abschlussbereich.</h2>
+            <p>Greifen Sie sicher auf Cockpit, Aufgaben, Datenräume, Kommunikation und Abschlussplanung zu.</p>
+            <div class="login-benefits">
+              <div class="login-benefit">Projektstatus und kritische Termine auf einen Blick</div>
+              <div class="login-benefit">Direkter Zugriff auf Aufgaben und Datenräume</div>
+              <div class="login-benefit">Rückfragen, Datenlieferungen und Prüfungsbedarf transparent verfolgen</div>
+            </div>
+          </div>
+          <div class="login-security">Passwortlose Anmeldung per persönlichem Magic Link. Ihre Sitzung wird ausschließlich für den geschützten LUMINA-Arbeitsbereich verwendet.</div>
+        </section>
+
+        <section class="login-form-panel">
+          <span class="eyebrow">Kunden- und Projektbereich</span>
+          <h3 id="customerLoginTitle">Sicher anmelden</h3>
+          <p>Geben Sie Ihre freigeschaltete E-Mail-Adresse ein. Sie erhalten einen einmalig nutzbaren Anmeldelink.</p>
+
+          <form id="customerLoginForm">
+            <div class="login-field">
+              <label for="customerLoginEmail">Geschäftliche E-Mail-Adresse</label>
+              <input id="customerLoginEmail" type="email" required autocomplete="email" placeholder="name@unternehmen.de">
+            </div>
+            <button class="btn green login-submit" id="customerLoginSubmit" type="submit">Anmeldelink senden →</button>
+          </form>
+
+          <div class="login-status" id="customerLoginStatus" aria-live="polite"></div>
+
+          <div class="login-divider">bereits angemeldet</div>
+          <a class="login-direct" id="customerCockpitLink" href="/cockpit">Direkt zum Abschluss-Cockpit</a>
+
+          <div class="login-footnote">Mit der Anmeldung akzeptieren Sie die Nutzung des geschützten Projektbereichs. Hinweise zur Verarbeitung Ihrer Daten finden Sie in der <a href="datenschutz.html">Datenschutzerklärung</a>.</div>
+        </section>
+      </div>
+    </div>
+  </div>
+
   <footer><div class="container footer"><div>© <span id="year"></span> LUMINA · Volker Kusch</div><div class="footer-links"><a href="impressum.html">Impressum</a><a href="datenschutz.html">Datenschutz</a><a href="mailto:info@volkerkusch.de">info@volkerkusch.de</a></div></div></footer>
 
   <script>
@@ -428,6 +557,86 @@
       const body=encodeURIComponent(`Hallo Herr Kusch,\n\nich interessiere mich für LUMINA.\n\nName: ${data.name}\nUnternehmen: ${data.company}\nFunktion: ${data.role}\nE-Mail: ${data.email}\n\nSituation:\n${data.message||"Keine weitere Angabe"}\n\nROI-Rechner:\n${roiSummary}\n\nViele Grüße\n${data.name}`);
       window.location.href=`mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`;status.textContent="Ihr E-Mail-Programm wurde mit den Angaben geöffnet.";
     });
+
+    /* Geschützter Kundenbereich */
+    const SUPABASE_URL = "https://mslbzypjtvvznyewupco.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1zbGJ6eXBqdHZ2em55ZXd1cGNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5OTA3NDAsImV4cCI6MjEwMDU2Njc0MH0.6f9QUtpaSLUrKVkH3rUYCcZecqwMHrdledZMtoCdRQo";
+    const luminaSupabase = window.supabase?.createClient(
+      SUPABASE_URL,
+      SUPABASE_ANON_KEY,
+      {auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}
+    );
+
+    const customerLoginBtn = document.getElementById("customerLoginBtn");
+    const customerLoginOverlay = document.getElementById("customerLoginOverlay");
+    const customerLoginClose = document.getElementById("customerLoginClose");
+    const customerLoginForm = document.getElementById("customerLoginForm");
+    const customerLoginEmail = document.getElementById("customerLoginEmail");
+    const customerLoginSubmit = document.getElementById("customerLoginSubmit");
+    const customerLoginStatus = document.getElementById("customerLoginStatus");
+    const customerCockpitLink = document.getElementById("customerCockpitLink");
+
+    function setCustomerStatus(message,type="info"){
+      customerLoginStatus.textContent=message;
+      customerLoginStatus.className=`login-status show ${type}`;
+    }
+    function openCustomerLogin(){
+      customerLoginOverlay.classList.add("open");
+      customerLoginOverlay.setAttribute("aria-hidden","false");
+      document.body.classList.add("menu-open");
+      setTimeout(()=>customerLoginEmail.focus(),80);
+    }
+    function closeCustomerLogin(){
+      customerLoginOverlay.classList.remove("open");
+      customerLoginOverlay.setAttribute("aria-hidden","true");
+      document.body.classList.remove("menu-open");
+    }
+    customerLoginBtn?.addEventListener("click",async()=>{
+      if(luminaSupabase){
+        const {data}=await luminaSupabase.auth.getSession();
+        if(data.session){window.location.href="/cockpit";return;}
+      }
+      openCustomerLogin();
+    });
+    customerLoginClose?.addEventListener("click",closeCustomerLogin);
+    customerLoginOverlay?.addEventListener("click",event=>{if(event.target===customerLoginOverlay)closeCustomerLogin();});
+    document.addEventListener("keydown",event=>{if(event.key==="Escape"&&customerLoginOverlay?.classList.contains("open"))closeCustomerLogin();});
+
+    customerLoginForm?.addEventListener("submit",async(event)=>{
+      event.preventDefault();
+      if(!luminaSupabase){setCustomerStatus("Die Anmeldung konnte technisch nicht initialisiert werden.","error");return;}
+      const email=customerLoginEmail.value.trim();
+      if(!email){setCustomerStatus("Bitte geben Sie Ihre E-Mail-Adresse ein.","error");return;}
+      customerLoginSubmit.disabled=true;
+      customerLoginSubmit.textContent="Anmeldelink wird gesendet …";
+      setCustomerStatus("Ihre Anfrage wird sicher übermittelt.","info");
+      const {error}=await luminaSupabase.auth.signInWithOtp({
+        email,
+        options:{emailRedirectTo:window.location.origin+"/cockpit"}
+      });
+      customerLoginSubmit.disabled=false;
+      customerLoginSubmit.textContent="Anmeldelink senden →";
+      if(error){setCustomerStatus("Der Anmeldelink konnte nicht gesendet werden: "+error.message,"error");return;}
+      setCustomerStatus("Der persönliche Anmeldelink wurde versendet. Bitte prüfen Sie auch Ihren Spam-Ordner.","ok");
+    });
+
+    async function refreshCustomerLoginState(){
+      if(!luminaSupabase)return;
+      const {data}=await luminaSupabase.auth.getSession();
+      const session=data.session;
+      if(session){
+        customerLoginBtn.textContent="Zum Abschluss-Cockpit";
+        customerLoginBtn.classList.add("authenticated");
+        customerCockpitLink.textContent="Cockpit jetzt öffnen →";
+      }else{
+        customerLoginBtn.textContent="Geschützter Kundenbereich";
+        customerLoginBtn.classList.remove("authenticated");
+        customerCockpitLink.textContent="Direkt zum Abschluss-Cockpit";
+      }
+    }
+    luminaSupabase?.auth.onAuthStateChange(()=>refreshCustomerLoginState());
+    refreshCustomerLoginState();
+
     document.getElementById("year").textContent=new Date().getFullYear();
   </script>
 </body>
