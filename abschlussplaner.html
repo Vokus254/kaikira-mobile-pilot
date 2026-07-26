@@ -1144,13 +1144,35 @@ navEls.forEach((el,idx)=>{
   el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}});
 });
 
+function isValidDateInput(id){
+  const el=document.getElementById(id);
+  if(!el || !el.value) return false;
+  return !Number.isNaN(el.valueAsDate?.getTime?.() ?? NaN);
+}
+
 function validateStep(i){
-  const err=document.getElementById(`error-${i}`); if(err) err.style.display='none';
+  const err=document.getElementById(`error-${i}`);
+  if(err) err.style.display='none';
+
   let ok=true;
-  if(i===0) ok=val('company').trim() && val('framework') && val('closingScope');
-  if(i===5) ok=val('closingDate') && val('draftDate') && val('signingDate');
+
+  if(i===0){
+    ok=Boolean(
+      val('company').trim() &&
+      val('framework') &&
+      val('closingScope')
+    );
+  }
+
+  if(i===5){
+    ok=
+      isValidDateInput('closingDate') &&
+      isValidDateInput('draftDate') &&
+      isValidDateInput('signingDate');
+  }
+
   if(!ok && err) err.style.display='block';
-  return !!ok;
+  return Boolean(ok);
 }
 navEls.forEach((el,idx)=>el.addEventListener('click',()=>{
   saveState();
@@ -1163,6 +1185,20 @@ document.querySelectorAll('[data-next]').forEach(b=>b.addEventListener('click',(
     saveState(); showStep(currentStep+1);
   }
 }));
+['closingDate','draftDate','signingDate'].forEach(id=>{
+  const field=document.getElementById(id);
+  if(!field) return;
+  ['input','change'].forEach(eventName=>{
+    field.addEventListener(eventName,()=>{
+      const err=document.getElementById('error-5');
+      if(err && isValidDateInput('closingDate') && isValidDateInput('draftDate') && isValidDateInput('signingDate')){
+        err.style.display='none';
+      }
+      saveState();
+    });
+  });
+});
+
 document.querySelectorAll('[data-prev]').forEach(b=>b.addEventListener('click',()=>showStep(Math.max(0,currentStep-1))));
 navEls.forEach((item,index)=>item.addEventListener('click',()=>{ saveState(); if(index===7 && generatedTasks.length) renderPlan(); showStep(index); }));
 
@@ -2438,6 +2474,11 @@ function importCompleteLuminaJson(payload){
   if(typeof renderRoomTemplateList==='function') renderRoomTemplateList();
   if(typeof installGermanNumberFormatting==='function') installGermanNumberFormatting();
   if(typeof renderSizeAssessment==='function') renderSizeAssessment(false);
+
+  const error0=document.getElementById('error-0');
+  const error5=document.getElementById('error-5');
+  if(error0 && validateStep(0)) error0.style.display='none';
+  if(error5 && validateStep(5)) error5.style.display='none';
 
   saveState();
 
