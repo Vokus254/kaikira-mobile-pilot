@@ -274,7 +274,7 @@ async function openDataRoom(){
   list.innerHTML=(folders||[]).map(folder=>`
     <div class="folder" data-folder="${folder.id}">
       <div class="folder-head">
-        <span>${String(folder.folder_number).padStart(2,"0")} ${escapeHtml(folder.folder_name)}</span>
+        <span>${escapeHtml(folder.folder_name)}</span>
         <button class="btn btn-secondary" type="button">Öffnen</button>
       </div>
       <div class="folder-body">
