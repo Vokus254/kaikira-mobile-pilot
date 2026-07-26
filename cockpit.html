@@ -98,7 +98,12 @@
     .empty{padding:22px;text-align:center;color:var(--muted)}
     @media(max-width:1150px){.metrics{grid-template-columns:repeat(3,1fr)}.dashboard,.comm-grid{grid-template-columns:1fr}.rooms-grid{grid-template-columns:repeat(2,1fr)}}
     @media(max-width:760px){.shell{padding:0 14px}.head{align-items:flex-start;padding:12px 0;flex-direction:column}.hero,.projectbar{display:block}.projectbar>*{margin-bottom:10px}.login-grid,.filters{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,1fr)}.rooms-grid{grid-template-columns:1fr}.event{grid-template-columns:42px 1fr}.event time{grid-column:2}}
-  </style>
+  
+    .event-clickable{cursor:pointer;transition:transform .14s ease,border-color .14s ease,box-shadow .14s ease}
+    .event-clickable:hover{transform:translateY(-1px);border-color:#91c6ab;box-shadow:0 8px 20px rgba(22,66,46,.08)}
+    .event-clickable:focus-visible{outline:3px solid rgba(47,143,91,.25);outline-offset:2px}
+
+</style>
 </head>
 <body>
 <header>
@@ -326,7 +331,12 @@ function renderMetrics(){
 function eventHtml(a){
   const icon=a.type==="file"?"DOC":a.type==="question"?"?":a.type==="response"?"✓":"•";
   const cls=a.type==="response"&&a.subtype==="declined"?"declined":a.type;
-  return `<div class="event"><div class="event-icon ${cls}">${icon}</div><div><strong>${esc(a.title)}</strong><div class="small">${esc(a.detail)}</div></div><time class="small">${dt(a.time)}</time></div>`;
+  const taskId=a.task?.id||a.task_id||"";
+  const action=a.type==="question"?"communication":a.type==="file"?"dataroom":"overview";
+  const interactive=taskId
+    ? ` role="button" tabindex="0" class="event event-clickable" onclick="openTaskArea('${taskId}','${action}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openTaskArea('${taskId}','${action}')}" title="Aufgabe direkt öffnen"`
+    : ` class="event"`;
+  return `<div${interactive}><div class="event-icon ${cls}">${icon}</div><div><strong>${esc(a.title)}</strong><div class="small">${esc(a.detail)}</div></div><time class="small">${dt(a.time)}</time></div>`;
 }
 function renderFeed(){
   const filter=document.getElementById("feedFilter").value;
@@ -396,8 +406,14 @@ function renderRooms(){
 }
 
 function renderCommunication(){
-  document.getElementById("questionsList").innerHTML=comments.slice(0,30).map(c=>eventHtml({type:"question",time:c.created_at,title:taskOf(c.task_id)?.title||"Rückfrage",detail:commentText(c)})).join("")||'<div class="empty">Keine Rückfragen vorhanden.</div>';
-  document.getElementById("deliveriesList").innerHTML=documents.slice(0,30).map(d=>{const t=taskForFolder(d.folder_id);return eventHtml({type:"file",time:docTime(d),title:docName(d),detail:`${t?.title||"Datenraum"} · ${folderOf(d.folder_id)?.folder_name||""}`})}).join("")||'<div class="empty">Keine Datenlieferungen vorhanden.</div>';
+  document.getElementById("questionsList").innerHTML=comments.slice(0,30).map(c=>{
+    const t=taskOf(c.task_id);
+    return eventHtml({type:"question",time:c.created_at,title:t?.title||"Rückfrage",detail:commentText(c),task:t,task_id:c.task_id});
+  }).join("")||'<div class="empty">Keine Rückfragen vorhanden.</div>';
+  document.getElementById("deliveriesList").innerHTML=documents.slice(0,30).map(d=>{
+    const t=taskForFolder(d.folder_id);
+    return eventHtml({type:"file",time:docTime(d),title:docName(d),detail:`${t?.title||"Datenraum"} · ${folderOf(d.folder_id)?.folder_name||""}`,task:t});
+  }).join("")||'<div class="empty">Keine Datenlieferungen vorhanden.</div>';
 }
 
 function activateView(name){
@@ -437,8 +453,12 @@ function openMetric(metric){
   renderTasks();
   setTimeout(()=>document.getElementById("view-tasks").scrollIntoView({behavior:"smooth",block:"start"}),50);
 }
+function openTaskArea(taskId,action="overview"){
+  if(!taskId||!currentProject)return;
+  window.open(`/task?task=${encodeURIComponent(taskId)}&action=${encodeURIComponent(action)}&project=${encodeURIComponent(currentProject.id)}&company=${encodeURIComponent(currentProject.companies?.name||"")}`,"_blank");
+}
 function openRoom(taskId){
-  window.open(`/task?task=${encodeURIComponent(taskId)}&action=dataroom&project=${encodeURIComponent(currentProject.id)}&company=${encodeURIComponent(currentProject.companies?.name||"")}`,"_blank");
+  openTaskArea(taskId,"dataroom");
 }
 
 document.querySelectorAll("[data-view]").forEach(btn=>btn.addEventListener("click",()=>{
