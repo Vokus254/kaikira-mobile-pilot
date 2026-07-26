@@ -310,7 +310,20 @@ async function openDataRoom(){
 async function uploadFile(folderId,file){
   if(!file) return;
 
-  const safe=file.name.replace(/[^\w.\-äöüÄÖÜß]/g,"_");
+  const extensionMatch=file.name.match(/(\.[A-Za-z0-9]+)$/);
+  const extension=extensionMatch ? extensionMatch[1].toLowerCase() : "";
+  const baseName=extension ? file.name.slice(0,-extension.length) : file.name;
+
+  const safeBase=baseName
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g,"")
+    .replace(/ß/g,"ss")
+    .replace(/[^A-Za-z0-9._-]+/g,"_")
+    .replace(/_+/g,"_")
+    .replace(/^[_\.\-]+|[_\.\-]+$/g,"")
+    .slice(0,120) || "datei";
+
+  const safe=safeBase+extension;
   const path=[currentTask.project_id,taskId,folderId,Date.now()+"-"+safe].join("/");
 
   setStatus("Datei wird hochgeladen …","info");
@@ -320,7 +333,7 @@ async function uploadFile(folderId,file){
     .upload(path,file,{upsert:false,contentType:file.type});
 
   if(uErr){
-    setStatus("Upload fehlgeschlagen: "+uErr.message,"err");
+    setStatus("Upload fehlgeschlagen: "+uErr.message+"\nVerwendeter Dateiname: "+safe,"err");
     return;
   }
 
