@@ -2,6 +2,10 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import vm from "node:vm";
+import * as roles from "../assets/role-resolver.mjs";
+import * as security from "../assets/cockpit-security.mjs";
+import * as filters from "../assets/cockpit-filters.mjs";
+import * as model from "../assets/cockpit-model.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
 const cockpit = fs.readFileSync(path.join(root, "cockpit.html"), "utf8");
@@ -13,11 +17,12 @@ function createElement(id = "") {
   return {
     id, hidden: false, value: "", textContent: "", innerHTML: "", className: "", style: {}, dataset: {},
     classList: { add: (...names) => names.forEach(name => classes.add(name)), remove: (...names) => names.forEach(name => classes.delete(name)), toggle: (name, force) => force === undefined ? (classes.has(name) ? (classes.delete(name), false) : (classes.add(name), true)) : (force ? classes.add(name) : classes.delete(name), force), contains: name => classes.has(name) },
-    addEventListener() {}, scrollIntoView() {},
+    addEventListener() {}, scrollIntoView() {}, querySelector() { return createElement(); }, querySelectorAll() { return []; }, insertAdjacentHTML() {},
   };
 }
 
 async function runScenario(session, pathname = "/cockpit", authOptions = {}) {
+  const projectId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
   const elements = new Map();
   const getElement = id => { if (!elements.has(id)) elements.set(id, createElement(id)); return elements.get(id); };
   const views = ["cockpit", "tasks", "rooms", "communication"].map(name => { const element = getElement(`view-${name}`); element.dataset.view = name; return element; });
@@ -28,11 +33,12 @@ async function runScenario(session, pathname = "/cockpit", authOptions = {}) {
   const authPayloads = {};
   let authCallback = null;
   let activeSession = session;
-  const tableData = table => ({
-    projects: activeSession ? [{ id: "project-a", name: "Testabschluss", status: "active", closing_date: "2026-12-31", companies: { name: "Test GmbH" }, created_at: "2026-01-01" }] : [],
-    project_members: activeSession ? [{ id: "member-cfo", project_id: "project-a", user_id: activeSession.user.id, name: "Cora Finance", email: activeSession.user.email, project_role: "CFO / Geschäftsführung", access_level: "cfo", can_read: true, can_upload: true, can_edit: true, can_approve: true, can_manage_members: true, invitation_status: "accepted" }] : [],
+  const defaultTableData = table => ({
+    projects: activeSession ? [{ id: projectId, name: "Testabschluss", status: "active", closing_date: "2026-12-31", companies: { name: "Test GmbH" }, created_at: "2026-01-01" }] : [],
+    project_members: activeSession ? [{ id: "member-cfo", project_id: projectId, user_id: activeSession.user.id, name: "Cora Finance", email: activeSession.user.email, project_role: "CFO / Geschäftsführung", cockpit_profile: "cfo", access_level: "cfo", can_read: true, can_upload: true, can_edit: true, can_approve: true, can_manage_members: true, can_view_all_tasks: true, invitation_status: "accepted" }] : [],
     tasks: [],
   })[table] || [];
+  const tableData = table => authOptions.tableData?.[table] ?? defaultTableData(table);
   const client = {
     auth: {
       async getSession() { calls.push("getSession"); return { data: { session: activeSession }, error: authOptions.sessionError || null }; },
@@ -52,8 +58,9 @@ async function runScenario(session, pathname = "/cockpit", authOptions = {}) {
   const local = new Map();
   const location = { pathname, origin: "http://127.0.0.1:4173", href: pathname, search: authOptions.search || "", hash: authOptions.hash || "" };
   const history = { replaceState(...args) { authPayloads.history = args; } };
+  const windowObject = { open() {}, location, history, luminaCockpitReady: Promise.resolve({ roles, security, filters, model }) };
   const context = vm.createContext({
-    supabase: { createClient: () => client }, location, window: { open() {}, location, history },
+    supabase: { createClient: () => client }, location, window: windowObject,
     document: { getElementById: getElement, querySelectorAll: selector => selector === "[data-view]" ? nav : selector === ".view" ? views : [], querySelector: selector => selector.startsWith("#") ? getElement(selector.slice(1)) : null },
     localStorage: { getItem: key => local.get(key) || null, setItem: (key, value) => local.set(key, value) },
     console, Intl, Date, Map, Set, URL, URLSearchParams, encodeURIComponent, clearTimeout() {}, setTimeout() { return 0; },
@@ -76,6 +83,12 @@ const checks = [
     assert.deepEqual(result.calls.filter(call => call.startsWith("query:")), []);
     assert.equal(result.calls[0], "getSession");
   }],
+  ["Unresolved membership shows the neutral gate and loads no project data", async () => {
+    const active = { user: { id: "user-unknown", email: "unknown@example.test" } };
+    const result = await runScenario(active, "/cockpit", { tableData: { project_members: [{ id: "member-x", project_id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", user_id: "user-unknown", email: "unknown@example.test", project_role: "Unbekannte Rolle", cockpit_profile: null, invitation_status: "accepted" }] } });
+    assert.equal(result.elements.get("protectedApp").hidden, true);assert.equal(result.elements.get("membershipGate").hidden, false);
+    assert.deepEqual(result.calls.filter(call => call.startsWith("query:")), ["query:project_members"]);
+  }],
   ["Expired session returns to the protected login gate", async () => {
     const result = await runScenario(null, "/cockpit", { sessionError: new Error("refresh token expired") });
     assert.equal(result.elements.get("protectedApp").hidden, true);assert.equal(result.elements.get("authGate").hidden, false);
@@ -87,7 +100,7 @@ const checks = [
     assert.equal(result.elements.get("protectedApp").hidden, false);
     assert.equal(result.elements.get("authGate").hidden, true);
     assert.equal(result.elements.get("roleIdentityLabel").textContent, "CFO / Geschäftsführung");
-    assert.deepEqual(result.calls.slice(0, 5), ["getSession", "onAuthStateChange", "query:projects", "query:project_members", "query:tasks"]);
+    assert.deepEqual(result.calls.slice(0, 5), ["getSession", "onAuthStateChange", "query:project_members", "query:projects", "query:tasks"]);
   }],
   ["Successful password login starts the membership-derived cockpit", async () => {
     const loginSession = { user: { id: "user-cfo", email: "cfo@example.test" } };

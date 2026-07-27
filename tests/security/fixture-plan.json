@@ -1,17 +1,17 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "environment": "separate-supabase-test-project-only",
   "productionProjectRefDenylist": [
     "mslbzypjtvvznyewupco"
   ],
   "identities": [
-    { "key": "user_a", "label": "Nutzer A", "project": "A", "projectRole": "Nutzer", "accessLevel": "member", "permissions": { "can_read": true, "can_upload": false, "can_edit": false, "can_approve": false, "can_manage_members": false } },
-    { "key": "user_b", "label": "Nutzer B", "project": "B", "projectRole": "Nutzer", "accessLevel": "member", "permissions": { "can_read": true, "can_upload": false, "can_edit": false, "can_approve": false, "can_manage_members": false } },
-    { "key": "editor", "label": "Bearbeiter", "project": "A", "projectRole": "Bearbeiter", "accessLevel": "member", "permissions": { "can_read": true, "can_upload": true, "can_edit": true, "can_approve": false, "can_manage_members": false } },
-    { "key": "approver", "label": "Freigeber", "project": "A", "projectRole": "Freigeber", "accessLevel": "member", "permissions": { "can_read": true, "can_upload": false, "can_edit": false, "can_approve": true, "can_manage_members": false } },
-    { "key": "auditor", "label": "Prüfer", "project": "A", "projectRole": "Prüfer", "accessLevel": "auditor", "permissions": { "can_read": true, "can_upload": false, "can_edit": false, "can_approve": false, "can_manage_members": false } },
-    { "key": "admin", "label": "Projektadministrator A", "project": "A", "projectRole": "Projektadministrator", "accessLevel": "admin", "permissions": { "can_read": true, "can_upload": true, "can_edit": true, "can_approve": true, "can_manage_members": true } },
-    { "key": "anonymous", "label": "Anonymous", "project": null, "projectRole": null, "accessLevel": null, "permissions": { "can_read": false, "can_upload": false, "can_edit": false, "can_approve": false, "can_manage_members": false } }
+    { "key": "user_a", "label": "Projektverwalter A", "project": "A", "projectRole": "Projektleitung Abschluss", "cockpitProfile": "project", "accessLevel": "member", "permissions": { "can_read": true, "can_upload": false, "can_edit": true, "can_approve": true, "can_manage_members": true, "can_view_all_tasks": true } },
+    { "key": "user_b", "label": "Projektverwalter B", "project": "B", "projectRole": "Projektleitung Abschluss", "cockpitProfile": "project", "accessLevel": "member", "permissions": { "can_read": true, "can_upload": false, "can_edit": true, "can_approve": true, "can_manage_members": true, "can_view_all_tasks": true } },
+    { "key": "editor", "label": "Bearbeiter", "project": "A", "projectRole": "Bilanzbuchhaltung", "cockpitProfile": "worker", "accessLevel": "member", "permissions": { "can_read": true, "can_upload": true, "can_edit": true, "can_approve": false, "can_manage_members": false, "can_view_all_tasks": false } },
+    { "key": "approver", "label": "Leiter Rechnungswesen", "project": "A", "projectRole": "Leiter Rechnungswesen", "cockpitProfile": "accounting_lead", "accessLevel": "member", "permissions": { "can_read": true, "can_upload": false, "can_edit": true, "can_approve": true, "can_manage_members": false, "can_view_all_tasks": true } },
+    { "key": "auditor", "label": "Wirtschaftsprüfung", "project": "A", "projectRole": "Wirtschaftsprüfung", "cockpitProfile": "worker", "accessLevel": "auditor", "permissions": { "can_read": true, "can_upload": false, "can_edit": false, "can_approve": false, "can_manage_members": false, "can_view_all_tasks": false } },
+    { "key": "admin", "label": "Expliziter Projektadministrator A", "project": "A", "projectRole": "Projektleitung Abschluss", "cockpitProfile": "project", "accessLevel": "admin", "permissions": { "can_read": true, "can_upload": true, "can_edit": true, "can_approve": true, "can_manage_members": true, "can_view_all_tasks": true } },
+    { "key": "anonymous", "label": "Anonymous", "project": null, "projectRole": null, "cockpitProfile": null, "accessLevel": null, "permissions": { "can_read": false, "can_upload": false, "can_edit": false, "can_approve": false, "can_manage_members": false, "can_view_all_tasks": false } }
   ],
   "fixtures": {
     "companies": ["A", "B"],

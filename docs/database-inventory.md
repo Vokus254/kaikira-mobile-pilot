@@ -1,5 +1,7 @@
 # Phase-0: Datenbank-Inventar
 
+> Phase-2-Ergänzung (27. Juli 2026): Auf der getrennten Testinstanz wurde additiv `project_member_substitutions` angelegt; `project_members` erhielt `cockpit_profile` und `can_view_all_tasks`. Die Produktionsdatenbank blieb unverändert. Der aktuelle Teststand umfasst dort 14 Public-Tabellen und 47 Public-/Storage-Policies. Details und Abgrenzung stehen in `phase-2-implementation-report.md`.
+
 Stand: 2026-07-26. Alle Remote-Abfragen waren lesend. Es wurde kein `db push`, `db reset`, `migration repair` oder DDL/DML ausgeführt.
 
 ## Verknüpftes Supabase-Projekt

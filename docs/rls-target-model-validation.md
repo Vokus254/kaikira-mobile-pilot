@@ -1,5 +1,7 @@
 # RLS-Zielmodell: Sicherheitsmigration und Validierung
 
+> Phase-2-Hinweis (27. Juli 2026): Der historische Hauptteil dieses Dokuments beschreibt Phase 1A. Die Migrationen `202607270003` bis `202607270005` wurden inzwischen ausschließlich auf `LUMINA-RLS-TEST` angewandt und dort mit 420/420 RLS-Fällen, 37/37 Privilege-Probes und 24/24 gezielten Sicherheitsnachweisen validiert. Produktion blieb unverändert. Details stehen in `phase-2-implementation-report.md`.
+
 Stand: 27. Juli 2026  
 Testinstanz: `LUMINA-RLS-TEST` (`vcozprjecsprgyeqfahn`)  
 Produktionsänderung: nein

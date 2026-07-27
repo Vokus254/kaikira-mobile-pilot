@@ -1,5 +1,7 @@
 # Phase 1A: Bewertung und Entfernung anonymer Test-Policies
 
+> Phase-2-Ergänzung (27. Juli 2026): Die nachfolgende Bewertung dokumentiert den Phase-1A-Stand. Der aktuelle Teststand nach `202607270003` bis `202607270005` verlangt ausschließlich `accepted + user_id = auth.uid()`, unterstützt projektgebundene aktive Stellvertretungen und trennt `can_manage_members` von Projektlöschung. Die erneute Testinstanz-Abnahme bestand mit 420/420 RLS-Fällen, 37/37 Privilege-Probes und 24/24 gezielten Nachweisen. Siehe `phase-2-implementation-report.md`.
+
 Stand: 27. Juli 2026
 
 ## Entfernte Policies

@@ -9,7 +9,8 @@ export const resources = [
 
 const projectAAccess = new Set(["user_a", "editor", "approver", "auditor", "admin"]);
 const projectAManagers = new Set(["user_a", "admin"]);
-const projectAEditors = new Set(["user_a", "editor", "admin"]);
+const projectATaskAccess = new Set(["user_a", "editor", "approver", "admin"]);
+const projectAEditors = new Set(["user_a", "editor", "approver", "admin"]);
 const authenticated = role => role !== "anonymous";
 const canUpload = (role, scope) => scope === "A"
   ? new Set(["editor", "admin"]).has(role)
@@ -18,6 +19,7 @@ const canUpload = (role, scope) => scope === "A"
 export function expectedAllowed({ resource, operation, role, scope = "A" }) {
   const foreign = scope === "A" ? role === "user_b" : role !== "user_b";
   const access = scope === "A" ? projectAAccess.has(role) : role === "user_b";
+  const taskAccess = scope === "A" ? projectATaskAccess.has(role) : role === "user_b";
   const manager = scope === "A" ? projectAManagers.has(role) : role === "user_b";
   const editor = scope === "A" ? projectAEditors.has(role) : role === "user_b";
 
@@ -34,54 +36,55 @@ export function expectedAllowed({ resource, operation, role, scope = "A" }) {
   }
   if (resource === "project_members") {
     if (operation === "select") return access && !foreign;
-    if (["update", "delete"].includes(operation) && role === "admin") return false;
+    if (["update", "delete"].includes(operation)) return false;
     return manager;
   }
   if (resource === "tasks") {
-    if (operation === "select") return access;
+    if (operation === "select") return taskAccess;
     if (operation === "update") return editor;
     return manager;
   }
   if (["task_rooms", "task_room_folders"].includes(resource)) {
-    if (operation === "select") return access;
+    if (operation === "select") return taskAccess;
     return editor;
   }
   if (resource === "documents") {
-    if (operation === "select") return access;
+    if (operation === "select") return taskAccess;
     if (operation === "insert") return editor && authenticated(role);
     return editor && authenticated(role);
   }
   if (resource === "task_comments") {
-    if (operation === "select") return access;
-    if (operation === "insert") return access && authenticated(role);
+    if (operation === "select") return taskAccess;
+    if (operation === "insert") return taskAccess && authenticated(role);
     return false;
   }
   if (resource === "task_activity_events") {
-    if (["select", "insert"].includes(operation)) return access;
+    if (["select", "insert"].includes(operation)) return taskAccess;
     return false;
   }
   if (resource === "task_approvals") {
-    if (operation === "select") return access;
+    if (operation === "select") return taskAccess;
     if (operation === "update") return manager || (scope === "A" && role === "approver");
-    if (["insert", "delete"].includes(operation)) return manager;
+    if (operation === "insert") return manager || (scope === "A" && role === "approver");
+    if (operation === "delete") return manager;
   }
   if (resource === "task_review_notes") {
-    if (["select", "insert"].includes(operation)) return access;
+    if (["select", "insert"].includes(operation)) return taskAccess;
     if (operation === "update") return manager || (scope === "A" && role === "approver");
     if (operation === "delete") return manager;
   }
   if (resource === "task_notifications") {
-    if (operation === "select") return manager || (scope === "A" && role === "approver");
+    if (operation === "select") return taskAccess;
     if (["insert", "update"].includes(operation)) return manager;
     return false;
   }
   if (resource === "task_responses") {
-    if (operation === "select") return access;
-    if (operation === "insert") return access && authenticated(role);
+    if (operation === "select") return taskAccess;
+    if (operation === "insert") return taskAccess && authenticated(role);
     return false;
   }
   if (resource === "storage:lumina-datarooms") {
-    if (operation === "select") return access && authenticated(role);
+    if (operation === "select") return taskAccess && authenticated(role);
     if (["insert", "update"].includes(operation)) return canUpload(role, scope);
     if (operation === "delete") return manager;
   }

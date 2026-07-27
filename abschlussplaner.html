@@ -160,6 +160,18 @@
       padding:9px 10px;border-radius:10px;
     }
     .team-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px}
+    .team-table{min-width:1180px}
+    .permission-summary{min-width:180px}
+    .permission-summary summary{cursor:pointer;color:var(--brand-dark);font-weight:760;font-size:.8rem}
+    .permission-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 10px;margin-top:9px}
+    .permission-grid label{display:flex;align-items:center;gap:5px;font-size:.73rem;color:var(--muted)}
+    .permission-grid input{width:auto;padding:0}
+    .identity-mapping{display:none;margin-top:18px;border:1px solid #cfe6da;background:var(--surface-soft);border-radius:14px;padding:16px}
+    .identity-mapping.open{display:block}
+    .identity-mapping table{width:100%;border-collapse:collapse;margin:12px 0}
+    .identity-mapping th,.identity-mapping td{padding:8px;border-bottom:1px solid var(--line);text-align:left;font-size:.78rem}
+    .identity-mapping-confirm{display:flex;align-items:flex-start;gap:9px;margin:12px 0;color:#355448;font-size:.84rem}
+    .identity-mapping-error{display:none;color:var(--danger);font-weight:700;margin-top:10px}
     .result-wrap{overflow:hidden;border:1px solid var(--line);border-radius:14px}
     .remove-row{
       border:0;background:transparent;color:var(--danger);font-weight:800;padding:8px;
@@ -617,13 +629,22 @@
           <p class="step-intro">LUMINA schlägt Rollen vor. Hinterlegen Sie bekannte Personen; offene Rollen bleiben sichtbar.</p>
           <div class="team-wrap">
             <table class="team-table">
-              <thead><tr><th>Rolle</th><th>Name</th><th>E-Mail</th><th>Stellvertretung</th><th>E-Mail Stellvertretung</th><th></th></tr></thead>
+              <thead><tr><th>Rolle</th><th>Name</th><th>E-Mail</th><th>Stellvertretung</th><th>E-Mail Stellvertretung</th><th>Profil &amp; Rechte</th><th></th></tr></thead>
               <tbody id="teamBody"></tbody>
             </table>
           </div>
           <div class="toolbar">
             <button type="button" class="btn btn-secondary btn-small" id="addTeamRow">+ Teammitglied hinzufügen</button>
             <button type="button" class="btn btn-ghost btn-small" id="addRecommendedRoles">Empfohlene Rollen ergänzen</button>
+            <button type="button" class="btn btn-ghost btn-small" id="previewTestIdentityMapping">Testidentitäten zuordnen</button>
+          </div>
+          <div class="identity-mapping" id="testIdentityMapping" aria-live="polite">
+            <strong>Kontrollierte Zuordnung der Testidentitäten</strong>
+            <p class="step-intro">Die bestehenden Adressen bleiben in dieser Vorschau sichtbar. Erst Ihre ausdrückliche Bestätigung übernimmt die 15 Haupt- und 15 Stellvertreteradressen in den Planer. Supabase-Auth-Benutzer werden hier nicht angelegt.</p>
+            <div class="team-wrap"><table><thead><tr><th>Alte Adresse</th><th>Neue Testadresse</th><th>Rolle</th><th>Art</th></tr></thead><tbody id="testIdentityMappingBody"></tbody></table></div>
+            <label class="identity-mapping-confirm"><input type="checkbox" id="confirmTestIdentityMapping"> Ich habe die sichtbare Zuordnung geprüft und möchte sie in den lokalen Planer übernehmen.</label>
+            <button type="button" class="btn btn-primary btn-small" id="applyTestIdentityMapping">Zuordnung übernehmen</button>
+            <div class="identity-mapping-error" id="testIdentityMappingError"></div>
           </div>
           <div class="callout">
             <div>✓</div>
@@ -994,6 +1015,14 @@ const progressBar = document.getElementById('progressBar');
 const progressCaption = document.getElementById('progressCaption');
 let currentStep = 0;
 let generatedTasks = [];
+let testIdentityMappingActive = false;
+const testOnboardingReady = Promise.all([
+  import('./assets/test-user-onboarding.mjs'),
+  fetch('./config/lumina-test-users.json').then(response=>{
+    if(!response.ok) throw new Error('Testidentitätskonfiguration konnte nicht geladen werden.');
+    return response.json();
+  })
+]).then(([module,config])=>({module,config}));
 
 const roleOptions = [
   'CFO / Geschäftsführung','Projektleitung Abschluss','Leiter Rechnungswesen','Bilanzbuchhaltung',
@@ -1157,17 +1186,31 @@ navEls.forEach((item,index)=>item.addEventListener('click',()=>{ saveState(); if
 function roleSelect(selected=''){
   return `<select class="team-role">${roleOptions.map(r=>`<option ${r===selected?'selected':''}>${r}</option>`).join('')}</select>`;
 }
-function addTeamRow(role='',name='',email='',deputy='',deputyEmail=''){
+const permissionLabels={can_read:'Lesen',can_upload:'Upload',can_edit:'Bearbeiten',can_approve:'Freigeben',can_manage_members:'Mitglieder',can_view_all_tasks:'Alle Aufgaben'};
+function addTeamRow(role='',name='',email='',deputy='',deputyEmail='',settings={}){
+  const defaults={cockpitProfile:'',substituteCockpitProfile:'',membershipKind:'principal',invitationStatus:'pending',can_read:true,can_upload:false,can_edit:false,can_approve:false,can_manage_members:false,can_view_all_tasks:false,substitute_can_read:true,substitute_can_upload:false,substitute_can_edit:false,substitute_can_approve:false,substitute_can_manage_members:false,substitute_can_view_all_tasks:false};
+  const member={...defaults,...settings};
   const tr=document.createElement('tr');
   tr.innerHTML=`<td>${roleSelect(role||'Sonstige')}</td>
     <td><input class="team-name" type="text" value="${escapeAttr(name)}" placeholder="Name"></td>
     <td><input class="team-email" type="email" value="${escapeAttr(email)}" placeholder="E-Mail"></td>
     <td><input class="team-deputy" type="text" value="${escapeAttr(deputy)}" placeholder="Optional"></td>
     <td><input class="team-deputy-email" type="email" value="${escapeAttr(deputyEmail)}" placeholder="E-Mail Stellvertretung"></td>
+    <td><details class="permission-summary"><summary>${escapeAttr(member.cockpitProfile||'Profil offen')} · ${escapeAttr(member.invitationStatus)}</summary>
+      <input class="team-profile" type="hidden" value="${escapeAttr(member.cockpitProfile)}">
+      <input class="team-substitute-profile" type="hidden" value="${escapeAttr(member.substituteCockpitProfile)}">
+      <input class="team-membership-kind" type="hidden" value="${escapeAttr(member.membershipKind)}">
+      <input class="team-invitation-status" type="hidden" value="${escapeAttr(member.invitationStatus)}">
+      <small>Hauptperson</small><div class="permission-grid">${Object.entries(permissionLabels).map(([field,label])=>`<label><input class="team-permission" data-permission="${field}" type="checkbox" ${member[field]?'checked':''}> ${label}</label>`).join('')}</div>
+      <small>Stellvertretung</small><div class="permission-grid">${Object.entries(permissionLabels).map(([field,label])=>`<label><input class="team-substitute-permission" data-permission="${field}" type="checkbox" ${member[`substitute_${field}`]?'checked':''}> ${label}</label>`).join('')}</div>
+    </details></td>
     <td><button type="button" class="remove-row">×</button></td>`;
   tr.querySelector('.remove-row').addEventListener('click',()=>{tr.remove();saveState();});
   tr.querySelectorAll('input,select').forEach(el=>el.addEventListener('change',saveState));
   document.getElementById('teamBody').appendChild(tr);
+  const roleInput=tr.querySelector('.team-role');
+  roleInput.addEventListener('change',()=>applyRoleDefaultsToRow(tr,roleInput.value));
+  if(!member.cockpitProfile) applyRoleDefaultsToRow(tr,roleInput.value);
 }
 function escapeAttr(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
 function collectTeam(){
@@ -1176,13 +1219,62 @@ function collectTeam(){
     name:tr.querySelector('.team-name').value.trim(),
     email:tr.querySelector('.team-email').value.trim(),
     deputy:tr.querySelector('.team-deputy').value.trim(),
-    deputyEmail:tr.querySelector('.team-deputy-email').value.trim()
+    deputyEmail:tr.querySelector('.team-deputy-email').value.trim(),
+    cockpitProfile:tr.querySelector('.team-profile').value,
+    substituteCockpitProfile:tr.querySelector('.team-substitute-profile').value,
+    membershipKind:tr.querySelector('.team-membership-kind').value,
+    invitationStatus:tr.querySelector('.team-invitation-status').value,
+    ...Object.fromEntries([...tr.querySelectorAll('.team-permission')].map(input=>[input.dataset.permission,input.checked])),
+    ...Object.fromEntries([...tr.querySelectorAll('.team-substitute-permission')].map(input=>[`substitute_${input.dataset.permission}`,input.checked]))
   }));
+}
+async function applyRoleDefaultsToRow(tr,role){
+  try{
+    const {module,config}=await testOnboardingReady;
+    const result=module.roleDefaultsFor(config,role);
+    if(!result.ok) return;
+    const {principal,substitute}=result.defaults;
+    tr.querySelector('.team-profile').value=principal.cockpit_profile;
+    tr.querySelector('.team-substitute-profile').value=substitute.cockpit_profile;
+    tr.querySelector('.permission-summary summary').textContent=`${principal.cockpit_profile} · ${tr.querySelector('.team-invitation-status').value}`;
+    tr.querySelectorAll('.team-permission').forEach(input=>{input.checked=principal[input.dataset.permission];});
+    tr.querySelectorAll('.team-substitute-permission').forEach(input=>{input.checked=substitute[input.dataset.permission];});
+    saveState();
+  }catch{/* Die lokale Konfiguration bleibt optional; Veröffentlichung validiert aktivierte Testzuordnungen. */}
 }
 document.getElementById('addTeamRow').addEventListener('click',()=>addTeamRow());
 document.getElementById('addRecommendedRoles').addEventListener('click',()=>{
   const existing=new Set(collectTeam().map(x=>x.role));
   ['Steuern','Personal / HR','IT','Treasury','Recht','Konsolidierung','Externe Beratung'].forEach(r=>{if(!existing.has(r))addTeamRow(r)});
+});
+
+function showIdentityMappingError(message=''){
+  const error=document.getElementById('testIdentityMappingError');
+  error.textContent=message;error.style.display=message?'block':'none';
+}
+document.getElementById('previewTestIdentityMapping').addEventListener('click',async()=>{
+  const panel=document.getElementById('testIdentityMapping');panel.classList.add('open');showIdentityMappingError();
+  try{
+    const {module,config}=await testOnboardingReady;
+    const preview=module.buildOnboardingPreview(collectTeam(),config);
+    if(!preview.ok) throw new Error(preview.errors.join(' '));
+    document.getElementById('testIdentityMappingBody').innerHTML=preview.rows.map(row=>`<tr><td>${escapeAttr(row.old_email)}</td><td>${escapeAttr(row.new_email)}</td><td>${escapeAttr(row.role)}</td><td>${row.membership_kind==='principal'?'Hauptperson':'Stellvertretung'}</td></tr>`).join('');
+    document.getElementById('confirmTestIdentityMapping').checked=false;
+  }catch(error){showIdentityMappingError(error.message||'Die Zuordnung konnte nicht vorbereitet werden.');}
+});
+document.getElementById('applyTestIdentityMapping').addEventListener('click',async()=>{
+  if(!document.getElementById('confirmTestIdentityMapping').checked){showIdentityMappingError('Bitte bestätigen Sie die sichtbare Zuordnung vor der Übernahme.');return;}
+  try{
+    const {module,config}=await testOnboardingReady;
+    const result=module.applyRoleIdentityPairs(collectTeam(),config);
+    if(!result.ok) throw new Error(result.errors.join(' '));
+    document.getElementById('teamBody').replaceChildren();
+    result.team.forEach(member=>addTeamRow(member.role,member.name,member.email,member.deputy,member.deputyEmail,member));
+    const validation=module.validatePlannerTeam(collectTeam(),config,{requireCompleteMatrix:true});
+    if(!validation.ok) throw new Error(validation.errors.join(' '));
+    testIdentityMappingActive=true;showIdentityMappingError();saveState();
+    document.getElementById('testIdentityMapping').classList.remove('open');
+  }catch(error){showIdentityMappingError(error.message||'Die Zuordnung konnte nicht übernommen werden.');}
 });
 
 
@@ -1327,7 +1419,7 @@ function collectAnswers(){
   };
 }
 function saveState(){
-  localStorage.setItem(STORAGE_KEY,JSON.stringify({answers:collectAnswers(),tasks:generatedTasks,approval:approvalState,appLinks:appLinkSettings,roomSetup:roomSetupState,publication:publicationState}));
+  localStorage.setItem(STORAGE_KEY,JSON.stringify({answers:collectAnswers(),tasks:generatedTasks,approval:approvalState,appLinks:appLinkSettings,roomSetup:roomSetupState,publication:publicationState,testIdentityMappingActive}));
 }
 function shouldInclude(task,a){
   const tags=task.tags;
@@ -1912,6 +2004,11 @@ async function publishProjectToSupabase(){
 
     const a=collectAnswers();
     const team=collectTeam().filter(m=>m.name&&m.email);
+    if(testIdentityMappingActive){
+      const {module,config}=await testOnboardingReady;
+      const validation=module.validatePlannerTeam(team,config,{requireCompleteMatrix:true});
+      if(!validation.ok){showPublish('error',`Testidentitätsmatrix unvollständig: ${validation.errors.join(' ')}`);return;}
+    }
     showPublish('info','Unternehmen wird angelegt …');
     const {data:company,error:e1}=await supabaseClient.from('companies')
       .insert({name:a.company,created_by:user.id}).select().single();
@@ -1951,17 +2048,39 @@ async function publishProjectToSupabase(){
     showPublish('info','Team wird angelegt …');
     let members=[];
     if(team.length){
-      const {data,error}=await supabaseClient.from('project_members').insert(team.map(m=>({
-        project_id:project.id,name:m.name,email:m.email.toLowerCase(),project_role:m.role,
-        deputy_name:m.deputy||null,deputy_email:m.deputyEmail?.toLowerCase()||null,
-        access_level:m.role==='CFO / Geschäftsführung'?'cfo':m.role==='Projektleitung Abschluss'?'manager':m.role==='Wirtschaftsprüfung'?'auditor':'member',
-        can_read:true,can_upload:true,
-        can_edit:['CFO / Geschäftsführung','Projektleitung Abschluss','Leiter Rechnungswesen'].includes(m.role),
-        can_approve:['CFO / Geschäftsführung','Leiter Rechnungswesen'].includes(m.role),
-        can_manage_members:['CFO / Geschäftsführung','Projektleitung Abschluss'].includes(m.role)
-      }))).select();
+      const accessLevel=m=>m.role==='CFO / Geschäftsführung'?'cfo':m.role==='Projektleitung Abschluss'?'manager':m.role==='Wirtschaftsprüfung'?'auditor':'member';
+      const rows=team.flatMap(m=>{
+        const principal={
+          project_id:project.id,name:m.name,email:m.email.toLowerCase(),project_role:m.role,
+          deputy_name:m.deputy||null,deputy_email:m.deputyEmail?.toLowerCase()||null,
+          access_level:accessLevel(m),cockpit_profile:m.cockpitProfile||null,invitation_status:'pending',
+          can_read:m.can_read,can_upload:m.can_upload,can_edit:m.can_edit,can_approve:m.can_approve,
+          can_manage_members:m.can_manage_members,can_view_all_tasks:m.can_view_all_tasks
+        };
+        if(!m.deputy||!m.deputyEmail) return [principal];
+        return [principal,{
+          project_id:project.id,name:m.deputy,email:m.deputyEmail.toLowerCase(),project_role:m.role,
+          deputy_name:null,deputy_email:null,access_level:accessLevel(m),
+          cockpit_profile:m.substituteCockpitProfile||m.cockpitProfile||null,invitation_status:'pending',
+          can_read:m.substitute_can_read,can_upload:m.substitute_can_upload,can_edit:m.substitute_can_edit,
+          can_approve:m.substitute_can_approve,can_manage_members:m.substitute_can_manage_members,
+          can_view_all_tasks:m.substitute_can_view_all_tasks
+        }];
+      });
+      const {data,error}=await supabaseClient.from('project_members').insert(rows).select();
       if(error) throw error;
       members=data||[];
+      const memberByEmail=new Map(members.map(member=>[member.email.toLowerCase(),member]));
+      const substitutions=team.filter(m=>m.email&&m.deputyEmail).map(m=>({
+        project_id:project.id,
+        principal_member_id:memberByEmail.get(m.email.toLowerCase())?.id,
+        substitute_member_id:memberByEmail.get(m.deputyEmail.toLowerCase())?.id,
+        status:'active'
+      })).filter(row=>row.principal_member_id&&row.substitute_member_id&&row.principal_member_id!==row.substitute_member_id);
+      if(substitutions.length){
+        const {error:substitutionError}=await supabaseClient.from('project_member_substitutions').insert(substitutions);
+        if(substitutionError) throw substitutionError;
+      }
     }
     const byEmail=new Map(members.map(m=>[m.email.toLowerCase(),m]));
 
@@ -2554,7 +2673,7 @@ function restore(){
     return;
   }
   try{
-    const {answers:a,tasks,approval,appLinks,roomSetup,publication}=JSON.parse(raw);
+    const {answers:a,tasks,approval,appLinks,roomSetup,publication,testIdentityMappingActive:savedTestIdentityMapping}=JSON.parse(raw);
     Object.entries(a||{}).forEach(([k,v])=>{
       if(['components','systems','risks','specialScope','team','sizeAssessment'].includes(k)) return;
       const els=[...form.querySelectorAll(`[name="${k}"]`)];
@@ -2566,7 +2685,8 @@ function restore(){
     ['components','systems','risks','specialScope'].forEach(k=>(a[k]||[]).forEach(v=>{
       const el=form.querySelector(`[name="${k}"][value="${v}"]`);if(el)el.checked=true;
     }));
-    (a.team?.length?a.team:baseTeam).forEach(r=>addTeamRow(r.role||r[0],r.name||r[1],r.email||r[2],r.deputy||r[3],r.deputyEmail||r[4]));
+    (a.team?.length?a.team:baseTeam).forEach(r=>addTeamRow(r.role||r[0],r.name||r[1],r.email||r[2],r.deputy||r[3],r.deputyEmail||r[4],Array.isArray(r)?{}:r));
+    testIdentityMappingActive=Boolean(savedTestIdentityMapping);
     generatedTasks=tasks||[];
     approvalState=approval||approvalState;
     appLinkSettings=appLinks||appLinkSettings;

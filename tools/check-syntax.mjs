@@ -3,7 +3,7 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(/^\/(?:[A-Za-z]:)/, match => match.slice(1))), "..");
-const roots = [path.join(root, "tools"), path.join(root, "tests")];
+const roots = [path.join(root, "assets"), path.join(root, "tools"), path.join(root, "tests")];
 const files = [];
 
 function collect(directory) {

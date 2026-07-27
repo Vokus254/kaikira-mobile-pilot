@@ -16,7 +16,7 @@ const admin = createClient(env.url, env.serviceRoleKey, {
 });
 const identityKeys = env.plan.identities.filter(item => item.key !== "anonymous").map(item => item.key);
 const identityByKey = Object.fromEntries(env.plan.identities.map(item => [item.key, item]));
-const permissionFields = ["can_read", "can_upload", "can_edit", "can_approve", "can_manage_members"];
+const permissionFields = ["can_read", "can_upload", "can_edit", "can_approve", "can_manage_members", "can_view_all_tasks"];
 for (const identity of env.plan.identities) {
   for (const field of permissionFields) {
     if (typeof identity.permissions?.[field] !== "boolean") {
@@ -53,6 +53,7 @@ const storagePaths = {
 };
 const stateDir = path.join(env.root, ".test-state");
 const statePath = path.join(stateDir, "fixtures.json");
+const cleanupOnly = process.argv.includes("--cleanup");
 
 async function deleteRows(table, rowIds) {
   const result = await admin.from(table).delete().in("id", rowIds);
@@ -93,11 +94,42 @@ async function deleteFixtureUsers() {
   }
 }
 
+async function verifyFixtureCleanup() {
+  const fixtureIds = {
+    companies: Object.values(ids.companies), projects: Object.values(ids.projects),
+    project_members: Object.values(ids.members), tasks: Object.values(ids.tasks),
+    task_rooms: Object.values(ids.rooms), task_room_folders: Object.values(ids.folders),
+    documents: Object.values(ids.documents), task_comments: Object.values(ids.comments),
+    task_activity_events: Object.values(ids.activities), task_approvals: Object.values(ids.approvals),
+    task_review_notes: Object.values(ids.reviews), task_notifications: Object.values(ids.notifications),
+    task_responses: Object.values(ids.responses),
+  };
+  let retainedRows = 0;
+  for (const [table, rowIds] of Object.entries(fixtureIds)) {
+    const result = await admin.from(table).select("id", { count: "exact", head: true }).in("id", rowIds);
+    if (result.error) throw result.error;
+    retainedRows += result.count ?? 0;
+  }
+  let retainedStorageObjects = 0;
+  for (const objectPath of Object.values(storagePaths)) {
+    const folder = objectPath.slice(0, objectPath.lastIndexOf("/"));
+    const file = objectPath.slice(objectPath.lastIndexOf("/") + 1);
+    const listed = await admin.storage.from("lumina-datarooms").list(folder, { limit: 100, search: file });
+    if (listed.error) throw listed.error;
+    retainedStorageObjects += listed.data.filter(item => item.name === file).length;
+  }
+  const listedUsers = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+  if (listedUsers.error) throw listedUsers.error;
+  const fixtureEmails = new Set(identityKeys.map(key => `lumina-security-${key}@${env.emailDomain}`.toLowerCase()));
+  const retainedUsers = listedUsers.data.users.filter(user => fixtureEmails.has(user.email?.toLowerCase())).length;
+  return { retainedRows, retainedStorageObjects, retainedUsers };
+}
+
 async function upsert(table, rows) {
   const requiredFixtureFields = {
     companies: ["id", "name", "created_by"],
     projects: ["id", "company_id", "name", "number_of_entities", "special_scope", "report_components", "systems", "risks", "status", "created_by"],
-    project_members: ["id", "project_id", "user_id", "name", "email", "project_role", "access_level", ...permissionFields, "invitation_status"],
+    project_members: ["id", "project_id", "user_id", "name", "email", "project_role", "cockpit_profile", "access_level", ...permissionFields, "invitation_status"],
     tasks: ["id", "project_id", "technical_id", "title", "status", "is_custom"],
     task_rooms: ["id", "task_id", "room_name", "room_status"],
     task_room_folders: ["id", "task_room_id", "folder_number", "folder_name", "can_member_upload", "can_auditor_read"],
@@ -126,17 +158,38 @@ function membership(key) {
     name: `Fixture ${identity.label}`,
     email: users[key].email,
     project_role: identity.projectRole,
+    cockpit_profile: identity.cockpitProfile,
     access_level: identity.accessLevel,
     can_read: identity.permissions.can_read,
     can_upload: identity.permissions.can_upload,
     can_edit: identity.permissions.can_edit,
     can_approve: identity.permissions.can_approve,
     can_manage_members: identity.permissions.can_manage_members,
+    can_view_all_tasks: identity.permissions.can_view_all_tasks,
     invitation_status: "accepted",
   };
 }
 
 try {
+  if (cleanupOnly) {
+    await cleanupFixtureData();
+    await deleteFixtureUsers();
+    const verification = await verifyFixtureCleanup();
+    if (Object.values(verification).some(count => count !== 0)) {
+      throw new Error(`fixture cleanup verification failed: ${JSON.stringify(verification)}`);
+    }
+    console.log(JSON.stringify({
+      status: "CLEANED",
+      environment: "separate-test-project",
+      fixtureRowsRetained: false,
+      fixtureUsersRetained: false,
+      fixtureStorageObjectsRetained: false,
+      verification,
+      productionApplied: false,
+    }, null, 2));
+    process.exit(0);
+  }
+
   await cleanupFixtureData();
 
   const listed = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });

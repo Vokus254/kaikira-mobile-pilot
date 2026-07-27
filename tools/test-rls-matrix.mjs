@@ -18,8 +18,12 @@ if (planOnly) {
     executedCases: 0,
     passedCases: 0,
     failedCases: 0,
-    actualVisibleRows: 0,
-    actualDeniedMutations: 0,
+    expectedVisibleSelectCases: plan.cases.filter(item => item.operation === "select" && item.expected).length,
+    actualVisibleSelectCases: 0,
+    successfulMutations: 0,
+    visibilityAfterMutations: 0,
+    privilegeProbesPlanned: 37,
+    privilegeProbesExecuted: 0,
     remoteApplied: false,
   }, null, 2));
   process.exit(0);
@@ -117,7 +121,7 @@ async function serviceInsert(table, payload) {
 }
 
 async function seedProjectMembership(projectId, role, dependencies) {
-  if (!["editor", "approver", "auditor", "admin"].includes(role)) return;
+  if (!["user_a", "editor", "approver", "auditor", "admin"].includes(role)) return;
   const identity = env.plan.identities.find(item => item.key === role);
   const memberId = crypto.randomUUID();
   await serviceInsert("project_members", {
@@ -127,6 +131,7 @@ async function seedProjectMembership(projectId, role, dependencies) {
     name: `Matrix ${identity.label}`,
     email: state.users[role].email,
     project_role: identity.projectRole,
+    cockpit_profile: identity.cockpitProfile,
     access_level: identity.accessLevel,
     ...identity.permissions,
     invitation_status: "accepted",
@@ -159,19 +164,21 @@ async function prepareTableCase(resource, scope, role, operation) {
     can_edit: false,
     can_approve: false,
     can_manage_members: false,
-    invitation_status: "accepted",
+    can_view_all_tasks: false,
+    cockpit_profile: null,
+    invitation_status: operation === "insert" ? "pending" : "accepted",
   };
-  if (resource === "tasks") payload = { id, project_id: refs.projectId, technical_id: `MATRIX-${id}`, title: "Matrix task", responsible_email: scope === "A" ? state.users.editor.email : state.users.user_b.email };
+  if (resource === "tasks") payload = { id, project_id: refs.projectId, technical_id: `MATRIX-${id}`, title: "Matrix task", responsible_member_id: scope === "A" ? state.ids.members.editor : state.ids.members.user_b, responsible_email: scope === "A" ? state.users.editor.email : state.users.user_b.email };
   if (resource === "task_rooms") {
     const taskId = crypto.randomUUID();
-    await serviceInsert("tasks", { id: taskId, project_id: refs.projectId, technical_id: `MATRIX-ROOM-${id}`, title: "Matrix room dependency", responsible_email: scope === "A" ? state.users.editor.email : state.users.user_b.email });
+    await serviceInsert("tasks", { id: taskId, project_id: refs.projectId, technical_id: `MATRIX-ROOM-${id}`, title: "Matrix room dependency", responsible_member_id: scope === "A" ? state.ids.members.editor : state.ids.members.user_b, responsible_email: scope === "A" ? state.users.editor.email : state.users.user_b.email });
     dependencies.push(["tasks", taskId]);
     payload = { id, task_id: taskId, room_name: "Matrix room" };
   }
   if (resource === "task_room_folders") {
     const taskId = crypto.randomUUID();
     const roomId = crypto.randomUUID();
-    await serviceInsert("tasks", { id: taskId, project_id: refs.projectId, technical_id: `MATRIX-FOLDER-${id}`, title: "Matrix folder dependency", responsible_email: scope === "A" ? state.users.editor.email : state.users.user_b.email });
+    await serviceInsert("tasks", { id: taskId, project_id: refs.projectId, technical_id: `MATRIX-FOLDER-${id}`, title: "Matrix folder dependency", responsible_member_id: scope === "A" ? state.ids.members.editor : state.ids.members.user_b, responsible_email: scope === "A" ? state.users.editor.email : state.users.user_b.email });
     await serviceInsert("task_rooms", { id: roomId, task_id: taskId, room_name: "Matrix folder room" });
     dependencies.push(["tasks", taskId]);
     payload = { id, task_room_id: roomId, folder_number: 1, folder_name: "Matrix folder" };
@@ -480,9 +487,11 @@ async function runPrivilegeProbes() {
       can_read: true,
       can_upload: false,
       can_edit: false,
-      can_approve: false,
-      can_manage_members: false,
-      invitation_status: "accepted",
+    can_approve: false,
+    can_manage_members: false,
+      can_view_all_tasks: false,
+      cockpit_profile: null,
+      invitation_status: "pending",
     };
     observers[actor].lastStatus = null;
     const mutation = await clients[actor].from("project_members").insert(payload);
@@ -512,6 +521,227 @@ async function runPrivilegeProbes() {
   };
   await insertProbe({ probeId: "PM-ESC-009", actor: "editor", expected: false });
   await insertProbe({ probeId: "PM-ESC-010", actor: "admin", expected: true });
+
+  const visibilityProbe = async ({ probeId, actor, table, id, expected, setup, cleanup, detail }) => {
+    try {
+      if (setup) await setup();
+      observers[actor].lastStatus = null;
+      const visible = await visibleCount(clients[actor], table, id);
+      probes.push({
+        probeId, actor, targetKind: detail, operation: "select", expected,
+        httpStatus: observers[actor].lastStatus ?? visible.httpStatus,
+        errorCode: visible.errorCode,
+        visibleRowsBefore: visible.count, affectedRows: 0, visibleRowsAfter: visible.count,
+        actualDataState: visible.count === 1 ? "ROW_VISIBLE" : "ROW_HIDDEN",
+        passed: (visible.count === 1) === expected,
+      });
+    } finally {
+      if (cleanup) await cleanup();
+    }
+  };
+
+  const auditorId = state.ids.members.auditor;
+  const auditorBefore = await readBack("project_members", auditorId);
+  const restoreAuditor = async () => {
+    await service.from("project_members").update({
+      user_id: auditorBefore.user_id,
+      invitation_status: auditorBefore.invitation_status,
+      project_role: auditorBefore.project_role,
+      cockpit_profile: auditorBefore.cockpit_profile,
+      can_view_all_tasks: auditorBefore.can_view_all_tasks,
+    }).eq("id", auditorId);
+  };
+
+  await visibilityProbe({ probeId: "P2-RLS-001", actor: "editor", table: "projects", id: state.ids.projects.A, expected: true, detail: "ACCEPTED_MEMBERSHIP" });
+  for (const [index, status] of ["pending", "invited", "declined", "inactive"].entries()) {
+    await visibilityProbe({
+      probeId: `P2-RLS-00${index + 2}`, actor: "auditor", table: "projects", id: state.ids.projects.A,
+      expected: false, detail: `${status.toUpperCase()}_MEMBERSHIP`,
+      setup: async () => { await service.from("project_members").update({ invitation_status: status }).eq("id", auditorId); },
+      cleanup: restoreAuditor,
+    });
+  }
+  await visibilityProbe({
+    probeId: "P2-RLS-006", actor: "auditor", table: "projects", id: state.ids.projects.A,
+    expected: false, detail: "UNLINKED_MEMBERSHIP",
+    setup: async () => { await service.from("project_members").update({ user_id: null }).eq("id", auditorId); },
+    cleanup: restoreAuditor,
+  });
+  await visibilityProbe({ probeId: "P2-RLS-007", actor: "editor", table: "tasks", id: state.ids.tasks.A, expected: true, detail: "OWN_TASK" });
+
+  const substitutionId = () => crypto.randomUUID();
+  const substitutionProbe = async ({ probeId, status, validFrom = null, validUntil = null, expected }) => {
+    const id = substitutionId();
+    await visibilityProbe({
+      probeId, actor: "auditor", table: "tasks", id: state.ids.tasks.A, expected, detail: `${status.toUpperCase()}_SUBSTITUTION`,
+      setup: async () => {
+        const inserted = await service.from("project_member_substitutions").insert({
+          id, project_id: state.ids.projects.A, principal_member_id: state.ids.members.editor,
+          substitute_member_id: auditorId, status, valid_from: validFrom, valid_until: validUntil,
+        });
+        if (inserted.error) throw inserted.error;
+      },
+      cleanup: async () => { await service.from("project_member_substitutions").delete().eq("id", id); },
+    });
+  };
+  await substitutionProbe({ probeId: "P2-RLS-008", status: "active", expected: true });
+  await substitutionProbe({ probeId: "P2-RLS-009", status: "inactive", expected: false });
+  await substitutionProbe({
+    probeId: "P2-RLS-010", status: "active", expected: false,
+    validFrom: "2020-01-01T00:00:00Z", validUntil: "2020-01-02T00:00:00Z",
+  });
+
+  const crossSubstitutionId = substitutionId();
+  const crossSubstitution = await service.from("project_member_substitutions").insert({
+    id: crossSubstitutionId, project_id: state.ids.projects.A,
+    principal_member_id: state.ids.members.editor, substitute_member_id: state.ids.members.user_b,
+    status: "active",
+  });
+  const crossSubstitutionAfter = await readBack("project_member_substitutions", crossSubstitutionId);
+  probes.push({
+    probeId: "P2-RLS-011", actor: "service_constraint_probe", targetKind: "CROSS_PROJECT_SUBSTITUTION",
+    operation: "insert", expected: false, httpStatus: crossSubstitution.status ?? null,
+    errorCode: crossSubstitution.error?.code || null, visibleRowsBefore: 0,
+    affectedRows: crossSubstitutionAfter ? 1 : 0, visibleRowsAfter: crossSubstitutionAfter ? 1 : 0,
+    actualDataState: crossSubstitutionAfter ? "ROW_INSERTED" : "ROW_NOT_INSERTED",
+    passed: !crossSubstitutionAfter && crossSubstitution.error?.code === "23503",
+  });
+  if (crossSubstitutionAfter) await service.from("project_member_substitutions").delete().eq("id", crossSubstitutionId);
+
+  await visibilityProbe({ probeId: "P2-RLS-012", actor: "auditor", table: "tasks", id: state.ids.tasks.A, expected: false, detail: "WORKER_FOREIGN_TASK" });
+  await visibilityProbe({
+    probeId: "P2-RLS-013", actor: "auditor", table: "tasks", id: state.ids.tasks.A, expected: true, detail: "EXPLICIT_VIEW_ALL",
+    setup: async () => { await service.from("project_members").update({ can_view_all_tasks: true }).eq("id", auditorId); },
+    cleanup: restoreAuditor,
+  });
+  await visibilityProbe({ probeId: "P2-RLS-014", actor: "auditor", table: "tasks", id: state.ids.tasks.A, expected: false, detail: "NO_VIEW_ALL" });
+
+  const safeInvitationAttempt = async ({ probeId, actor, profile, role }) => {
+    const actorId = state.ids.members[actor];
+    const before = await readBack("project_members", actorId);
+    const id = crypto.randomUUID();
+    await service.from("project_members").update({ project_role: role, cockpit_profile: profile, can_manage_members: false }).eq("id", actorId);
+    observers[actor].lastStatus = null;
+    const mutation = await clients[actor].from("project_members").insert({
+      id, project_id: state.ids.projects.A, user_id: null, name: `Phase 2 ${role}`,
+      email: `phase2-${id}@example.invalid`, project_role: "Bilanzbuchhaltung", cockpit_profile: null,
+      access_level: "viewer", can_read: true, can_upload: false, can_edit: false,
+      can_approve: false, can_manage_members: false, can_view_all_tasks: false, invitation_status: "pending",
+    });
+    const after = await readBack("project_members", id);
+    await service.from("project_members").delete().eq("id", id);
+    await service.from("project_members").update({
+      project_role: before.project_role, cockpit_profile: before.cockpit_profile,
+      can_manage_members: before.can_manage_members,
+    }).eq("id", actorId);
+    probes.push({
+      probeId, actor, targetKind: `${profile.toUpperCase()}_WITHOUT_MANAGE`, operation: "insert", expected: false,
+      httpStatus: observers[actor].lastStatus ?? mutation.status ?? null, errorCode: mutation.error?.code || null,
+      visibleRowsBefore: 0, affectedRows: after ? 1 : 0, visibleRowsAfter: after ? 1 : 0,
+      actualDataState: after ? "ROW_INSERTED" : "ROW_NOT_INSERTED", passed: !after,
+    });
+  };
+  await safeInvitationAttempt({ probeId: "P2-RLS-015", actor: "approver", profile: "cfo", role: "CFO / Geschäftsführung" });
+  await safeInvitationAttempt({ probeId: "P2-RLS-016", actor: "approver", profile: "project", role: "Projektleitung Abschluss" });
+
+  const adminInviteId = crypto.randomUUID();
+  const adminInvite = await clients.admin.from("project_members").insert({
+    id: adminInviteId, project_id: state.ids.projects.A, user_id: null, name: "Phase 2 safe invitation",
+    email: `phase2-${adminInviteId}@example.invalid`, project_role: "Bilanzbuchhaltung", cockpit_profile: null,
+    access_level: "viewer", can_read: true, can_upload: false, can_edit: false,
+    can_approve: false, can_manage_members: false, can_view_all_tasks: false, invitation_status: "pending",
+  });
+  const adminInviteAfter = await readBack("project_members", adminInviteId);
+  probes.push({
+    probeId: "P2-RLS-017", actor: "admin", targetKind: "EXPLICIT_MANAGER_SAFE_INVITATION",
+    operation: "insert", expected: true, httpStatus: adminInvite.status ?? null, errorCode: adminInvite.error?.code || null,
+    visibleRowsBefore: 0, affectedRows: adminInviteAfter ? 1 : 0, visibleRowsAfter: adminInviteAfter ? 1 : 0,
+    actualDataState: adminInviteAfter ? "ROW_INSERTED" : "ROW_NOT_INSERTED", passed: Boolean(adminInviteAfter),
+  });
+  await service.from("project_members").delete().eq("id", adminInviteId);
+
+  await visibilityProbe({
+    probeId: "P2-RLS-018", actor: "auditor", table: "tasks", id: state.ids.tasks.A, expected: false, detail: "UNKNOWN_PROFILE",
+    setup: async () => { await service.from("project_members").update({ project_role: "Unbekannte Altrolle", cockpit_profile: null }).eq("id", auditorId); },
+    cleanup: restoreAuditor,
+  });
+  await updateProbe({ probeId: "P2-RLS-019", actor: "editor", targetRole: "editor", targetKind: "OWN_PROFILE", field: "cockpit_profile", value: "cfo", expected: false });
+  await updateProbe({ probeId: "P2-RLS-020", actor: "editor", targetRole: "editor", targetKind: "OWN_TASK_SCOPE", field: "can_view_all_tasks", value: true, expected: false });
+  await updateProbe({ probeId: "P2-RLS-021", actor: "editor", targetRole: "approver", targetKind: "FOREIGN_USER_ID", field: "user_id", value: state.users.editor.id, expected: false });
+  await updateProbe({ probeId: "P2-RLS-022", actor: "admin", targetRole: "approver", targetKind: "FOREIGN_PROJECT_ID", field: "project_id", value: state.ids.projects.B, expected: false });
+
+  const constraintProbe = async ({ probeId, table, payload, targetKind }) => {
+    observers.admin.lastStatus = null;
+    const mutation = await clients.admin.from(table).insert(payload);
+    const after = await readBack(table, payload.id);
+    probes.push({
+      probeId, actor: "admin", targetKind, operation: "insert", expected: false,
+      httpStatus: observers.admin.lastStatus ?? mutation.status ?? null, errorCode: mutation.error?.code || null,
+      visibleRowsBefore: 0, affectedRows: after ? 1 : 0, visibleRowsAfter: after ? 1 : 0,
+      actualDataState: after ? "ROW_INSERTED" : "ROW_NOT_INSERTED",
+      passed: !after && mutation.error?.code === "23503",
+    });
+    if (after) await service.from(table).delete().eq("id", payload.id);
+  };
+  await constraintProbe({
+    probeId: "P2-RLS-023", table: "documents", targetKind: "PROJECT_TASK_MISMATCH_DOCUMENT",
+    payload: {
+      id: crypto.randomUUID(), project_id: state.ids.projects.B, task_id: state.ids.tasks.A,
+      folder_id: null, storage_bucket: "lumina-datarooms", storage_path: `mismatch/${crypto.randomUUID()}`,
+      file_name: "mismatch.txt", uploaded_by: state.users.admin.id,
+    },
+  });
+
+  const actingSubstitutionId = substitutionId();
+  await service.from("project_member_substitutions").insert({
+    id: actingSubstitutionId, project_id: state.ids.projects.A,
+    principal_member_id: state.ids.members.editor, substitute_member_id: auditorId, status: "active",
+  });
+  const actorEventId = crypto.randomUUID();
+  const validActorEvent = await clients.auditor.from("task_activity_events").insert({
+    id: actorEventId, project_id: state.ids.projects.A, task_id: state.ids.tasks.A,
+    event_type: "substitution_probe", message: "Acting substitute", created_by: state.users.auditor.id,
+  });
+  const actorEvent = await readBack("task_activity_events", actorEventId);
+  const spoofEventId = crypto.randomUUID();
+  const spoofActor = await clients.auditor.from("task_activity_events").insert({
+    id: spoofEventId, project_id: state.ids.projects.A, task_id: state.ids.tasks.A,
+    event_type: "substitution_probe", message: "Spoofed principal", created_by: state.users.editor.id,
+  });
+  const spoofEvent = await readBack("task_activity_events", spoofEventId);
+  probes.push({
+    probeId: "P2-RLS-024", actor: "auditor", targetKind: "SUBSTITUTE_ACTOR_IDENTITY", operation: "insert",
+    expected: true, httpStatus: validActorEvent.status ?? null,
+    errorCode: validActorEvent.error?.code || spoofActor.error?.code || null,
+    visibleRowsBefore: 0, affectedRows: actorEvent && !spoofEvent ? 1 : 0, visibleRowsAfter: actorEvent ? 1 : 0,
+    actualDataState: actorEvent?.created_by === state.users.auditor.id && !spoofEvent ? "ACTOR_PRESERVED_SPOOF_REJECTED" : "ACTOR_INTEGRITY_FAILED",
+    passed: actorEvent?.created_by === state.users.auditor.id && !spoofEvent,
+  });
+  await service.from("task_activity_events").delete().in("id", [actorEventId, spoofEventId]);
+  await service.from("project_member_substitutions").delete().eq("id", actingSubstitutionId);
+
+  const spoofCommentId = crypto.randomUUID();
+  const spoofComment = await clients.editor.from("task_comments").insert({
+    id: spoofCommentId, task_id: state.ids.tasks.A, user_id: state.users.editor.id,
+    author_name: "KIRA", author_type: "system", comment_type: "system", message: "spoof",
+  });
+  const spoofCommentAfter = await readBack("task_comments", spoofCommentId);
+  probes.push({
+    probeId: "P2-RLS-025", actor: "editor", targetKind: "SYSTEM_AUTHOR_IMPERSONATION", operation: "insert",
+    expected: false, httpStatus: spoofComment.status ?? null, errorCode: spoofComment.error?.code || null,
+    visibleRowsBefore: 0, affectedRows: spoofCommentAfter ? 1 : 0, visibleRowsAfter: spoofCommentAfter ? 1 : 0,
+    actualDataState: spoofCommentAfter ? "ROW_INSERTED" : "ROW_NOT_INSERTED", passed: !spoofCommentAfter,
+  });
+  if (spoofCommentAfter) await service.from("task_comments").delete().eq("id", spoofCommentId);
+
+  await constraintProbe({
+    probeId: "P2-RLS-026", table: "task_activity_events", targetKind: "PROJECT_TASK_MISMATCH_ACTIVITY",
+    payload: {
+      id: crypto.randomUUID(), project_id: state.ids.projects.B, task_id: state.ids.tasks.A,
+      event_type: "mismatch", message: "mismatch", created_by: state.users.admin.id,
+    },
+  });
+  await updateProbe({ probeId: "P2-RLS-027", actor: "editor", targetRole: "editor", targetKind: "ACCESS_LEVEL_NO_ESCALATION", field: "access_level", value: "admin", expected: false });
   return probes;
 }
 
@@ -530,7 +760,8 @@ for (const testCase of selectedCases) {
 }
 
 const mutationResults = results.filter(item => item.operation !== "select");
-const privilegeProbes = probesOnly ? await runPrivilegeProbes() : [];
+const privilegeProbes = requestedResources && !probesOnly ? [] : await runPrivilegeProbes();
+const selectResults = results.filter(item => item.operation === "select");
 const summary = {
   status: results.every(item => item.passed) && privilegeProbes.every(item => item.passed) ? "PASS" : "FAIL",
   startedAt,
@@ -542,8 +773,12 @@ const summary = {
   executedCases: results.length,
   passedCases: results.filter(item => item.passed).length,
   failedCases: results.filter(item => !item.passed).length,
-  expectedVisibleRows: results.filter(item => item.operation === "select" && item.expected).length,
-  actualVisibleRows: results.reduce((sum, item) => sum + (item.visibleRowsAfter || 0), 0),
+  expectedVisibleSelectCases: selectResults.filter(item => item.expected).length,
+  actualVisibleSelectCases: selectResults.filter(item => item.visibleRowsAfter === 1).length,
+  expectedVisibleSelectRows: selectResults.filter(item => item.expected).length,
+  actualVisibleSelectRows: selectResults.reduce((sum, item) => sum + (item.visibleRowsAfter || 0), 0),
+  successfulMutations: mutationResults.filter(item => item.allowed).length,
+  visibilityAfterMutations: mutationResults.reduce((sum, item) => sum + (item.visibleRowsAfter || 0), 0),
   expectedDeniedMutations: mutationResults.filter(item => !item.expected).length,
   actualDeniedMutations: mutationResults.filter(item => !item.allowed).length,
   productionApplied: false,
