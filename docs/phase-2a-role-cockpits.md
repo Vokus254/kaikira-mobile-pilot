@@ -18,6 +18,9 @@
 - Header, Hauptnavigation, Projektauswahl, Rollenansicht, Feed sowie KAI/KIRA liegen vollständig im standardmäßig versteckten `protectedApp`-Container.
 - Erst nach erfolgreicher Sessionprüfung werden sichtbare Projekte und die eigene Projektmitgliedschaft geladen.
 - `SIGNED_OUT` leert den lokalen Nutzer-, Projekt- und Rollenstatus und verbirgt den geschützten Container ohne Seitenneuladung.
+- Neben dem Magic Link steht die klassische Anmeldung über `signInWithPassword` zur Verfügung. Fehler werden unabhängig von der Existenz eines Kontos als „E-Mail-Adresse oder Passwort ist nicht korrekt.“ ausgegeben.
+- „Passwort vergessen“ verwendet `resetPasswordForEmail` mit der festen Rücksprungadresse `${location.origin}/cockpit` und einer kontoneutralen Erfolgsnachricht.
+- Die Passwortänderung erscheint nur bei einem von Supabase bestätigten `PASSWORD_RECOVERY`-Ereignis beziehungsweise einem gültigen Recovery-Token im URL-Fragment. Ein frei gesetzter Query-Parameter aktiviert sie nicht.
 
 ### Rollenmodell
 
@@ -53,7 +56,7 @@ Abschlussplaner und Projektverwaltung werden erst nach Rollenauflösung eingeble
 
 - `cockpit.html`: Mitgliedschaftsauflösung, drei Einstiegsbilder, rollenabhängige Navigation und responsive Darstellung.
 - `vercel.json`: Geschützte Direktpfade `/aufgaben`, `/datenraeume` und `/kommunikation` auf den bewachten Cockpit-Einstieg geführt.
-- `tools/test-auth-guard.mjs`: Verhaltensprüfung für Session-Gate, fehlende Projektabfragen, Rollenstart, Abmeldung und Direktpfade.
+- `tools/test-auth-guard.mjs`: Verhaltensprüfung für Session-Gate, Passwort- und Magic-Link-Login, kontoneutrale Fehler, Recovery, Rollenstart, Abmeldung und Direktpfade.
 - `tools/test-role-cockpits.mjs`: statische Regressionstests für Bindung, Profile, sicheren Fallback und fehlenden Rollenumschalter.
 - `tools/test-http-smoke.mjs`: Geschützte Direktpfade in die Routenprüfung aufgenommen.
 - `package.json`: Regressionstest in die vorhandene Testsuite aufgenommen.

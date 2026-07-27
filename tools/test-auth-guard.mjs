@@ -17,42 +17,50 @@ function createElement(id = "") {
   };
 }
 
-async function runScenario(session, pathname = "/cockpit") {
+async function runScenario(session, pathname = "/cockpit", authOptions = {}) {
   const elements = new Map();
   const getElement = id => { if (!elements.has(id)) elements.set(id, createElement(id)); return elements.get(id); };
   const views = ["cockpit", "tasks", "rooms", "communication"].map(name => { const element = getElement(`view-${name}`); element.dataset.view = name; return element; });
   const nav = ["cockpit", "tasks", "rooms", "communication"].map(name => { const element = createElement(); element.dataset.view = name; return element; });
-  getElement("protectedApp").hidden = true; getElement("authGate").hidden = true; getElement("authLoading").hidden = false;
+  ["loginEmail", "loginPassword", "newPassword", "confirmPassword"].forEach(getElement);
+  getElement("protectedApp").hidden = true; getElement("authGate").hidden = true; getElement("recoveryGate").hidden = true; getElement("authLoading").hidden = false;
   const calls = [];
+  const authPayloads = {};
   let authCallback = null;
-  const tableData = {
-    projects: session ? [{ id: "project-a", name: "Testabschluss", status: "active", closing_date: "2026-12-31", companies: { name: "Test GmbH" }, created_at: "2026-01-01" }] : [],
-    project_members: session ? [{ id: "member-cfo", project_id: "project-a", user_id: session.user.id, name: "Cora Finance", email: session.user.email, project_role: "CFO / Geschäftsführung", access_level: "cfo", can_read: true, can_upload: true, can_edit: true, can_approve: true, can_manage_members: true, invitation_status: "accepted" }] : [],
+  let activeSession = session;
+  const tableData = table => ({
+    projects: activeSession ? [{ id: "project-a", name: "Testabschluss", status: "active", closing_date: "2026-12-31", companies: { name: "Test GmbH" }, created_at: "2026-01-01" }] : [],
+    project_members: activeSession ? [{ id: "member-cfo", project_id: "project-a", user_id: activeSession.user.id, name: "Cora Finance", email: activeSession.user.email, project_role: "CFO / Geschäftsführung", access_level: "cfo", can_read: true, can_upload: true, can_edit: true, can_approve: true, can_manage_members: true, invitation_status: "accepted" }] : [],
     tasks: [],
-  };
+  })[table] || [];
   const client = {
     auth: {
-      async getSession() { calls.push("getSession"); return { data: { session }, error: null }; },
-      onAuthStateChange(callback) { calls.push("onAuthStateChange"); authCallback = callback; return { data: { subscription: { unsubscribe() {} } } }; },
-      async signInWithOtp() { return { error: null }; }, async signOut() { return { error: null }; },
+      async getSession() { calls.push("getSession"); return { data: { session: activeSession }, error: authOptions.sessionError || null }; },
+      onAuthStateChange(callback) { calls.push("onAuthStateChange"); authCallback = callback; if (authOptions.initialAuthEvent) callback(authOptions.initialAuthEvent, activeSession); return { data: { subscription: { unsubscribe() {} } } }; },
+      async signInWithPassword(payload) { calls.push("auth:signInWithPassword"); authPayloads.passwordLogin = payload; if (authOptions.passwordError) return { data: { session: null }, error: authOptions.passwordError }; activeSession = authOptions.loginSession; return { data: { session: activeSession }, error: null }; },
+      async resetPasswordForEmail(email, options) { calls.push("auth:resetPasswordForEmail"); authPayloads.passwordReset = { email, options }; return { data: {}, error: authOptions.resetError || null }; },
+      async signInWithOtp(payload) { calls.push("auth:signInWithOtp"); authPayloads.magicLink = payload; return { error: authOptions.magicError || null }; },
+      async updateUser(payload) { calls.push("auth:updateUser"); authPayloads.passwordUpdate = payload; return { data: { user: activeSession?.user || null }, error: authOptions.updateError || null }; },
+      async signOut() { calls.push("auth:signOut"); activeSession = null; return { error: null }; },
     },
     from(table) {
       calls.push(`query:${table}`);
-      const chain = { select: () => chain, order: () => chain, eq: () => chain, in: () => chain, then: resolve => Promise.resolve({ data: tableData[table] || [], error: null }).then(resolve) };
+      const chain = { select: () => chain, order: () => chain, eq: () => chain, in: () => chain, then: resolve => Promise.resolve({ data: tableData(table), error: null }).then(resolve) };
       return chain;
     },
   };
   const local = new Map();
-  const location = { pathname, origin: "http://127.0.0.1:4173", href: pathname };
+  const location = { pathname, origin: "http://127.0.0.1:4173", href: pathname, search: authOptions.search || "", hash: authOptions.hash || "" };
+  const history = { replaceState(...args) { authPayloads.history = args; } };
   const context = vm.createContext({
-    supabase: { createClient: () => client }, location, window: { open() {}, location },
+    supabase: { createClient: () => client }, location, window: { open() {}, location, history },
     document: { getElementById: getElement, querySelectorAll: selector => selector === "[data-view]" ? nav : selector === ".view" ? views : [], querySelector: selector => selector.startsWith("#") ? getElement(selector.slice(1)) : null },
     localStorage: { getItem: key => local.get(key) || null, setItem: (key, value) => local.set(key, value) },
-    console, Intl, Date, Map, Set, URL, encodeURIComponent, clearTimeout() {}, setTimeout() { return 0; },
+    console, Intl, Date, Map, Set, URL, URLSearchParams, encodeURIComponent, clearTimeout() {}, setTimeout() { return 0; },
   });
   vm.runInContext(applicationScript, context);
   await vm.runInContext("authReady", context);
-  return { context, elements, calls, get authCallback() { return authCallback; } };
+  return { context, elements, calls, authPayloads, get authCallback() { return authCallback; } };
 }
 
 const checks = [
@@ -68,12 +76,76 @@ const checks = [
     assert.deepEqual(result.calls.filter(call => call.startsWith("query:")), []);
     assert.equal(result.calls[0], "getSession");
   }],
+  ["Expired session returns to the protected login gate", async () => {
+    const result = await runScenario(null, "/cockpit", { sessionError: new Error("refresh token expired") });
+    assert.equal(result.elements.get("protectedApp").hidden, true);assert.equal(result.elements.get("authGate").hidden, false);
+    assert.equal(result.elements.get("authGateNotice").textContent, "Die Sitzung konnte nicht geprüft werden.");
+    assert.doesNotMatch(result.elements.get("authGateNotice").textContent, /refresh|token|expired/i);
+  }],
   ["Valid session loads the membership-derived CFO start", async () => {
     const result = await runScenario({ user: { id: "user-cfo", email: "cfo@example.test" } });
     assert.equal(result.elements.get("protectedApp").hidden, false);
     assert.equal(result.elements.get("authGate").hidden, true);
     assert.equal(result.elements.get("roleIdentityLabel").textContent, "CFO / Geschäftsführung");
-    assert.deepEqual(result.calls.slice(0, 4), ["getSession", "query:projects", "query:project_members", "query:tasks"]);
+    assert.deepEqual(result.calls.slice(0, 5), ["getSession", "onAuthStateChange", "query:projects", "query:project_members", "query:tasks"]);
+  }],
+  ["Successful password login starts the membership-derived cockpit", async () => {
+    const loginSession = { user: { id: "user-cfo", email: "cfo@example.test" } };
+    const result = await runScenario(null, "/cockpit", { loginSession });
+    result.elements.get("loginEmail").value = "cfo@example.test";
+    result.elements.get("loginPassword").value = "correct-" + "input";
+    await vm.runInContext("passwordLogin()", result.context);
+    assert.equal(result.authPayloads.passwordLogin.email, "cfo@example.test");assert.equal(result.authPayloads.passwordLogin.password, "correct-input");
+    assert.equal(result.elements.get("protectedApp").hidden, false);
+    assert.equal(result.elements.get("roleIdentityLabel").textContent, "CFO / Geschäftsführung");
+    assert.equal(result.elements.get("loginPassword").value, "");
+  }],
+  ["Wrong password uses the neutral login error", async () => {
+    const result = await runScenario(null, "/cockpit", { passwordError: new Error("invalid credentials") });
+    result.elements.get("loginEmail").value = "known@example.test";result.elements.get("loginPassword").value = "wrong-input";
+    await vm.runInContext("passwordLogin()", result.context);
+    assert.equal(result.elements.get("authGateNotice").textContent, "E-Mail-Adresse oder Passwort ist nicht korrekt.");
+    assert.doesNotMatch(result.elements.get("authGateNotice").textContent, /invalid|credentials|known@example/i);
+  }],
+  ["Unknown email uses the identical neutral login error", async () => {
+    const result = await runScenario(null, "/cockpit", { passwordError: new Error("user not found") });
+    result.elements.get("loginEmail").value = "unknown@example.test";result.elements.get("loginPassword").value = "any-input";
+    await vm.runInContext("passwordLogin()", result.context);
+    assert.equal(result.elements.get("authGateNotice").textContent, "E-Mail-Adresse oder Passwort ist nicht korrekt.");
+    assert.doesNotMatch(result.elements.get("authGateNotice").textContent, /unknown|not found/i);
+  }],
+  ["Password reset uses the fixed recovery redirect and neutral response", async () => {
+    const result = await runScenario(null);
+    result.elements.get("loginEmail").value = "person@example.test";
+    await vm.runInContext("requestPasswordReset()", result.context);
+    assert.equal(result.authPayloads.passwordReset.email, "person@example.test");assert.equal(result.authPayloads.passwordReset.options.redirectTo, "http://127.0.0.1:4173/cockpit");
+    assert.match(result.elements.get("authGateNotice").textContent, /Wenn für diese E-Mail-Adresse ein Zugang besteht/);
+  }],
+  ["Magic link remains available", async () => {
+    const result = await runScenario(null);
+    result.elements.get("loginEmail").value = "person@example.test";
+    await vm.runInContext("sendMagicLink()", result.context);
+    assert.equal(result.authPayloads.magicLink.email, "person@example.test");assert.equal(result.authPayloads.magicLink.options.emailRedirectTo, "http://127.0.0.1:4173/cockpit");
+    assert.equal(result.elements.get("authGateNotice").textContent, "Anmeldelink wurde versendet.");
+  }],
+  ["Password update is shown and accepted only with a valid recovery session", async () => {
+    const recoverySession = { user: { id: "user-cfo", email: "cfo@example.test" } };
+    const result = await runScenario(recoverySession, "/cockpit", { initialAuthEvent: "PASSWORD_RECOVERY" });
+    assert.equal(result.elements.get("recoveryGate").hidden, false);assert.equal(result.elements.get("protectedApp").hidden, true);
+    result.elements.get("newPassword").value = "new-" + "secure-input";result.elements.get("confirmPassword").value = "new-" + "secure-input";
+    await vm.runInContext("updateRecoveredPassword()", result.context);
+    assert.equal(result.authPayloads.passwordUpdate.password, "new-secure-input");
+    assert.equal(result.elements.get("protectedApp").hidden, false);
+    assert.ok(result.authPayloads.history);
+  }],
+  ["Recovery URL without a valid session never shows password update", async () => {
+    const result = await runScenario(null, "/cockpit", { search: "?type=recovery" });
+    assert.equal(result.elements.get("recoveryGate").hidden, true);assert.equal(result.elements.get("authGate").hidden, false);
+  }],
+  ["Forged recovery query with a normal session never shows password update", async () => {
+    const normalSession = { user: { id: "user-cfo", email: "cfo@example.test" } };
+    const result = await runScenario(normalSession, "/cockpit", { search: "?type=recovery" });
+    assert.equal(result.elements.get("recoveryGate").hidden, true);assert.equal(result.elements.get("protectedApp").hidden, false);
   }],
   ["SIGNED_OUT immediately removes protected UI", async () => {
     const result = await runScenario({ user: { id: "user-cfo", email: "cfo@example.test" } });
