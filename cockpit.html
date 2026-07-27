@@ -634,7 +634,7 @@ function eventHtml(a){
   const taskId=a.task?.id||a.task_id||"";
   const action=a.type==="question"?"communication":a.type==="file"?"dataroom":"overview";
   const interactive=taskId
-     ` role="button" tabindex="0" class="event event-clickable" onclick="openTaskArea('${taskId}','${action}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openTaskArea('${taskId}','${action}')}" title="Aufgabe direkt Ã¶ffnen"`
+     ? ` role="button" tabindex="0" class="event event-clickable" onclick="openTaskArea('${taskId}','${action}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openTaskArea('${taskId}','${action}')}" title="Aufgabe direkt Ã¶ffnen"`
     : ` class="event"`;
   return `<div${interactive}><div class="event-icon ${cls}">${icon}</div><div><strong>${esc(a.title)}</strong><div class="small">${esc(a.detail)}</div></div><time class="small">${dt(a.time)}</time></div>`;
 }
