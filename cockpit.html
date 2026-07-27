@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="utf-8">
@@ -316,7 +316,7 @@ let authEpoch=0,authSubscription=null,recoverySessionActive=false;
 let recoveryUrlSignal=new URLSearchParams(location.hash.replace(/^#/,"")).get("type")==="recovery"&&location.hash.includes("access_token=");
 const statusMap={planned:"Geplant",invited:"Eingeladen",accepted:"Angenommen",declined:"Abgelehnt",in_progress:"In Bearbeitung",question:"RÃ¼ckfrage",blocked:"Blockiert",submitted:"Eingereicht",in_review:"In PrÃ¼fung",approved:"Freigegeben",completed:"Erledigt",rooms_ready:"DatenrÃ¤ume bereit"};
 
-function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function esc(v){return String(v?"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function label(v){return statusMap[v]||v||"â€“"}
 function dt(v){if(!v)return "â€“";try{return new Intl.DateTimeFormat("de-DE",{dateStyle:"short",timeStyle:"short"}).format(new Date(v))}catch{return v}}
 function dateOnly(v){if(!v)return "â€“";try{return new Intl.DateTimeFormat("de-DE").format(new Date(v+"T12:00:00"))}catch{return v}}
@@ -464,7 +464,7 @@ async function loadProjectData(epoch=authEpoch){
     sb.from("tasks").select("*").eq("project_id",currentProject.id).order("task_number"),
     sb.from("project_member_substitutions").select("id,project_id,principal_member_id,substitute_member_id,status,starts_on,ends_on").eq("project_id",currentProject.id),
     currentMembership.can_view_all_tasks||currentMembership.can_manage_members
-      ? sb.from("project_members").select("id,project_id,name,project_role,invitation_status,can_approve,can_manage_members").eq("project_id",currentProject.id)
+       sb.from("project_members").select("id,project_id,name,project_role,invitation_status,can_approve,can_manage_members").eq("project_id",currentProject.id)
       : Promise.resolve({data:[],error:null})
   ]);
   const {data:t,error}=taskResult;
@@ -634,7 +634,7 @@ function eventHtml(a){
   const taskId=a.task?.id||a.task_id||"";
   const action=a.type==="question"?"communication":a.type==="file"?"dataroom":"overview";
   const interactive=taskId
-    ? ` role="button" tabindex="0" class="event event-clickable" onclick="openTaskArea('${taskId}','${action}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openTaskArea('${taskId}','${action}')}" title="Aufgabe direkt Ã¶ffnen"`
+     ` role="button" tabindex="0" class="event event-clickable" onclick="openTaskArea('${taskId}','${action}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openTaskArea('${taskId}','${action}')}" title="Aufgabe direkt Ã¶ffnen"`
     : ` class="event"`;
   return `<div${interactive}><div class="event-icon ${cls}">${icon}</div><div><strong>${esc(a.title)}</strong><div class="small">${esc(a.detail)}</div></div><time class="small">${dt(a.time)}</time></div>`;
 }

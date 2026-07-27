@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="utf-8">
@@ -257,7 +257,7 @@ function notice(msg,type="info"){
   el.textContent=msg;el.className=`notice show ${type}`;
   clearTimeout(notice.t);notice.t=setTimeout(()=>el.className="notice",4500);
 }
-function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function esc(v){return String(v?"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function deDate(v){if(!v)return "";return new Intl.DateTimeFormat("de-DE").format(new Date(v+"T12:00:00"))}
 function statusLabel(v){return statusOptions.find(x=>x[0]===v)?.[1]||v}
 function uniq(arr){return [...new Set(arr.filter(Boolean))].sort((a,b)=>a.localeCompare(b,"de"))}
@@ -384,7 +384,7 @@ function renderTasks(){
   body.innerHTML=filteredTasks().map(t=>{
     const room=rooms.find(r=>r.task_id===t.id);
     return `<tr>
-      <td>${t.task_number??""}</td>
+      <td>${t.task_number?""}</td>
       <td>${esc(t.phase)}</td>
       <td><strong>${esc(t.title)}</strong></td>
       <td><select data-person="${t.id}">${memberOptions(t.responsible_email||"")}</select></td>

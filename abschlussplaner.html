@@ -1,4 +1,4 @@
-﻿
+
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -1118,7 +1118,7 @@ function showStep(i){
   currentStep=i;
   stepEls.forEach((el,idx)=>el.classList.toggle('active',idx===i));
   navEls.forEach((el,idx)=>el.classList.toggle('active',idx===i));
-  progressCaption.textContent = i<10 ? `Schritt ${i+1} von 11` : 'Abschlussplan';
+  progressCaption.textContent = i<10  `Schritt ${i+1} von 11` : 'Abschlussplan';
   progressBar.style.width = `${((i+1)/11)*100}%`;
   window.scrollTo({top:Math.max(0,document.querySelector('.planner').offsetTop-90),behavior:'smooth'});
 }
@@ -1281,7 +1281,7 @@ document.getElementById('applyTestIdentityMapping').addEventListener('click',asy
 
 function parseGermanNumber(value){
   if(value===null || value===undefined || value==='') return '';
-  if(typeof value==='number') return Number.isFinite(value) ? value : '';
+  if(typeof value==='number') return Number.isFinite(value)  value : '';
   let s=String(value).trim().replace(/\s/g,'');
   if(!s) return '';
   // German format: dots are thousands separators, comma is decimal separator.
@@ -1293,7 +1293,7 @@ function parseGermanNumber(value){
   }
   s=s.replace(/[^\d.-]/g,'');
   const n=Number(s);
-  return Number.isFinite(n) ? n : '';
+  return Number.isFinite(n)  n : '';
 }
 function formatGermanNumber(value,decimals=2){
   const n=parseGermanNumber(value);
@@ -1316,13 +1316,13 @@ function installGermanNumberFormatting(){
     const type=el.dataset.numberFormat;
     const apply=()=>{
       el.value = type==='integer'
-        ? formatGermanInteger(el.value)
+         formatGermanInteger(el.value)
         : formatGermanNumber(el.value,2);
     };
     el.addEventListener('blur',apply);
     el.addEventListener('focus',()=>{
       const n=parseGermanNumber(el.value);
-      el.value = n==='' ? '' : String(n).replace('.',',');
+      el.value = n===''  '' : String(n).replace('.',',');
     });
     apply();
   });
@@ -1357,12 +1357,12 @@ function getSizeAssessment(){
   }else if(prev && curr && prev!==curr){
     effective=previousLegal || (CLASS_ORDER[prev]>CLASS_ORDER[curr]?prev:curr);
     explanation=previousLegal
-      ? 'Die Kennzahlenklassen unterscheiden sich. FÃ¼r den Plan wird die hinterlegte bisherige rechtliche GrÃ¶ÃŸenklasse verwendet.'
+       'Die Kennzahlenklassen unterscheiden sich. FÃ¼r den Plan wird die hinterlegte bisherige rechtliche GrÃ¶ÃŸenklasse verwendet.'
       : 'Die Kennzahlenklassen unterscheiden sich. Ohne hinterlegte bisherige Klasse verwendet der Plan vorsorglich den umfangreicheren Berichtsumfang.';
   }else{
     effective=previousLegal || '';
     explanation=effective
-      ? 'Mangels vollstÃ¤ndiger Zweijahresdaten wird die hinterlegte bisherige rechtliche GrÃ¶ÃŸenklasse verwendet.'
+       'Mangels vollstÃ¤ndiger Zweijahresdaten wird die hinterlegte bisherige rechtliche GrÃ¶ÃŸenklasse verwendet.'
       : 'Bitte Kennzahlen fÃ¼r beide Stichtage eingeben.';
   }
   if(special.includes('voluntary_large')) {
@@ -1593,7 +1593,7 @@ document.getElementById('saveCustomTask').addEventListener('click',()=>{
     deputy:(collectTeam().find(x=>x.name===document.getElementById('customPerson').value)?.deputy||''),
     deputyEmail:(collectTeam().find(x=>x.name===document.getElementById('customPerson').value)?.deputyEmail||''),
     roomStructure:(document.getElementById('customRoomStructure').value.trim()
-      ? document.getElementById('customRoomStructure').value.split('|').map(x=>x.trim()).filter(Boolean)
+       document.getElementById('customRoomStructure').value.split('|').map(x=>x.trim()).filter(Boolean)
       : defaultRoomStructure()),
     status:'Geplant',tags:['custom'],custom:true
   });
@@ -1911,7 +1911,7 @@ async function updateSupabaseUi(){
       }
     }else{
       badge.textContent=isLocalFile
-        ? 'Lokale Datei â€“ Anmeldung Ã¼ber Webadresse erforderlich'
+         'Lokale Datei â€“ Anmeldung Ã¼ber Webadresse erforderlich'
         : 'Nicht angemeldet';
       badge.classList.remove('online');
       document.getElementById('signOutSupabase').hidden=true;
@@ -1948,7 +1948,7 @@ async function sendSupabaseMagicLink(){
 
   const isLocalFile=location.protocol==='file:';
   const redirectTo=isLocalFile
-    ? 'https://lumina.volkerkusch.de/'
+     'https://lumina.volkerkusch.de/'
     : location.href.split('#')[0].split('?')[0];
 
   showPublish('info','Anmeldelink wird versendet â€¦');
@@ -1967,7 +1967,7 @@ async function sendSupabaseMagicLink(){
     'success',
     `Anmeldelink wurde an ${email} versendet.\n` +
     (isLocalFile
-      ? 'Ã–ffne den Link anschlieÃŸend Ã¼ber die Webadresse von LUMINA, nicht Ã¼ber die lokale C:-Datei.'
+       'Ã–ffne den Link anschlieÃŸend Ã¼ber die Webadresse von LUMINA, nicht Ã¼ber die lokale C:-Datei.'
       : 'Ã–ffne den Link in diesem Browser.')
   );
 }
@@ -2171,7 +2171,7 @@ function mailTextFor(group){
     return `${i+1}. ${t.title}
 âœ“ Aufgabe annehmen: ${links.accept}
 âœ• Aufgabe ablehnen: ${links.decline}
-? RÃ¼ckfrage: ${links.question}
+ RÃ¼ckfrage: ${links.question}
 â–£ Datenraum Ã¶ffnen: ${links.dataroom}
 
 FÃ¤llig: ${dateLabel(t.due)}
@@ -2189,7 +2189,7 @@ ${mailOutroFor(group)}`;
 function renderMailStep(){
   const groups=tasksByRecipient();
   document.getElementById('mailApprovalStatus').textContent=approvalState.approved
-    ? `Freigegeben am ${dateLabel(approvalState.approvalDate)}`
+     `Freigegeben am ${dateLabel(approvalState.approvalDate)}`
     : 'Nicht freigegeben';
   document.getElementById('mailRecipientCount').textContent=groups.length;
   document.getElementById('mailTaskCount').textContent=groups.reduce((s,g)=>s+g.tasks.length,0);
@@ -2217,7 +2217,7 @@ function renderMailStep(){
                 <span>Â·</span>
                 <a href="${escapeAttr(links.decline)}" target="_blank">âœ• Aufgabe ablehnen</a>
                 <span>Â·</span>
-                <a href="${escapeAttr(links.question)}" target="_blank">? RÃ¼ckfrage</a>
+                <a href="${escapeAttr(links.question)}" target="_blank"> RÃ¼ckfrage</a>
                 <span>Â·</span>
                 <a href="${escapeAttr(links.dataroom)}" target="_blank">â–£ Datenraum Ã¶ffnen</a>
               </div>
@@ -2252,7 +2252,7 @@ function renderMailStep(){
 
 
 function htmlEscape(value){
-  return String(value??'').replace(/[&<>"']/g,ch=>({
+  return String(value?'').replace(/[&<>"']/g,ch=>({
     '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
   }[ch]));
 }
@@ -2271,7 +2271,7 @@ function mailHtmlFor(group){
         &nbsp;Â·&nbsp;
         <a href="${htmlEscape(links.decline)}" style="color:#248763;text-decoration:none;font-weight:700;">âœ• Aufgabe ablehnen</a>
         &nbsp;Â·&nbsp;
-        <a href="${htmlEscape(links.question)}" style="color:#248763;text-decoration:none;font-weight:700;">? RÃ¼ckfrage</a>
+        <a href="${htmlEscape(links.question)}" style="color:#248763;text-decoration:none;font-weight:700;"> RÃ¼ckfrage</a>
         &nbsp;Â·&nbsp;
         <a href="${htmlEscape(links.dataroom)}" style="color:#248763;text-decoration:none;font-weight:700;">â–£ Datenraum Ã¶ffnen</a>
       </div>
@@ -2468,7 +2468,7 @@ document.getElementById('downloadCsv').addEventListener('click',()=>{
   function excelDate(value){
     if(!value) return '';
     const d=new Date(value+'T12:00:00');
-    return Number.isNaN(d.getTime()) ? value : d;
+    return Number.isNaN(d.getTime())  value : d;
   }
 
   function addSheet(name,title,headers,rows,widths,dateCols=[]){
@@ -2574,7 +2574,7 @@ document.getElementById('downloadCsv').addEventListener('click',()=>{
     ['Nr.','Besonderheit / Risiko'],
     [
       ...(a.risks||[]).map((x,i)=>[i+1,L(x)]),
-      ...(a.specialNote ? [['','Weitere Besonderheiten: '+a.specialNote]] : [])
+      ...(a.specialNote  [['','Weitere Besonderheiten: '+a.specialNote]] : [])
     ],
     [8,90]
   );
@@ -2680,7 +2680,7 @@ function restore(){
       if(!els.length)return;
       if(els[0].type==='radio'){
         const el=els.find(x=>x.value===v);if(el)el.checked=true;
-      }else if(!Array.isArray(v)) els[0].value=v??'';
+      }else if(!Array.isArray(v)) els[0].value=v?'';
     });
     ['components','systems','risks','specialScope'].forEach(k=>(a[k]||[]).forEach(v=>{
       const el=form.querySelector(`[name="${k}"][value="${v}"]`);if(el)el.checked=true;
