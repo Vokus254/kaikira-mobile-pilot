@@ -152,7 +152,12 @@ async function flagProof({ id, actor, targetId, targetKind, field, value, expect
 async function memberInsertProof({ id, project, expected }) {
   const memberId = crypto.randomUUID();
   temporaryMembers.add(memberId);
-  const payload = memberPayload(memberId, state.ids.projects[project], `admin-${project}`);
+  const payload = {
+    ...memberPayload(memberId, state.ids.projects[project], `admin-${project}`),
+    cockpit_profile: null,
+    can_view_all_tasks: false,
+    invitation_status: "pending",
+  };
   observers.admin.status = null;
   const mutation = await clients.admin.from("project_members").insert(payload);
   const after = await readMember(memberId);
