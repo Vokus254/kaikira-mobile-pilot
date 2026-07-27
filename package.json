@@ -7,12 +7,14 @@
     "node": "24.18.x"
   },
   "scripts": {
-    "test": "npm run test:syntax && npm run test:role-resolver && npm run test:phase2-schema && npm run test:http && npm run test:auth-guard && npm run test:role-cockpits && npm run test:rls:plan && npm run test:secrets",
+    "test": "npm run test:syntax && npm run test:role-resolver && npm run test:onboarding && npm run test:provisioning && npm run test:phase2-schema && npm run test:http && npm run test:auth-guard && npm run test:role-cockpits && npm run test:rls:plan && npm run test:secrets",
     "test:syntax": "node tools/check-syntax.mjs",
     "test:http": "node tools/test-http-smoke.mjs",
     "test:auth-guard": "node tools/test-auth-guard.mjs",
     "test:role-cockpits": "node tools/test-role-cockpits.mjs",
     "test:role-resolver": "node --test tests/role-resolver.test.mjs",
+    "test:onboarding": "node --test tests/test-user-onboarding.test.mjs",
+    "test:provisioning": "node --test tests/provision-lumina-test-users.test.mjs",
     "test:phase2-schema": "node --test tests/phase2-migrations.test.mjs",
     "test:rls:plan": "node tools/test-rls-matrix.mjs --plan",
     "test:env": "node --env-file-if-exists=.env.test tools/check-test-environment.mjs",
