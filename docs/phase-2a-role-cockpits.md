@@ -13,8 +13,11 @@
 
 - Die Anmeldung erfolgt weiterhin per Supabase-Magic-Link.
 - Der Redirect nach erfolgreicher Anmeldung bleibt `/cockpit`.
-- `cockpit.html` liest die persistierte Supabase-Session und lädt anschließend die für den Nutzer sichtbaren Projekte.
-- An Authentifizierung, Session-Persistenz und Logout wurde nichts geändert.
+- `cockpit.html` prüft vor jedem Aufbau des Kundenbereichs die persistierte Supabase-Session.
+- Während der Prüfung ist ausschließlich ein neutraler Ladezustand sichtbar. Ohne Session wird nur die Zugangssperre mit Magic-Link-Login und Rücklink zur Landingpage angezeigt.
+- Header, Hauptnavigation, Projektauswahl, Rollenansicht, Feed sowie KAI/KIRA liegen vollständig im standardmäßig versteckten `protectedApp`-Container.
+- Erst nach erfolgreicher Sessionprüfung werden sichtbare Projekte und die eigene Projektmitgliedschaft geladen.
+- `SIGNED_OUT` leert den lokalen Nutzer-, Projekt- und Rollenstatus und verbirgt den geschützten Container ohne Seitenneuladung.
 
 ### Rollenmodell
 
@@ -49,7 +52,10 @@ Abschlussplaner und Projektverwaltung werden erst nach Rollenauflösung eingeble
 ## Geänderte Dateien
 
 - `cockpit.html`: Mitgliedschaftsauflösung, drei Einstiegsbilder, rollenabhängige Navigation und responsive Darstellung.
+- `vercel.json`: Geschützte Direktpfade `/aufgaben`, `/datenraeume` und `/kommunikation` auf den bewachten Cockpit-Einstieg geführt.
+- `tools/test-auth-guard.mjs`: Verhaltensprüfung für Session-Gate, fehlende Projektabfragen, Rollenstart, Abmeldung und Direktpfade.
 - `tools/test-role-cockpits.mjs`: statische Regressionstests für Bindung, Profile, sicheren Fallback und fehlenden Rollenumschalter.
+- `tools/test-http-smoke.mjs`: Geschützte Direktpfade in die Routenprüfung aufgenommen.
 - `package.json`: Regressionstest in die vorhandene Testsuite aufgenommen.
 - `docs/phase-2a-role-cockpits.md`: Bestandsaufnahme, Zielmodell und Prüfumfang.
 
@@ -65,6 +71,7 @@ Abschlussplaner und Projektverwaltung werden erst nach Rollenauflösung eingeble
 
 - Syntaxprüfung aller Node-Testwerkzeuge.
 - Syntaxprüfung des Inline-Skripts in `cockpit.html`.
+- Verhaltensprüfung des Auth-Guards mit synthetischer Supabase-Session und protokollierten Tabellenzugriffen.
 - Statischer Regressionstest für die drei Rollenprofile und das Entfernen des manuellen Rollenumschalters.
 - Bestehender HTTP-Smoke-Test und RLS-Plan-Test.
 - Responsive Sichtprüfung der Cockpit-Seite auf Desktop- und Mobilbreite.
