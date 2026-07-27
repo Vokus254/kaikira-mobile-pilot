@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="utf-8">
@@ -141,14 +141,14 @@
 </head>
 <body>
 <section id="authLoading" class="auth-gate" aria-live="polite">
-  <div class="auth-loading-card"><div class="auth-spinner" aria-hidden="true"></div><strong>Zugang wird geprüft</strong><span>Ihre sichere LUMINA-Sitzung wird geladen.</span></div>
+  <div class="auth-loading-card"><div class="auth-spinner" aria-hidden="true"></div><strong>Zugang wird geprÃ¼ft</strong><span>Ihre sichere LUMINA-Sitzung wird geladen.</span></div>
 </section>
 
 <section id="authGate" class="auth-gate" hidden>
   <div class="card auth-gate-card">
     <div class="auth-gate-brand"><div class="mark"></div><span>LUMINA</span></div>
     <h1>Kundenbereich</h1>
-    <p class="lead">Melden Sie sich mit Ihrer Projekt-E-Mail an. Ohne gültige Sitzung bleiben Cockpit und Projektdaten vollständig gesperrt.</p>
+    <p class="lead">Melden Sie sich mit Ihrer Projekt-E-Mail an. Ohne gÃ¼ltige Sitzung bleiben Cockpit und Projektdaten vollstÃ¤ndig gesperrt.</p>
     <div id="authGateNotice" class="notice"></div>
     <form id="passwordLoginForm" class="auth-gate-actions">
       <div class="field"><label for="loginEmail">Anmelde-E-Mail</label><input id="loginEmail" type="email" autocomplete="email" placeholder="name@unternehmen.de"></div>
@@ -157,9 +157,9 @@
       <button id="forgotPasswordBtn" type="button" class="auth-link">Passwort vergessen</button>
       <div class="auth-divider"><span>oder</span></div>
       <button id="sendMagicLink" type="button" class="btn btn-secondary">Alternativ Magic Link senden</button>
-      <button id="checkSession" type="button" class="auth-link">Sitzung erneut prüfen</button>
+      <button id="checkSession" type="button" class="auth-link">Sitzung erneut prÃ¼fen</button>
     </form>
-    <a class="auth-gate-back" href="/">← Zur LUMINA Landingpage</a>
+    <a class="auth-gate-back" href="/">â† Zur LUMINA Landingpage</a>
   </div>
 </section>
 
@@ -167,14 +167,14 @@
   <div class="card auth-gate-card">
     <div class="auth-gate-brand"><div class="mark"></div><span>LUMINA</span></div>
     <h1>Neues Passwort</h1>
-    <p class="lead">Legen Sie ein neues Passwort für Ihren LUMINA-Zugang fest.</p>
+    <p class="lead">Legen Sie ein neues Passwort fÃ¼r Ihren LUMINA-Zugang fest.</p>
     <div id="recoveryNotice" class="notice"></div>
     <form id="passwordRecoveryForm" class="auth-gate-actions">
       <div class="field"><label for="newPassword">Neues Passwort</label><input id="newPassword" type="password" autocomplete="new-password" minlength="8"></div>
-      <div class="field"><label for="confirmPassword">Passwort bestätigen</label><input id="confirmPassword" type="password" autocomplete="new-password" minlength="8"></div>
+      <div class="field"><label for="confirmPassword">Passwort bestÃ¤tigen</label><input id="confirmPassword" type="password" autocomplete="new-password" minlength="8"></div>
       <button id="updatePasswordBtn" type="submit" class="btn btn-primary">Passwort speichern</button>
     </form>
-    <a class="auth-gate-back" href="/">← Zur LUMINA Landingpage</a>
+    <a class="auth-gate-back" href="/">â† Zur LUMINA Landingpage</a>
   </div>
 </section>
 
@@ -182,11 +182,11 @@
   <div class="card auth-gate-card">
     <div class="auth-gate-brand"><div class="mark"></div><span>LUMINA</span></div>
     <h1>Projektzugriff</h1>
-    <p id="membershipGateMessage" class="lead">Ihre aktive Projektmitgliedschaft wird geprüft.</p>
+    <p id="membershipGateMessage" class="lead">Ihre aktive Projektmitgliedschaft wird geprÃ¼ft.</p>
     <div class="auth-gate-actions">
       <button id="membershipLogoutBtn" type="button" class="btn btn-secondary">Abmelden</button>
     </div>
-    <a class="auth-gate-back" href="/">← Zur LUMINA Landingpage</a>
+    <a class="auth-gate-back" href="/">â† Zur LUMINA Landingpage</a>
   </div>
 </section>
 
@@ -197,7 +197,7 @@
     <nav class="nav">
       <button class="active" data-view="cockpit">Cockpit</button>
       <button data-view="tasks">Aufgaben</button>
-      <button data-view="rooms">Datenräume</button>
+      <button data-view="rooms">DatenrÃ¤ume</button>
       <button data-view="communication">Kommunikation</button>
       <button id="plannerNav" onclick="location.href='/abschlussplaner'" hidden>Abschlussplaner</button>
       <button id="adminNav" onclick="location.href='/admin'" hidden>Admin</button>
@@ -213,7 +213,7 @@
 <main>
 <div class="shell">
   <div class="hero">
-    <div><h1>Abschluss-Cockpit</h1><p class="lead">Transparenz über Aufgaben, Datenlieferungen, Rückfragen und Prüfungsbedarf.</p></div>
+    <div><h1>Abschluss-Cockpit</h1><p class="lead">Transparenz Ã¼ber Aufgaben, Datenlieferungen, RÃ¼ckfragen und PrÃ¼fungsbedarf.</p></div>
     <button id="refreshBtn" class="btn btn-secondary">Aktualisieren</button>
   </div>
 
@@ -221,7 +221,7 @@
 
   <section class="card projectbar">
     <div class="field"><label>Abschlussprojekt</label><select id="projectSelect"><option value="">Bitte anmelden</option></select></div>
-    <div><strong id="projectTitle">Kein Projekt ausgewählt</strong><div id="projectMeta" class="small"></div></div>
+    <div><strong id="projectTitle">Kein Projekt ausgewÃ¤hlt</strong><div id="projectMeta" class="small"></div></div>
     <button id="openAdmin" class="btn btn-secondary" hidden>Projekt verwalten</button>
   </section>
 
@@ -229,9 +229,9 @@
     <button type="button" class="metric" data-metric="tasks"><span>Aufgaben</span><strong id="mTasks">0</strong></button>
     <button type="button" class="metric" data-metric="done"><span>Erledigt/Freigegeben</span><strong id="mDone">0</strong></button>
     <button type="button" class="metric" data-metric="files"><span>Neue Dateien</span><strong id="mFiles">0</strong></button>
-    <button type="button" class="metric" data-metric="questions"><span>Offene Rückfragen</span><strong id="mQuestions">0</strong></button>
+    <button type="button" class="metric" data-metric="questions"><span>Offene RÃ¼ckfragen</span><strong id="mQuestions">0</strong></button>
     <button type="button" class="metric" data-metric="declined"><span>Abgelehnt</span><strong id="mDeclined">0</strong></button>
-    <button type="button" class="metric" data-metric="overdue"><span>Überfällig</span><strong id="mOverdue">0</strong></button>
+    <button type="button" class="metric" data-metric="overdue"><span>ÃœberfÃ¤llig</span><strong id="mOverdue">0</strong></button>
   </section>
 
   <section id="view-cockpit" class="view active">
@@ -239,26 +239,26 @@
       <div class="management-head">
         <div><div id="roleEyebrow" class="role-eyebrow">Projektrolle wird ermittelt</div><h2 id="managementTitle">LUMINA Abschluss-Cockpit</h2><div id="managementSubtitle" class="small">Die Ansicht folgt Ihrer Projektmitgliedschaft.</div></div>
         <div id="roleIdentity" class="role-identity" aria-live="polite">
-          <div><strong id="roleIdentityName">–</strong><span id="roleIdentityLabel">Keine Rolle geladen</span></div>
-          <div id="roleIdentityAvatar" class="role-avatar" aria-hidden="true">–</div>
+          <div><strong id="roleIdentityName">â€“</strong><span id="roleIdentityLabel">Keine Rolle geladen</span></div>
+          <div id="roleIdentityAvatar" class="role-avatar" aria-hidden="true">â€“</div>
         </div>
       </div>
       <div id="roleCockpitContent" class="role-cockpit-content">
-        <div class="role-empty"><strong>Projektrolle wird geladen.</strong><span>Die Ansicht kann erst nach der Prüfung Ihrer Projektmitgliedschaft aufgebaut werden.</span></div>
+        <div class="role-empty"><strong>Projektrolle wird geladen.</strong><span>Die Ansicht kann erst nach der PrÃ¼fung Ihrer Projektmitgliedschaft aufgebaut werden.</span></div>
       </div>
     </section>
 
     <div id="operationalDashboard" class="dashboard operational-dashboard">
       <div class="card section">
         <div class="toolbar" style="justify-content:space-between;margin-bottom:12px">
-          <h2>Aktivitätsfeed</h2>
-          <select id="feedFilter" style="width:auto"><option value="">Alle Aktivitäten</option><option value="file">Dateien</option><option value="question">Rückfragen</option><option value="response">Antworten</option></select>
+          <h2>AktivitÃ¤tsfeed</h2>
+          <select id="feedFilter" style="width:auto"><option value="">Alle AktivitÃ¤ten</option><option value="file">Dateien</option><option value="question">RÃ¼ckfragen</option><option value="response">Antworten</option></select>
         </div>
         <div id="feed" class="feed"></div>
       </div>
       <div class="rightcol">
-        <section class="card assistant kai"><div class="assistant-head"><div class="avatar">KAI</div><div><h2>Kommunikationsassistent</h2><div class="small">Erklärt, erinnert und koordiniert</div></div></div><p id="kaiSummary">Noch kein Projekt ausgewählt.</p><div id="kaiInsights" class="insights"></div></section>
-        <section class="card assistant kira"><div class="assistant-head"><div class="avatar">KIRA</div><div><h2>Prüfungsassistentin</h2><div class="small">Sichtet Lieferungen und markiert Prüfungsbedarf</div></div></div><p id="kiraSummary">Noch keine Datenlieferungen geladen.</p><div id="kiraInsights" class="insights"></div></section>
+        <section class="card assistant kai"><div class="assistant-head"><div class="avatar">KAI</div><div><h2>Kommunikationsassistent</h2><div class="small">ErklÃ¤rt, erinnert und koordiniert</div></div></div><p id="kaiSummary">Noch kein Projekt ausgewÃ¤hlt.</p><div id="kaiInsights" class="insights"></div></section>
+        <section class="card assistant kira"><div class="assistant-head"><div class="avatar">KIRA</div><div><h2>PrÃ¼fungsassistentin</h2><div class="small">Sichtet Lieferungen und markiert PrÃ¼fungsbedarf</div></div></div><p id="kiraSummary">Noch keine Datenlieferungen geladen.</p><div id="kiraInsights" class="insights"></div></section>
       </div>
     </div>
   </section>
@@ -268,26 +268,26 @@
       <div id="taskQuickFilter" class="quick-filter"><span id="taskQuickFilterText"></span><button id="clearQuickFilter" class="btn btn-secondary btn-small" type="button">Filter aufheben</button></div>
       <div class="filters">
         <select id="taskPhase"><option value="">Alle Phasen</option></select>
-        <select id="taskPerson"><option value="">Alle Zuständigen</option></select>
+        <select id="taskPerson"><option value="">Alle ZustÃ¤ndigen</option></select>
         <select id="taskStatus"><option value="">Alle Status</option></select>
         <input id="taskSearch" placeholder="Aufgabe suchen">
       </div>
       <div class="table-wrap">
-        <table><thead><tr><th>Nr.</th><th>Phase</th><th>Aufgabe</th><th>Zuständig</th><th>Fällig</th><th>Status</th><th>Dateien</th><th>Rückfragen</th><th>Datenraum</th></tr></thead><tbody id="taskBody"></tbody></table>
+        <table><thead><tr><th>Nr.</th><th>Phase</th><th>Aufgabe</th><th>ZustÃ¤ndig</th><th>FÃ¤llig</th><th>Status</th><th>Dateien</th><th>RÃ¼ckfragen</th><th>Datenraum</th></tr></thead><tbody id="taskBody"></tbody></table>
       </div>
     </div>
   </section>
 
   <section id="view-rooms" class="view">
     <div class="card tabs-panel">
-      <div class="toolbar" style="justify-content:space-between;margin-bottom:14px"><h2 style="margin:0">Datenräume</h2><input id="roomSearch" style="max-width:360px" placeholder="Datenraum suchen"></div>
+      <div class="toolbar" style="justify-content:space-between;margin-bottom:14px"><h2 style="margin:0">DatenrÃ¤ume</h2><input id="roomSearch" style="max-width:360px" placeholder="Datenraum suchen"></div>
       <div id="roomsGrid" class="rooms-grid"></div>
     </div>
   </section>
 
   <section id="view-communication" class="view">
     <div class="comm-grid">
-      <div id="questionsCard" class="card section"><h2>Offene Rückfragen</h2><div id="questionsList" class="feed"></div></div>
+      <div id="questionsCard" class="card section"><h2>Offene RÃ¼ckfragen</h2><div id="questionsList" class="feed"></div></div>
       <div id="deliveriesCard" class="card section"><h2>Neue Datenlieferungen</h2><div id="deliveriesList" class="feed"></div></div>
     </div>
   </section>
@@ -304,8 +304,8 @@ window.luminaCockpitReady=Promise.all([
 ]).then(([roles,security,filters,model])=>({roles,security,filters,model}));
 </script>
 <script>
-const SUPABASE_URL="https://mslbzypjtvvznyewupco.supabase.co";
-const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1zbGJ6eXBqdHZ2em55ZXd1cGNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5OTA3NDAsImV4cCI6MjEwMDU2Njc0MH0.6f9QUtpaSLUrKVkH3rUYCcZecqwMHrdledZMtoCdRQo";
+const SUPABASE_URL="https://vcozprjecsprgyeqfahn.supabase.co";
+const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZjb3pwcmplY3Nwcmd5ZXFmYWhuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUwOTM4NTcsImV4cCI6MjEwMDY2OTg1N30.oNdAhKXPGqkzWUycSSd11VGKg5LEMniVKqc9gtaRMYw";
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 const PASSWORD_RECOVERY_REDIRECT=location.origin+"/cockpit";
 
@@ -314,12 +314,12 @@ let bottleneckTask=null;
 let quickTaskFilter="";
 let authEpoch=0,authSubscription=null,recoverySessionActive=false;
 let recoveryUrlSignal=new URLSearchParams(location.hash.replace(/^#/,"")).get("type")==="recovery"&&location.hash.includes("access_token=");
-const statusMap={planned:"Geplant",invited:"Eingeladen",accepted:"Angenommen",declined:"Abgelehnt",in_progress:"In Bearbeitung",question:"Rückfrage",blocked:"Blockiert",submitted:"Eingereicht",in_review:"In Prüfung",approved:"Freigegeben",completed:"Erledigt",rooms_ready:"Datenräume bereit"};
+const statusMap={planned:"Geplant",invited:"Eingeladen",accepted:"Angenommen",declined:"Abgelehnt",in_progress:"In Bearbeitung",question:"RÃ¼ckfrage",blocked:"Blockiert",submitted:"Eingereicht",in_review:"In PrÃ¼fung",approved:"Freigegeben",completed:"Erledigt",rooms_ready:"DatenrÃ¤ume bereit"};
 
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
-function label(v){return statusMap[v]||v||"–"}
-function dt(v){if(!v)return "–";try{return new Intl.DateTimeFormat("de-DE",{dateStyle:"short",timeStyle:"short"}).format(new Date(v))}catch{return v}}
-function dateOnly(v){if(!v)return "–";try{return new Intl.DateTimeFormat("de-DE").format(new Date(v+"T12:00:00"))}catch{return v}}
+function label(v){return statusMap[v]||v||"â€“"}
+function dt(v){if(!v)return "â€“";try{return new Intl.DateTimeFormat("de-DE",{dateStyle:"short",timeStyle:"short"}).format(new Date(v))}catch{return v}}
+function dateOnly(v){if(!v)return "â€“";try{return new Intl.DateTimeFormat("de-DE").format(new Date(v+"T12:00:00"))}catch{return v}}
 function uniq(a){return [...new Set(a.filter(Boolean))].sort((x,y)=>x.localeCompare(y,"de"))}
 function pick(o,keys,fallback=""){for(const k of keys)if(o&&o[k]!=null&&o[k]!=="")return o[k];return fallback}
 function showNotice(msg,type="info"){const el=document.getElementById("notice");el.textContent=msg;el.className=`notice show ${type}`;clearTimeout(showNotice.t);showNotice.t=setTimeout(()=>el.className="notice",4500)}
@@ -342,8 +342,8 @@ function resetProtectedState(){
   document.getElementById("globalMetrics").hidden=true;
   document.getElementById("plannerNav").hidden=true;document.getElementById("adminNav").hidden=true;document.getElementById("openAdmin").hidden=true;
   document.getElementById("projectSelect").innerHTML='<option value="">Bitte anmelden</option>';
-  document.getElementById("projectTitle").textContent="Kein Projekt ausgewählt";document.getElementById("projectMeta").textContent="";
-  document.getElementById("roleCockpitContent").innerHTML='<div class="role-empty"><strong>Projektrolle wird geladen.</strong><span>Die Ansicht kann erst nach der Prüfung Ihrer Projektmitgliedschaft aufgebaut werden.</span></div>';
+  document.getElementById("projectTitle").textContent="Kein Projekt ausgewÃ¤hlt";document.getElementById("projectMeta").textContent="";
+  document.getElementById("roleCockpitContent").innerHTML='<div class="role-empty"><strong>Projektrolle wird geladen.</strong><span>Die Ansicht kann erst nach der PrÃ¼fung Ihrer Projektmitgliedschaft aufgebaut werden.</span></div>';
   ["feed","kaiInsights","kiraInsights","taskBody","roomsGrid","questionsList","deliveriesList"].forEach(id=>document.getElementById(id).innerHTML="");
 }
 function showAuthChecking(){document.getElementById("protectedApp").hidden=true;document.getElementById("authGate").hidden=true;document.getElementById("recoveryGate").hidden=true;document.getElementById("membershipGate").hidden=true;document.getElementById("authLoading").hidden=false}
@@ -351,7 +351,7 @@ function showSignedOut(message=""){resetProtectedState();document.getElementById
 function showMembershipGate(message){
   currentProject=null;currentMembership=null;currentRoleProfile=null;tasks=[];rooms=[];folders=[];documents=[];comments=[];responses=[];notifications=[];activities=[];substitutions=[];teamMembers=[];
   document.getElementById("authLoading").hidden=true;document.getElementById("authGate").hidden=true;document.getElementById("recoveryGate").hidden=true;document.getElementById("protectedApp").hidden=true;document.getElementById("membershipGate").hidden=false;
-  document.getElementById("membershipGateMessage").textContent=message||"Für diesen Zugang ist keine eindeutig akzeptierte Projektrolle verfügbar. Bitte wenden Sie sich an die Projektverantwortlichen.";
+  document.getElementById("membershipGateMessage").textContent=message||"FÃ¼r diesen Zugang ist keine eindeutig akzeptierte Projektrolle verfÃ¼gbar. Bitte wenden Sie sich an die Projektverantwortlichen.";
 }
 async function showAuthenticated(session){
   const epoch=++authEpoch;user=session.user;recoverySessionActive=false;
@@ -360,7 +360,7 @@ async function showAuthenticated(session){
   await loadMembershipProjects(epoch);
 }
 function showPasswordRecovery(session){
-  if(!session?.user){showSignedOut("Der Link ist ungültig oder abgelaufen. Bitte fordern Sie einen neuen Link an.");return}
+  if(!session?.user){showSignedOut("Der Link ist ungÃ¼ltig oder abgelaufen. Bitte fordern Sie einen neuen Link an.");return}
   authEpoch++;user=session.user;recoverySessionActive=true;
   document.getElementById("protectedApp").hidden=true;document.getElementById("membershipGate").hidden=true;document.getElementById("authLoading").hidden=true;document.getElementById("authGate").hidden=true;document.getElementById("recoveryGate").hidden=false;
 }
@@ -370,7 +370,7 @@ async function initializeAuth(){
   ensureAuthSubscription();
   const {data,error}=await sessionRequest;
   if(recoverySessionActive)return;
-  if(error||!data.session){showSignedOut(error?"Die Sitzung konnte nicht geprüft werden.":"");return}
+  if(error||!data.session){showSignedOut(error?"Die Sitzung konnte nicht geprÃ¼ft werden.":"");return}
   if(recoveryUrlSignal){showPasswordRecovery(data.session);return}
   await showAuthenticated(data.session);
 }
@@ -393,31 +393,31 @@ async function requestPasswordReset(){
   const email=document.getElementById("loginEmail").value.trim();
   if(!email){showAuthNotice("Bitte geben Sie zuerst Ihre E-Mail-Adresse ein.","info");return}
   await sb.auth.resetPasswordForEmail(email,{redirectTo:PASSWORD_RECOVERY_REDIRECT});
-  showAuthNotice("Wenn für diese E-Mail-Adresse ein Zugang besteht, wurde ein Link zum Zurücksetzen versendet.","ok");
+  showAuthNotice("Wenn fÃ¼r diese E-Mail-Adresse ein Zugang besteht, wurde ein Link zum ZurÃ¼cksetzen versendet.","ok");
 }
 async function sendMagicLink(){
   const email=document.getElementById("loginEmail").value.trim();if(!email){showAuthNotice("Bitte E-Mail-Adresse eingeben.","err");return}
   const {error}=await sb.auth.signInWithOtp({email,options:{emailRedirectTo:location.origin+"/cockpit"}});
-  if(error){showAuthNotice("Der Anmeldelink konnte nicht versendet werden. Bitte versuchen Sie es später erneut.","err");return}showAuthNotice("Anmeldelink wurde versendet.","ok");
+  if(error){showAuthNotice("Der Anmeldelink konnte nicht versendet werden. Bitte versuchen Sie es spÃ¤ter erneut.","err");return}showAuthNotice("Anmeldelink wurde versendet.","ok");
 }
 async function updateRecoveredPassword(){
   const password=document.getElementById("newPassword").value,confirmation=document.getElementById("confirmPassword").value;
   const {data:sessionData}=await sb.auth.getSession();
-  if(!recoverySessionActive||!sessionData.session){showSignedOut("Der Link ist ungültig oder abgelaufen. Bitte fordern Sie einen neuen Link an.");return}
-  if(password.length<8||password!==confirmation){showRecoveryNotice("Die Passwörter müssen übereinstimmen und mindestens acht Zeichen lang sein.","err");return}
+  if(!recoverySessionActive||!sessionData.session){showSignedOut("Der Link ist ungÃ¼ltig oder abgelaufen. Bitte fordern Sie einen neuen Link an.");return}
+  if(password.length<8||password!==confirmation){showRecoveryNotice("Die PasswÃ¶rter mÃ¼ssen Ã¼bereinstimmen und mindestens acht Zeichen lang sein.","err");return}
   const {error}=await sb.auth.updateUser({password});document.getElementById("newPassword").value="";document.getElementById("confirmPassword").value="";
-  if(error){showRecoveryNotice("Das Passwort konnte nicht geändert werden. Bitte fordern Sie einen neuen Link an.","err");return}
+  if(error){showRecoveryNotice("Das Passwort konnte nicht geÃ¤ndert werden. Bitte fordern Sie einen neuen Link an.","err");return}
   recoveryUrlSignal=false;if(window.history?.replaceState)window.history.replaceState({},"",location.origin+"/cockpit");
   await showAuthenticated(sessionData.session);showNotice("Ihr Passwort wurde erfolgreich aktualisiert.","ok");
 }
 
-const profilePresentation={cfo:{label:"CFO / Geschäftsführung",eyebrow:"Management-Cockpit"},project:{label:"Projektleitung Abschluss",eyebrow:"Projektsteuerung"},accounting_lead:{label:"Leiter Rechnungswesen",eyebrow:"Teamsteuerung"},worker:{label:"Fachrolle",eyebrow:"Mein Tag"}};
+const profilePresentation={cfo:{label:"CFO / GeschÃ¤ftsfÃ¼hrung",eyebrow:"Management-Cockpit"},project:{label:"Projektleitung Abschluss",eyebrow:"Projektsteuerung"},accounting_lead:{label:"Leiter Rechnungswesen",eyebrow:"Teamsteuerung"},worker:{label:"Fachrolle",eyebrow:"Mein Tag"}};
 async function loadMembershipProjects(epoch=authEpoch){
   if(!user||epoch!==authEpoch)return;
   const {roles,security}=await cockpitModules();
   const {data:members,error:memberError}=await sb.from("project_members").select("id,project_id,user_id,name,email,project_role,cockpit_profile,access_level,can_read,can_upload,can_edit,can_approve,can_manage_members,can_view_all_tasks,invitation_status").eq("user_id",user.id);
   if(!user||epoch!==authEpoch)return;
-  if(memberError){showMembershipGate("Ihre Projektmitgliedschaft konnte nicht sicher geprüft werden.");return}
+  if(memberError){showMembershipGate("Ihre Projektmitgliedschaft konnte nicht sicher geprÃ¼ft werden.");return}
   const resolution=security.acceptedProjectContexts(members||[],user,roles.classifyMemberContext);projectContexts=resolution.contexts;
   if(!projectContexts.length){showMembershipGate();return}
   const allowedIds=projectContexts.map(context=>context.projectId);
@@ -425,12 +425,12 @@ async function loadMembershipProjects(epoch=authEpoch){
   if(!user||epoch!==authEpoch)return;
   if(error){showMembershipGate("Die freigegebenen Projekte konnten nicht sicher geladen werden.");return}
   projects=(data||[]).filter(project=>allowedIds.includes(project.id));
-  if(!projects.length){showMembershipGate("Es ist kein freigegebenes, sichtbares Projekt verfügbar.");return}
+  if(!projects.length){showMembershipGate("Es ist kein freigegebenes, sichtbares Projekt verfÃ¼gbar.");return}
   document.getElementById("authLoading").hidden=true;document.getElementById("protectedApp").hidden=false;activateView(protectedViewForPath());
   const sel=document.getElementById("projectSelect");
-  sel.innerHTML='<option value="">Projekt auswählen</option>'+projects.map(project=>`<option value="${project.id}">${esc(project.name)}</option>`).join("");
+  sel.innerHTML='<option value="">Projekt auswÃ¤hlen</option>'+projects.map(project=>`<option value="${project.id}">${esc(project.name)}</option>`).join("");
   const chosen=security.validatedProjectChoice({requested:new URLSearchParams(location.search).get("project"),remembered:localStorage.getItem("luminaCockpitProject"),contexts:projectContexts,projects});
-  if(chosen){sel.value=chosen;await selectProject(chosen,epoch);const requestedFilter=security&&new URLSearchParams(location.search).get("filter");if(requestedFilter)openCockpitFilter(requestedFilter)}else{document.getElementById("projectTitle").textContent="Projekt sicher auswählen";document.getElementById("projectMeta").textContent="Es werden nur akzeptierte, für Sie sichtbare Projekte angeboten."}
+  if(chosen){sel.value=chosen;await selectProject(chosen,epoch);const requestedFilter=security&&new URLSearchParams(location.search).get("filter");if(requestedFilter)openCockpitFilter(requestedFilter)}else{document.getElementById("projectTitle").textContent="Projekt sicher auswÃ¤hlen";document.getElementById("projectMeta").textContent="Es werden nur akzeptierte, fÃ¼r Sie sichtbare Projekte angeboten."}
 }
 
 async function selectProject(id,epoch=authEpoch){
@@ -441,7 +441,7 @@ async function selectProject(id,epoch=authEpoch){
   currentRoleProfile={key:context.cockpitProfile,label:currentMembership.project_role||presentation.label,eyebrow:presentation.eyebrow,canonicalRole:context.projectRole};
   localStorage.setItem("luminaCockpitProject",id);
   document.getElementById("projectTitle").textContent=currentProject.name;
-  document.getElementById("projectMeta").textContent=`${currentProject.companies?.name||""} · Abschlussstichtag ${dateOnly(currentProject.closing_date)} · ${label(currentProject.status)}`;
+  document.getElementById("projectMeta").textContent=`${currentProject.companies?.name||""} Â· Abschlussstichtag ${dateOnly(currentProject.closing_date)} Â· ${label(currentProject.status)}`;
   const chip=document.getElementById("activeProjectChip");chip.hidden=false;chip.querySelector("strong").textContent=currentProject.name;chip.querySelector("span").textContent=currentMembership.project_role;
   await applyRoleNavigation();
   await loadProjectData(epoch);
@@ -450,7 +450,7 @@ async function selectProject(id,epoch=authEpoch){
 function normalized(value){return String(value||"").trim().toLocaleLowerCase("de-DE")}
 function memberInitials(){
   const source=currentMembership?.name||user?.email||"";
-  return source.split(/[\s.@_-]+/).filter(Boolean).map(part=>part[0]).join("").slice(0,2).toUpperCase()||"–";
+  return source.split(/[\s.@_-]+/).filter(Boolean).map(part=>part[0]).join("").slice(0,2).toUpperCase()||"â€“";
 }
 async function applyRoleNavigation(){
   const {security}=await cockpitModules(),nav=security.navigationFor({cockpitProfile:currentRoleProfile?.key,projectRole:currentRoleProfile?.canonicalRole,member:currentMembership});
@@ -506,13 +506,13 @@ function folderOf(id){return folders.find(f=>f.id===id)}
 function taskForFolder(folderId){const f=folderOf(folderId);const r=f&&rooms.find(x=>x.id===f.task_room_id);return r&&taskOf(r.task_id)}
 function docName(d){return pick(d,["original_name","file_name","filename","name"],"Datei")}
 function docTime(d){return pick(d,["uploaded_at","created_at","inserted_at"])}
-function commentText(c){return pick(c,["comment_text","body","message","text"],"Rückfrage")}
+function commentText(c){return pick(c,["comment_text","body","message","text"],"RÃ¼ckfrage")}
 function responseType(r){return pick(r,["response_type","action","response","status"],"response")}
 
 function buildActivities(){
   activities=[];
-  documents.forEach(d=>{const t=taskForFolder(d.folder_id);activities.push({type:"file",time:docTime(d),title:`Datei hochgeladen: ${docName(d)}`,detail:t?`${t.title} · ${folderOf(d.folder_id)?.folder_name||""}`:"Datenraum",task:t,raw:d})});
-  comments.forEach(c=>{const t=taskOf(c.task_id);activities.push({type:"question",time:c.created_at,title:"Rückfrage gestellt",detail:`${t?.title||"Aufgabe"} · ${commentText(c)}`,task:t,raw:c})});
+  documents.forEach(d=>{const t=taskForFolder(d.folder_id);activities.push({type:"file",time:docTime(d),title:`Datei hochgeladen: ${docName(d)}`,detail:t?`${t.title} Â· ${folderOf(d.folder_id)?.folder_name||""}`:"Datenraum",task:t,raw:d})});
+  comments.forEach(c=>{const t=taskOf(c.task_id);activities.push({type:"question",time:c.created_at,title:"RÃ¼ckfrage gestellt",detail:`${t?.title||"Aufgabe"} Â· ${commentText(c)}`,task:t,raw:c})});
   responses.forEach(r=>{const t=taskOf(r.task_id),rt=responseType(r);activities.push({type:"response",subtype:rt,time:r.created_at,title:`Aufgabe ${label(rt).toLowerCase()}`,detail:t?.title||"Aufgabe",task:t,raw:r})});
   notifications.forEach(n=>activities.push({type:"notification",time:n.created_at,title:pick(n,["title","notification_type","type"],"Benachrichtigung"),detail:pick(n,["message","body"],""),task:taskOf(n.task_id),raw:n}));
   activities.sort((a,b)=>new Date(b.time||0)-new Date(a.time||0));
@@ -537,42 +537,42 @@ function renderMetrics(){
 
 function isDone(t){return ["completed","approved"].includes(t.status)}
 function phaseGroup(t){const p=(t.phase||"").toLowerCase(),title=(t.title||"").toLowerCase();if(/kick|vorbereit|projekt/.test(p+title))return 0;if(/susa|salden|hauptbuch|nebenbuch/.test(p+title))return 1;if(/mapping|konten|zuordn/.test(p+title))return 2;if(/bilanz|guv|abschlussarbeit|buchung/.test(p+title))return 3;if(/anhang|lagebericht|bericht/.test(p+title))return 4;return 5}
-function managementPhases(){return ["Kick-off","SuSa","Mapping","Bilanz / GuV","Anhang / Lagebericht","Prüfung / Freigabe"]}
+function managementPhases(){return ["Kick-off","SuSa","Mapping","Bilanz / GuV","Anhang / Lagebericht","PrÃ¼fung / Freigabe"]}
 function daysUntil(date){if(!date)return null;return Math.ceil((new Date(date+"T12:00:00")-new Date())/86400000)}
 function isOwnTask(task){
   return Boolean(currentMembership&&task.responsible_member_id===currentMembership.id);
 }
 function isSubstitutionTask(task){return substitutions.some(row=>row.principal_member_id===task.responsible_member_id)}
-function dueText(task){const days=daysUntil(task.due_date);if(days==null)return "ohne Termin";if(days<0)return `${Math.abs(days)} Tage überfällig`;if(days===0)return "heute fällig";if(days===1)return "morgen fällig";return `in ${days} Tagen`}
+function dueText(task){const days=daysUntil(task.due_date);if(days==null)return "ohne Termin";if(days<0)return `${Math.abs(days)} Tage Ã¼berfÃ¤llig`;if(days===0)return "heute fÃ¤llig";if(days===1)return "morgen fÃ¤llig";return `in ${days} Tagen`}
 function roleTaskHtml(task,context=""){
   const overdue=daysUntil(task.due_date)<0&&!isDone(task);
-  return `<div class="role-task ${overdue||["blocked","declined"].includes(task.status)?"critical":""}"><div><strong>${esc(task.title)}</strong><span>${esc(context||task.responsible_name||task.phase||"Aufgabe")} · ${esc(label(task.status))}</span></div><time class="${overdue?"overdue":""}">${esc(dueText(task))}</time><button class="btn btn-secondary btn-small" onclick="openTaskArea('${task.id}','overview')">Öffnen</button></div>`;
+  return `<div class="role-task ${overdue||["blocked","declined"].includes(task.status)?"critical":""}"><div><strong>${esc(task.title)}</strong><span>${esc(context||task.responsible_name||task.phase||"Aufgabe")} Â· ${esc(label(task.status))}</span></div><time class="${overdue?"overdue":""}">${esc(dueText(task))}</time><button class="btn btn-secondary btn-small" onclick="openTaskArea('${task.id}','overview')">Ã–ffnen</button></div>`;
 }
 function phaseProgressHtml(){
   const names=managementPhases(),groups=names.map((_,i)=>tasks.filter(t=>phaseGroup(t)===i));let firstOpen=groups.findIndex(group=>group.some(t=>!isDone(t)));if(firstOpen<0)firstOpen=5;
-  const steps=names.map((name,i)=>{const group=groups[i],done=group.filter(isDone).length,complete=group.length>0&&done===group.length,active=i===firstOpen;return `<div class="process-step ${complete?"done":active?"active":""}" onclick="openPhase(${i})"><div class="step-dot">${complete?"✓":i+1}</div><strong>${name}</strong><small>${complete?"Abgeschlossen":active?"In Arbeit":group.length?`${done}/${group.length} erledigt`:"Geplant"}</small></div>`}).join("");
-  return `<div class="process-card"><div class="process-head"><h3>Prozessfortschritt</h3><span class="small">${firstOpen>=0?`${names[firstOpen]} ist aktuell im Fokus`:"Abschlussprozess vollständig"}</span></div><div class="process-steps">${steps}</div></div>`;
+  const steps=names.map((name,i)=>{const group=groups[i],done=group.filter(isDone).length,complete=group.length>0&&done===group.length,active=i===firstOpen;return `<div class="process-step ${complete?"done":active?"active":""}" onclick="openPhase(${i})"><div class="step-dot">${complete?"âœ“":i+1}</div><strong>${name}</strong><small>${complete?"Abgeschlossen":active?"In Arbeit":group.length?`${done}/${group.length} erledigt`:"Geplant"}</small></div>`}).join("");
+  return `<div class="process-card"><div class="process-head"><h3>Prozessfortschritt</h3><span class="small">${firstOpen>=0?`${names[firstOpen]} ist aktuell im Fokus`:"Abschlussprozess vollstÃ¤ndig"}</span></div><div class="process-steps">${steps}</div></div>`;
 }
 function renderIdentity(){
-  document.getElementById("roleEyebrow").textContent=currentRoleProfile?.eyebrow||"Projektrolle nicht verfügbar";
-  document.getElementById("roleIdentityName").textContent=currentMembership?.name||user?.email||"–";
+  document.getElementById("roleEyebrow").textContent=currentRoleProfile?.eyebrow||"Projektrolle nicht verfÃ¼gbar";
+  document.getElementById("roleIdentityName").textContent=currentMembership?.name||user?.email||"â€“";
   document.getElementById("roleIdentityLabel").textContent=currentRoleProfile?.label||"Keine eigene Projektmitgliedschaft";
   document.getElementById("roleIdentityAvatar").textContent=memberInitials();
 }
-function workerSubstitutionHtml(substituteTasks,auditor){return `<section class="role-panel" style="margin-top:12px"><div class="role-panel-title"><h3>Stellvertretung</h3><small>nur aktuell gültige Zuweisungen</small></div><div class="role-task-list">${substituteTasks.slice(0,6).map(task=>roleTaskHtml(task,`Vertretung für ${task.responsible_name||"zugewiesene Hauptperson"}`)).join("")||'<div class="empty">Keine aktiven Stellvertretungsaufgaben.</div>'}</div>${substituteTasks.length?'<button class="panel-action" onclick="openCockpitFilter(\'substitutions\')">Stellvertretungsaufgaben öffnen →</button>':""}${auditor?'<p class="small">Prüfungssicht: Interne Budget- und Managementinformationen werden nicht angezeigt.</p>':""}</section>`}
-function cfoKiraHtml(metrics){return `<section class="role-panel" style="margin-top:12px"><div class="role-panel-title"><h3>KIRA-Einschätzung</h3><small>kompakt und datenbasiert</small></div><p class="small">${documents.length?`${documents.length} RLS-sichtbare Datenlieferung(en) liegen vor.`:"Noch keine Datenlieferung vorhanden."} ${metrics.critical.length?`${metrics.critical.length} kritische Aufgabe(n) sollten vor der nächsten Entscheidung geprüft werden.`:"Aktuell ist kein kritischer Aufgabenengpass sichtbar."}</p></section>`}
+function workerSubstitutionHtml(substituteTasks,auditor){return `<section class="role-panel" style="margin-top:12px"><div class="role-panel-title"><h3>Stellvertretung</h3><small>nur aktuell gÃ¼ltige Zuweisungen</small></div><div class="role-task-list">${substituteTasks.slice(0,6).map(task=>roleTaskHtml(task,`Vertretung fÃ¼r ${task.responsible_name||"zugewiesene Hauptperson"}`)).join("")||'<div class="empty">Keine aktiven Stellvertretungsaufgaben.</div>'}</div>${substituteTasks.length?'<button class="panel-action" onclick="openCockpitFilter(\'substitutions\')">Stellvertretungsaufgaben Ã¶ffnen â†’</button>':""}${auditor?'<p class="small">PrÃ¼fungssicht: Interne Budget- und Managementinformationen werden nicht angezeigt.</p>':""}</section>`}
+function cfoKiraHtml(metrics){return `<section class="role-panel" style="margin-top:12px"><div class="role-panel-title"><h3>KIRA-EinschÃ¤tzung</h3><small>kompakt und datenbasiert</small></div><p class="small">${documents.length?`${documents.length} RLS-sichtbare Datenlieferung(en) liegen vor.`:"Noch keine Datenlieferung vorhanden."} ${metrics.critical.length?`${metrics.critical.length} kritische Aufgabe(n) sollten vor der nÃ¤chsten Entscheidung geprÃ¼ft werden.`:"Aktuell ist kein kritischer Aufgabenengpass sichtbar."}</p></section>`}
 function wireRoleKpis(content){
-  const map={"Überfällig":"overdue","Heute fällig":"today","Rückfragen / Nacharbeit":"rework","Erledigt":"done","Kritisch überfällig":"critical","Offene Reviews":"review","Nicht zugeordnet":"unassigned","Teamfortschritt":"done"};
+  const map={"ÃœberfÃ¤llig":"overdue","Heute fÃ¤llig":"today","RÃ¼ckfragen / Nacharbeit":"rework","Erledigt":"done","Kritisch Ã¼berfÃ¤llig":"critical","Offene Reviews":"review","Nicht zugeordnet":"unassigned","Teamfortschritt":"done"};
   content.querySelectorAll(".role-kpi").forEach(button=>{const filter=map[button.querySelector("span")?.textContent];if(filter)button.onclick=()=>openCockpitFilter(filter)});
 }
 async function renderManagementCockpit(){
   if(!currentProject)return;
   renderIdentity();
-  document.getElementById("managementTitle").textContent=`${currentProject.name}${currentProject.closing_date?` · ${String(currentProject.closing_date).slice(0,4)}`:""}`;
+  document.getElementById("managementTitle").textContent=`${currentProject.name}${currentProject.closing_date?` Â· ${String(currentProject.closing_date).slice(0,4)}`:""}`;
   const content=document.getElementById("roleCockpitContent");
   if(!currentMembership){
-    document.getElementById("managementSubtitle").textContent="Die Rolle wird ausschließlich aus der eigenen Projektmitgliedschaft abgeleitet.";
-    content.innerHTML='<div class="role-empty"><strong>Keine eigene Projektmitgliedschaft gefunden.</strong><span>Für dieses Projekt wird keine Rollenansicht freigeschaltet. Bitte lassen Sie die Mitgliedschaft durch die Projektverantwortlichen prüfen.</span></div>';
+    document.getElementById("managementSubtitle").textContent="Die Rolle wird ausschlieÃŸlich aus der eigenen Projektmitgliedschaft abgeleitet.";
+    content.innerHTML='<div class="role-empty"><strong>Keine eigene Projektmitgliedschaft gefunden.</strong><span>FÃ¼r dieses Projekt wird keine Rollenansicht freigeschaltet. Bitte lassen Sie die Mitgliedschaft durch die Projektverantwortlichen prÃ¼fen.</span></div>';
     return;
   }
   const {model}=await cockpitModules(),metrics=model.buildCockpitModel({tasks,project:currentProject,member:currentMembership,substitutions});
@@ -590,31 +590,31 @@ function renderCfoCockpit({content,metrics}){
   const ownership=new Map();tasks.filter(t=>!isDone(t)).forEach(t=>{const name=t.responsible_name||"Nicht zugeordnet";ownership.set(name,(ownership.get(name)||0)+1)});
   const intervention=[...ownership.entries()].sort((a,b)=>b[1]-a[1]).slice(0,5);
   const atRisk=critical.length>0;
-  content.innerHTML=`<div class="role-alert ${atRisk?"":"ok"}"><div><strong>${atRisk?"Der Abschluss benötigt Aufmerksamkeit.":"Der Abschluss ist aktuell stabil."}</strong><span>${atRisk?`${critical.length} kritische Punkte können Folgetermine beeinflussen.`:`${done.length} von ${total} Aufgaben sind abgeschlossen; derzeit ist kein kritischer Engpass sichtbar.`}</span></div>${bottleneckTask?'<button class="btn btn-primary" onclick="openBottleneck()">Engpass öffnen</button>':""}</div>
-    <div class="role-kpis"><button class="role-kpi" onclick="openCockpitFilter('done')"><span>Ist-Fortschritt</span><strong>${progress} %</strong><small>${done.length} von ${total} abgeschlossen</small></button><button class="role-kpi" onclick="openCockpitFilter('open')"><span>Planabweichung</span><strong>${planDeviation==null?"–":`${planDeviation>0?"+":""}${planDeviation} %`}</strong><small>${planProgress==null?"Plan nicht konfiguriert":`Planfortschritt ${planProgress} %`}</small></button><button class="role-kpi critical" onclick="openCockpitFilter('critical')"><span>Kritische Engpässe</span><strong>${critical.length}</strong><small>überfällig, blockiert oder abgelehnt</small></button><button class="role-kpi" onclick="openCockpitFilter('decisions')"><span>Tage bis Abschluss</span><strong>${daysToClose==null?"–":daysToClose}</strong><small>${daysToClose==null?"Abschlussstichtag nicht konfiguriert":"bis zum Abschlussstichtag"}</small></button></div>
-    <div class="role-alert ok"><div><strong>Budget nicht konfiguriert</strong><span>Im aktuellen Projektschema ist kein verlässlich auswertbares Budgetfeld vorhanden; es werden keine Schätzwerte angezeigt.</span></div></div>
+  content.innerHTML=`<div class="role-alert ${atRisk?"":"ok"}"><div><strong>${atRisk?"Der Abschluss benÃ¶tigt Aufmerksamkeit.":"Der Abschluss ist aktuell stabil."}</strong><span>${atRisk?`${critical.length} kritische Punkte kÃ¶nnen Folgetermine beeinflussen.`:`${done.length} von ${total} Aufgaben sind abgeschlossen; derzeit ist kein kritischer Engpass sichtbar.`}</span></div>${bottleneckTask?'<button class="btn btn-primary" onclick="openBottleneck()">Engpass Ã¶ffnen</button>':""}</div>
+    <div class="role-kpis"><button class="role-kpi" onclick="openCockpitFilter('done')"><span>Ist-Fortschritt</span><strong>${progress} %</strong><small>${done.length} von ${total} abgeschlossen</small></button><button class="role-kpi" onclick="openCockpitFilter('open')"><span>Planabweichung</span><strong>${planDeviation==null?"â€“":`${planDeviation>0?"+":""}${planDeviation} %`}</strong><small>${planProgress==null?"Plan nicht konfiguriert":`Planfortschritt ${planProgress} %`}</small></button><button class="role-kpi critical" onclick="openCockpitFilter('critical')"><span>Kritische EngpÃ¤sse</span><strong>${critical.length}</strong><small>Ã¼berfÃ¤llig, blockiert oder abgelehnt</small></button><button class="role-kpi" onclick="openCockpitFilter('decisions')"><span>Tage bis Abschluss</span><strong>${daysToClose==null?"â€“":daysToClose}</strong><small>${daysToClose==null?"Abschlussstichtag nicht konfiguriert":"bis zum Abschlussstichtag"}</small></button></div>
+    <div class="role-alert ok"><div><strong>Budget nicht konfiguriert</strong><span>Im aktuellen Projektschema ist kein verlÃ¤sslich auswertbares Budgetfeld vorhanden; es werden keine SchÃ¤tzwerte angezeigt.</span></div></div>
     ${phaseProgressHtml()}
-    <div class="role-layout"><div class="role-stack"><section class="role-panel"><div class="role-panel-title"><h3>Entscheidungsbedarf</h3><small>Kontext vor Freigabe prüfen</small></div><div class="role-task-list">${decisions.map(t=>roleTaskHtml(t,t.responsible_name||t.phase)).join("")||'<div class="empty">Aktuell wartet keine Aufgabe auf eine Managemententscheidung.</div>'}</div></section><section class="role-panel"><div class="role-panel-title"><h3>Engpässe</h3><small>mit Auswirkung auf den Terminplan</small></div><div class="role-task-list">${critical.slice(0,4).map(t=>roleTaskHtml(t,t.responsible_name||"Nicht zugeordnet")).join("")||'<div class="empty">Keine kritischen Engpässe ermittelt.</div>'}</div></section></div><div class="role-stack"><section class="role-panel"><div class="role-panel-title"><h3>Wo ist Eingreifen erforderlich?</h3></div>${intervention.map(([name,count])=>`<div class="team-row"><div class="team-copy"><strong>${esc(name)}</strong><span>offene Verantwortlichkeiten</span></div><span class="count-badge ${count>2?"warn":""}">${count} offen</span></div>`).join("")||'<div class="empty">Keine offenen Verantwortlichkeiten.</div>'}</section><section class="role-panel"><div class="role-panel-title"><h3>Terminlage</h3></div><div class="team-row"><span>Projektstatus</span><span class="pill ${critical.length?"blocked":"approved"}">${critical.length?"Risiko":"im Plan"}</span></div><div class="team-row"><span>Abschlussziel</span><strong>${dateOnly(currentProject.closing_date)}</strong></div></section></div></div>`;
+    <div class="role-layout"><div class="role-stack"><section class="role-panel"><div class="role-panel-title"><h3>Entscheidungsbedarf</h3><small>Kontext vor Freigabe prÃ¼fen</small></div><div class="role-task-list">${decisions.map(t=>roleTaskHtml(t,t.responsible_name||t.phase)).join("")||'<div class="empty">Aktuell wartet keine Aufgabe auf eine Managemententscheidung.</div>'}</div></section><section class="role-panel"><div class="role-panel-title"><h3>EngpÃ¤sse</h3><small>mit Auswirkung auf den Terminplan</small></div><div class="role-task-list">${critical.slice(0,4).map(t=>roleTaskHtml(t,t.responsible_name||"Nicht zugeordnet")).join("")||'<div class="empty">Keine kritischen EngpÃ¤sse ermittelt.</div>'}</div></section></div><div class="role-stack"><section class="role-panel"><div class="role-panel-title"><h3>Wo ist Eingreifen erforderlich?</h3></div>${intervention.map(([name,count])=>`<div class="team-row"><div class="team-copy"><strong>${esc(name)}</strong><span>offene Verantwortlichkeiten</span></div><span class="count-badge ${count>2?"warn":""}">${count} offen</span></div>`).join("")||'<div class="empty">Keine offenen Verantwortlichkeiten.</div>'}</section><section class="role-panel"><div class="role-panel-title"><h3>Terminlage</h3></div><div class="team-row"><span>Projektstatus</span><span class="pill ${critical.length?"blocked":"approved"}">${critical.length?"Risiko":"im Plan"}</span></div><div class="team-row"><span>Abschlussziel</span><strong>${dateOnly(currentProject.closing_date)}</strong></div></section></div></div>`;
 }
 function renderProjectCockpit({content,metrics}){
-  document.getElementById("managementSubtitle").textContent="Gesamtkoordination, Termine, Zuständigkeiten und sichere Projektadministration";
+  document.getElementById("managementSubtitle").textContent="Gesamtkoordination, Termine, ZustÃ¤ndigkeiten und sichere Projektadministration";
   const invitations=teamMembers.filter(member=>member.invitation_status!=="accepted"),openInvitations=invitations.filter(member=>["pending","invited"].includes(member.invitation_status)),declinedInvitations=invitations.filter(member=>member.invitation_status==="declined"),activeSubs=substitutions.length;
-  content.innerHTML=`<div class="role-alert ${metrics.critical.length?"":"ok"}"><div><strong>${metrics.critical.length?`${metrics.critical.length} kritische Vorgänge benötigen Koordination.`:"Das Projekt ist ohne kritischen Engpass."}</strong><span>${metrics.unassigned.length} offene Aufgaben ohne Zuordnung; ${metrics.reviews.length} Reviews offen.</span></div></div><div class="role-kpis"><button class="role-kpi" onclick="openCockpitFilter('open')"><span>Offen</span><strong>${metrics.open.length}</strong><small>aktive Aufgaben</small></button><button class="role-kpi critical" onclick="openCockpitFilter('overdue')"><span>Überfällig</span><strong>${metrics.overdue.length}</strong><small>terminlich im Verzug</small></button><button class="role-kpi warning" onclick="openCockpitFilter('unassigned')"><span>Nicht zugeordnet</span><strong>${metrics.unassigned.length}</strong><small>Verantwortung fehlt</small></button><button class="role-kpi" onclick="openCockpitFilter('review')"><span>Reviews</span><strong>${metrics.reviews.length}</strong><small>${invitations.length} Einladungen · ${activeSubs} aktive Vertretungen</small></button></div>${phaseProgressHtml()}<div class="role-layout"><section class="role-panel"><div class="role-panel-title"><h3>Koordinationsbedarf</h3><small>RLS-sichtbarer Projektbestand</small></div><div class="role-task-list">${[...metrics.critical,...metrics.unassigned,...metrics.reviews].filter((task,index,list)=>list.findIndex(item=>item.id===task.id)===index).slice(0,8).map(task=>roleTaskHtml(task,task.responsible_name||"Nicht zugeordnet")).join("")||'<div class="empty">Kein akuter Koordinationsbedarf.</div>'}</div></section><section class="role-panel"><div class="role-panel-title"><h3>Projektzugänge</h3><small>nur mit expliziten Rechten</small></div><div class="team-row"><span>Akzeptierte Mitglieder</span><strong>${teamMembers.filter(member=>member.invitation_status==="accepted").length}</strong></div><div class="team-row"><span>Offene Einladungen</span><strong>${invitations.length}</strong></div><div class="team-row"><span>Aktive Stellvertretungen</span><strong>${activeSubs}</strong></div>${currentMembership.can_manage_members?'<button class="panel-action" onclick="location.href=\'/admin\'">Projektverwaltung öffnen →</button>':'<div class="small">Keine Berechtigung zur Mitgliederverwaltung.</div>'}</section></div>`;
+  content.innerHTML=`<div class="role-alert ${metrics.critical.length?"":"ok"}"><div><strong>${metrics.critical.length?`${metrics.critical.length} kritische VorgÃ¤nge benÃ¶tigen Koordination.`:"Das Projekt ist ohne kritischen Engpass."}</strong><span>${metrics.unassigned.length} offene Aufgaben ohne Zuordnung; ${metrics.reviews.length} Reviews offen.</span></div></div><div class="role-kpis"><button class="role-kpi" onclick="openCockpitFilter('open')"><span>Offen</span><strong>${metrics.open.length}</strong><small>aktive Aufgaben</small></button><button class="role-kpi critical" onclick="openCockpitFilter('overdue')"><span>ÃœberfÃ¤llig</span><strong>${metrics.overdue.length}</strong><small>terminlich im Verzug</small></button><button class="role-kpi warning" onclick="openCockpitFilter('unassigned')"><span>Nicht zugeordnet</span><strong>${metrics.unassigned.length}</strong><small>Verantwortung fehlt</small></button><button class="role-kpi" onclick="openCockpitFilter('review')"><span>Reviews</span><strong>${metrics.reviews.length}</strong><small>${invitations.length} Einladungen Â· ${activeSubs} aktive Vertretungen</small></button></div>${phaseProgressHtml()}<div class="role-layout"><section class="role-panel"><div class="role-panel-title"><h3>Koordinationsbedarf</h3><small>RLS-sichtbarer Projektbestand</small></div><div class="role-task-list">${[...metrics.critical,...metrics.unassigned,...metrics.reviews].filter((task,index,list)=>list.findIndex(item=>item.id===task.id)===index).slice(0,8).map(task=>roleTaskHtml(task,task.responsible_name||"Nicht zugeordnet")).join("")||'<div class="empty">Kein akuter Koordinationsbedarf.</div>'}</div></section><section class="role-panel"><div class="role-panel-title"><h3>ProjektzugÃ¤nge</h3><small>nur mit expliziten Rechten</small></div><div class="team-row"><span>Akzeptierte Mitglieder</span><strong>${teamMembers.filter(member=>member.invitation_status==="accepted").length}</strong></div><div class="team-row"><span>Offene Einladungen</span><strong>${invitations.length}</strong></div><div class="team-row"><span>Aktive Stellvertretungen</span><strong>${activeSubs}</strong></div>${currentMembership.can_manage_members?'<button class="panel-action" onclick="location.href=\'/admin\'">Projektverwaltung Ã¶ffnen â†’</button>':'<div class="small">Keine Berechtigung zur Mitgliederverwaltung.</div>'}</section></div>`;
 }
 function renderAccountingLeadCockpit({content,critical,progress}){
-  document.getElementById("managementSubtitle").textContent="Teamsteuerung, Engpässe, Reviews und Verantwortlichkeiten";
+  document.getElementById("managementSubtitle").textContent="Teamsteuerung, EngpÃ¤sse, Reviews und Verantwortlichkeiten";
   const reviews=tasks.filter(t=>["submitted","in_review"].includes(t.status)),unassigned=tasks.filter(t=>!isDone(t)&&!t.responsible_member_id&&!t.responsible_email),priority=[...new Map([...critical,...unassigned,...reviews].map(t=>[t.id,t])).values()].slice(0,7);
   const loads=new Map();tasks.filter(t=>!isDone(t)).forEach(t=>{const name=t.responsible_name||"Nicht zugeordnet";const value=loads.get(name)||{open:0,critical:0};value.open++;if(critical.some(c=>c.id===t.id))value.critical++;loads.set(name,value)});
-  content.innerHTML=`<div class="role-alert ${critical.length?"":"ok"}"><div><strong>${critical.length?`${critical.length} kritische Teamaufgaben benötigen Steuerung.`:"Das Team arbeitet ohne kritische Überfälligkeit."}</strong><span>${unassigned.length} offene Aufgaben sind noch nicht zugeordnet; ${reviews.length} warten auf Review.</span></div>${bottleneckTask?'<button class="btn btn-primary" onclick="openBottleneck()">Nächsten Engpass bearbeiten</button>':""}</div><div class="role-kpis"><button class="role-kpi critical" onclick="openCriticalTasks()"><span>Kritisch überfällig</span><strong>${critical.length}</strong><small>blockiert oder im Verzug</small></button><button class="role-kpi warning" onclick="openReviewTasks()"><span>Offene Reviews</span><strong>${reviews.length}</strong><small>warten auf Prüfung</small></button><button class="role-kpi warning" onclick="openMetric('tasks')"><span>Nicht zugeordnet</span><strong>${unassigned.length}</strong><small>Verantwortung fehlt</small></button><button class="role-kpi" onclick="openMetric('done')"><span>Teamfortschritt</span><strong>${progress} %</strong><small>gesamter Aufgabenbestand</small></button></div><div class="role-layout"><div class="role-stack"><section class="role-panel"><div class="role-panel-title"><h3>Teamaufgaben mit Handlungsbedarf</h3><small>nach Termin- und Blockadewirkung priorisiert</small></div><div class="role-task-list">${priority.map(t=>roleTaskHtml(t,t.responsible_name||"Nicht zugeordnet")).join("")||'<div class="empty">Kein akuter Handlungsbedarf.</div>'}</div></section>${phaseProgressHtml()}</div><div class="role-stack"><section class="role-panel"><div class="role-panel-title"><h3>Team-Auslastung</h3><small>offene Aufgaben und Engpässe</small></div>${[...loads.entries()].sort((a,b)=>b[1].open-a[1].open).slice(0,7).map(([name,value])=>`<div class="team-row"><div class="team-copy"><strong>${esc(name)}</strong><span>${value.critical} kritisch · ${value.open} offen</span></div><span class="count-badge ${value.critical?"warn":""}">${value.critical?"prüfen":"normal"}</span></div>`).join("")||'<div class="empty">Keine offenen Teamaufgaben.</div>'}</section><section class="role-panel"><div class="role-panel-title"><h3>Seit Ihrem letzten Login</h3></div><div class="role-change-list">${activities.slice(0,5).map(activity=>`<div class="role-change"><span class="role-change-dot"></span><div><strong>${esc(activity.title)}</strong><span>${esc(activity.detail)} · ${dt(activity.time)}</span></div></div>`).join("")||'<div class="empty">Keine neuen Aktivitäten.</div>'}</div></section></div></div>`;
+  content.innerHTML=`<div class="role-alert ${critical.length?"":"ok"}"><div><strong>${critical.length?`${critical.length} kritische Teamaufgaben benÃ¶tigen Steuerung.`:"Das Team arbeitet ohne kritische ÃœberfÃ¤lligkeit."}</strong><span>${unassigned.length} offene Aufgaben sind noch nicht zugeordnet; ${reviews.length} warten auf Review.</span></div>${bottleneckTask?'<button class="btn btn-primary" onclick="openBottleneck()">NÃ¤chsten Engpass bearbeiten</button>':""}</div><div class="role-kpis"><button class="role-kpi critical" onclick="openCriticalTasks()"><span>Kritisch Ã¼berfÃ¤llig</span><strong>${critical.length}</strong><small>blockiert oder im Verzug</small></button><button class="role-kpi warning" onclick="openReviewTasks()"><span>Offene Reviews</span><strong>${reviews.length}</strong><small>warten auf PrÃ¼fung</small></button><button class="role-kpi warning" onclick="openMetric('tasks')"><span>Nicht zugeordnet</span><strong>${unassigned.length}</strong><small>Verantwortung fehlt</small></button><button class="role-kpi" onclick="openMetric('done')"><span>Teamfortschritt</span><strong>${progress} %</strong><small>gesamter Aufgabenbestand</small></button></div><div class="role-layout"><div class="role-stack"><section class="role-panel"><div class="role-panel-title"><h3>Teamaufgaben mit Handlungsbedarf</h3><small>nach Termin- und Blockadewirkung priorisiert</small></div><div class="role-task-list">${priority.map(t=>roleTaskHtml(t,t.responsible_name||"Nicht zugeordnet")).join("")||'<div class="empty">Kein akuter Handlungsbedarf.</div>'}</div></section>${phaseProgressHtml()}</div><div class="role-stack"><section class="role-panel"><div class="role-panel-title"><h3>Team-Auslastung</h3><small>offene Aufgaben und EngpÃ¤sse</small></div>${[...loads.entries()].sort((a,b)=>b[1].open-a[1].open).slice(0,7).map(([name,value])=>`<div class="team-row"><div class="team-copy"><strong>${esc(name)}</strong><span>${value.critical} kritisch Â· ${value.open} offen</span></div><span class="count-badge ${value.critical?"warn":""}">${value.critical?"prÃ¼fen":"normal"}</span></div>`).join("")||'<div class="empty">Keine offenen Teamaufgaben.</div>'}</section><section class="role-panel"><div class="role-panel-title"><h3>Seit Ihrem letzten Login</h3></div><div class="role-change-list">${activities.slice(0,5).map(activity=>`<div class="role-change"><span class="role-change-dot"></span><div><strong>${esc(activity.title)}</strong><span>${esc(activity.detail)} Â· ${dt(activity.time)}</span></div></div>`).join("")||'<div class="empty">Keine neuen AktivitÃ¤ten.</div>'}</div></section></div></div>`;
 }
 function renderWorkerCockpit({content,metrics}){
-  document.getElementById("managementSubtitle").textContent="Eigene Aufgaben, Rückfragen und nächste Aktion";
-  document.getElementById("managementTitle").textContent=`Mein Tag – ${currentMembership.project_role}`;
+  document.getElementById("managementSubtitle").textContent="Eigene Aufgaben, RÃ¼ckfragen und nÃ¤chste Aktion";
+  document.getElementById("managementTitle").textContent=`Mein Tag â€“ ${currentMembership.project_role}`;
   const mine=tasks.filter(isOwnTask),openMine=mine.filter(t=>!isDone(t)),today=new Date().toISOString().slice(0,10),overdue=openMine.filter(t=>t.due_date&&t.due_date<today),dueToday=openMine.filter(t=>t.due_date===today),submitted=mine.filter(t=>["submitted","in_review"].includes(t.status)),returned=mine.filter(t=>["declined","question"].includes(t.status));
   const next=cockpitLib.model.prioritizeWorkerTasks(openMine)[0]||null,myIds=new Set(mine.map(t=>t.id)),myActivities=activities.filter(activity=>myIds.has(activity.task?.id||activity.task_id));
-  content.innerHTML=`<div class="today-box"><div class="role-eyebrow">Mein Tag</div><h3>${openMine.length?`${openMine.length} ${openMine.length===1?"Aufgabe wartet":"Aufgaben warten"}.`:"Ihre Aufgaben sind für heute erledigt."}</h3><p>${returned.length?`${returned.length} Aufgabe(n) benötigen Rückmeldung oder Nachbesserung.`:"Konzentrieren Sie sich auf die nächste fällige Aufgabe und die dazugehörigen Nachweise."}</p>${next?`<div class="next-action"><div><strong>${esc(next.title)}</strong><span>${esc(dueText(next))} · ${esc(next.phase||"Abschlussaufgabe")}</span></div><button class="btn btn-primary" onclick="openTaskArea('${next.id}','overview')">Nächste Aufgabe öffnen</button></div>`:""}</div><div class="role-kpis"><button class="role-kpi critical" onclick="openOwnTasks()"><span>Überfällig</span><strong>${overdue.length}</strong><small>eigene offene Aufgaben</small></button><button class="role-kpi warning" onclick="openOwnTasks()"><span>Heute fällig</span><strong>${dueToday.length}</strong><small>noch zu bearbeiten</small></button><button class="role-kpi warning" onclick="openOwnTasks()"><span>Rückfragen / Nacharbeit</span><strong>${returned.length}</strong><small>benötigen Ihre Reaktion</small></button><button class="role-kpi" onclick="openOwnTasks()"><span>Erledigt</span><strong>${mine.filter(isDone).length}</strong><small>im aktuellen Projekt</small></button></div><div class="role-layout"><div class="role-stack"><section class="role-panel"><div class="role-panel-title"><h3>Meine Aufgaben</h3><small>nur Ihre eigene Zuständigkeit</small></div><div class="role-task-list">${openMine.slice(0,8).map(t=>roleTaskHtml(t,t.phase)).join("")||'<div class="empty">Keine eigenen offenen Aufgaben.</div>'}</div></section><section class="role-panel"><div class="role-panel-title"><h3>Von mir eingereicht</h3><small>derzeit keine Aktion erforderlich</small></div><div class="role-task-list">${submitted.slice(0,5).map(t=>roleTaskHtml(t,"Wartet auf Prüfung")).join("")||'<div class="empty">Keine Aufgaben warten auf Prüfung.</div>'}</div></section></div><div class="role-stack"><section class="role-panel"><div class="role-panel-title"><h3>Seit Ihrem letzten Login</h3></div><div class="role-change-list">${myActivities.slice(0,6).map(activity=>`<div class="role-change"><span class="role-change-dot"></span><div><strong>${esc(activity.title)}</strong><span>${esc(activity.detail)} · ${dt(activity.time)}</span></div></div>`).join("")||'<div class="empty">Keine neuen Aktivitäten zu Ihren Aufgaben.</div>'}</div></section><section class="role-panel"><div class="role-panel-title"><h3>Ihr Fortschritt</h3></div><div class="team-row"><span>Offen</span><span class="pill">${openMine.length}</span></div><div class="team-row"><span>Eingereicht</span><span class="pill question">${submitted.length}</span></div><div class="team-row"><span>Erledigt / freigegeben</span><span class="pill approved">${mine.filter(isDone).length}</span></div><button class="panel-action" onclick="openOwnTasks()">Alle eigenen Aufgaben →</button></section></div></div>`;
+  content.innerHTML=`<div class="today-box"><div class="role-eyebrow">Mein Tag</div><h3>${openMine.length?`${openMine.length} ${openMine.length===1?"Aufgabe wartet":"Aufgaben warten"}.`:"Ihre Aufgaben sind fÃ¼r heute erledigt."}</h3><p>${returned.length?`${returned.length} Aufgabe(n) benÃ¶tigen RÃ¼ckmeldung oder Nachbesserung.`:"Konzentrieren Sie sich auf die nÃ¤chste fÃ¤llige Aufgabe und die dazugehÃ¶rigen Nachweise."}</p>${next?`<div class="next-action"><div><strong>${esc(next.title)}</strong><span>${esc(dueText(next))} Â· ${esc(next.phase||"Abschlussaufgabe")}</span></div><button class="btn btn-primary" onclick="openTaskArea('${next.id}','overview')">NÃ¤chste Aufgabe Ã¶ffnen</button></div>`:""}</div><div class="role-kpis"><button class="role-kpi critical" onclick="openOwnTasks()"><span>ÃœberfÃ¤llig</span><strong>${overdue.length}</strong><small>eigene offene Aufgaben</small></button><button class="role-kpi warning" onclick="openOwnTasks()"><span>Heute fÃ¤llig</span><strong>${dueToday.length}</strong><small>noch zu bearbeiten</small></button><button class="role-kpi warning" onclick="openOwnTasks()"><span>RÃ¼ckfragen / Nacharbeit</span><strong>${returned.length}</strong><small>benÃ¶tigen Ihre Reaktion</small></button><button class="role-kpi" onclick="openOwnTasks()"><span>Erledigt</span><strong>${mine.filter(isDone).length}</strong><small>im aktuellen Projekt</small></button></div><div class="role-layout"><div class="role-stack"><section class="role-panel"><div class="role-panel-title"><h3>Meine Aufgaben</h3><small>nur Ihre eigene ZustÃ¤ndigkeit</small></div><div class="role-task-list">${openMine.slice(0,8).map(t=>roleTaskHtml(t,t.phase)).join("")||'<div class="empty">Keine eigenen offenen Aufgaben.</div>'}</div></section><section class="role-panel"><div class="role-panel-title"><h3>Von mir eingereicht</h3><small>derzeit keine Aktion erforderlich</small></div><div class="role-task-list">${submitted.slice(0,5).map(t=>roleTaskHtml(t,"Wartet auf PrÃ¼fung")).join("")||'<div class="empty">Keine Aufgaben warten auf PrÃ¼fung.</div>'}</div></section></div><div class="role-stack"><section class="role-panel"><div class="role-panel-title"><h3>Seit Ihrem letzten Login</h3></div><div class="role-change-list">${myActivities.slice(0,6).map(activity=>`<div class="role-change"><span class="role-change-dot"></span><div><strong>${esc(activity.title)}</strong><span>${esc(activity.detail)} Â· ${dt(activity.time)}</span></div></div>`).join("")||'<div class="empty">Keine neuen AktivitÃ¤ten zu Ihren Aufgaben.</div>'}</div></section><section class="role-panel"><div class="role-panel-title"><h3>Ihr Fortschritt</h3></div><div class="team-row"><span>Offen</span><span class="pill">${openMine.length}</span></div><div class="team-row"><span>Eingereicht</span><span class="pill question">${submitted.length}</span></div><div class="team-row"><span>Erledigt / freigegeben</span><span class="pill approved">${mine.filter(isDone).length}</span></div><button class="panel-action" onclick="openOwnTasks()">Alle eigenen Aufgaben â†’</button></section></div></div>`;
 }
-function openPhase(i){activateView("tasks");quickTaskFilter="";document.getElementById("taskPhase").value="";document.getElementById("taskSearch").value="";const ids=new Set(tasks.filter(t=>phaseGroup(t)===i).map(t=>t.id));document.getElementById("taskBody").innerHTML=tasks.filter(t=>ids.has(t.id)).map(t=>{const r=roomOfTask(t.id),fids=r?folders.filter(f=>f.task_room_id===r.id).map(f=>f.id):[],dc=documents.filter(d=>fids.includes(d.folder_id)).length,qc=comments.filter(c=>c.task_id===t.id).length;return `<tr><td>${t.task_number||""}</td><td>${esc(t.phase)}</td><td><strong>${esc(t.title)}</strong></td><td>${esc(t.responsible_name||"Offen")}</td><td>${dateOnly(t.due_date)}</td><td><span class="pill ${t.status}">${label(t.status)}</span></td><td>${dc}</td><td>${qc}</td><td><button class="btn btn-secondary btn-small" onclick="openRoom('${t.id}')">Öffnen</button></td></tr>`}).join("")||'<tr><td colspan="9" class="empty">Keine Aufgaben in dieser Phase.</td></tr>';setTimeout(()=>document.getElementById("view-tasks").scrollIntoView({behavior:"smooth"}),50)}
+function openPhase(i){activateView("tasks");quickTaskFilter="";document.getElementById("taskPhase").value="";document.getElementById("taskSearch").value="";const ids=new Set(tasks.filter(t=>phaseGroup(t)===i).map(t=>t.id));document.getElementById("taskBody").innerHTML=tasks.filter(t=>ids.has(t.id)).map(t=>{const r=roomOfTask(t.id),fids=r?folders.filter(f=>f.task_room_id===r.id).map(f=>f.id):[],dc=documents.filter(d=>fids.includes(d.folder_id)).length,qc=comments.filter(c=>c.task_id===t.id).length;return `<tr><td>${t.task_number||""}</td><td>${esc(t.phase)}</td><td><strong>${esc(t.title)}</strong></td><td>${esc(t.responsible_name||"Offen")}</td><td>${dateOnly(t.due_date)}</td><td><span class="pill ${t.status}">${label(t.status)}</span></td><td>${dc}</td><td>${qc}</td><td><button class="btn btn-secondary btn-small" onclick="openRoom('${t.id}')">Ã–ffnen</button></td></tr>`}).join("")||'<tr><td colspan="9" class="empty">Keine Aufgaben in dieser Phase.</td></tr>';setTimeout(()=>document.getElementById("view-tasks").scrollIntoView({behavior:"smooth"}),50)}
 function openPerson(name){activateView("tasks");document.getElementById("taskPerson").value=name;renderTasks();setTimeout(()=>document.getElementById("view-tasks").scrollIntoView({behavior:"smooth"}),50)}
 function showTaskQuickFilter(filter,text){activateView("tasks");quickTaskFilter=filter;document.getElementById("taskQuickFilterText").textContent=text;document.getElementById("taskQuickFilter").classList.add("show");renderTasks();setTimeout(()=>document.getElementById("view-tasks").scrollIntoView({behavior:"smooth"}),50)}
 function openCriticalTasks(){showTaskQuickFilter("critical","Kritische Aufgaben")}
@@ -629,19 +629,19 @@ function openCockpitFilter(requested){
   document.getElementById("taskQuickFilterText").textContent=cockpitLib?.filters.COCKPIT_FILTERS[filter]||"Alle Aufgaben";document.getElementById("taskQuickFilter").classList.toggle("show",Boolean(quickTaskFilter));activateView("tasks");renderTasks();
 }
 function eventHtml(a){
-  const icon=a.type==="file"?"DOC":a.type==="question"?"?":a.type==="response"?"✓":"•";
+  const icon=a.type==="file"?"DOC":a.type==="question"?"?":a.type==="response"?"âœ“":"â€¢";
   const cls=a.type==="response"&&a.subtype==="declined"?"declined":a.type;
   const taskId=a.task?.id||a.task_id||"";
   const action=a.type==="question"?"communication":a.type==="file"?"dataroom":"overview";
   const interactive=taskId
-    ? ` role="button" tabindex="0" class="event event-clickable" onclick="openTaskArea('${taskId}','${action}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openTaskArea('${taskId}','${action}')}" title="Aufgabe direkt öffnen"`
+    ? ` role="button" tabindex="0" class="event event-clickable" onclick="openTaskArea('${taskId}','${action}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openTaskArea('${taskId}','${action}')}" title="Aufgabe direkt Ã¶ffnen"`
     : ` class="event"`;
   return `<div${interactive}><div class="event-icon ${cls}">${icon}</div><div><strong>${esc(a.title)}</strong><div class="small">${esc(a.detail)}</div></div><time class="small">${dt(a.time)}</time></div>`;
 }
 function renderFeed(){
   const filter=document.getElementById("feedFilter").value;
   const list=activities.filter(a=>!filter||a.type===filter).slice(0,30);
-  document.getElementById("feed").innerHTML=list.map(eventHtml).join("")||'<div class="empty">Noch keine Aktivitäten vorhanden.</div>';
+  document.getElementById("feed").innerHTML=list.map(eventHtml).join("")||'<div class="empty">Noch keine AktivitÃ¤ten vorhanden.</div>';
 }
 
 function renderAssistants(){
@@ -651,22 +651,22 @@ function renderAssistants(){
   const unassigned=tasks.filter(t=>!t.responsible_email);
   const noFiles=tasks.filter(t=>{const r=roomOfTask(t.id);if(!r)return true;const fids=folders.filter(f=>f.task_room_id===r.id).map(f=>f.id);return !documents.some(d=>fids.includes(d.folder_id))});
 
-  document.getElementById("kaiSummary").textContent=`KAI sieht ${comments.length} Rückfragen, ${declined.length} abgelehnte Zuständigkeiten und ${overdue.length} überfällige Aufgaben.`;
+  document.getElementById("kaiSummary").textContent=`KAI sieht ${comments.length} RÃ¼ckfragen, ${declined.length} abgelehnte ZustÃ¤ndigkeiten und ${overdue.length} Ã¼berfÃ¤llige Aufgaben.`;
   const kai=[];
-  if(declined.length)kai.push(`${declined.length} abgelehnte Zuständigkeit(en) neu zuordnen.`);
-  if(overdue.length)kai.push(`${overdue.length} überfällige Aufgabe(n) erinnern oder eskalieren.`);
+  if(declined.length)kai.push(`${declined.length} abgelehnte ZustÃ¤ndigkeit(en) neu zuordnen.`);
+  if(overdue.length)kai.push(`${overdue.length} Ã¼berfÃ¤llige Aufgabe(n) erinnern oder eskalieren.`);
   if(unassigned.length)kai.push(`${unassigned.length} Aufgabe(n) haben noch keine verantwortliche Person.`);
   if(!kai.length)kai.push("Aktuell besteht kein unmittelbarer Kommunikationsbedarf.");
   document.getElementById("kaiInsights").innerHTML=kai.map(x=>`<div class="insight">${esc(x)}</div>`).join("");
 
   const xlsx=documents.filter(d=>/\.xlsx?$/i.test(docName(d))).length;
   const docs=documents.filter(d=>/\.docx?$/i.test(docName(d))).length;
-  document.getElementById("kiraSummary").textContent=`KIRA hat ${documents.length} Datenlieferung(en) im Prüfungsmonitor. Davon ${xlsx} Excel- und ${docs} Word-Datei(en).`;
+  document.getElementById("kiraSummary").textContent=`KIRA hat ${documents.length} Datenlieferung(en) im PrÃ¼fungsmonitor. Davon ${xlsx} Excel- und ${docs} Word-Datei(en).`;
   const kira=[];
-  if(documents.length)kira.push(`${documents.length} Datei(en) sind fachlich noch zu sichten; der Pilot führt zunächst eine technische Klassifizierung durch.`);
-  if(noFiles.length)kira.push(`${noFiles.length} Datenraum/Datenräume enthalten noch keine Datei.`);
-  if(xlsx)kira.push(`${xlsx} Excel-Datei(en) eignen sich später für Vollständigkeits-, Summen- und Abweichungsprüfungen.`);
-  if(!documents.length)kira.push("Noch keine Datenlieferung zur Prüfung vorhanden.");
+  if(documents.length)kira.push(`${documents.length} Datei(en) sind fachlich noch zu sichten; der Pilot fÃ¼hrt zunÃ¤chst eine technische Klassifizierung durch.`);
+  if(noFiles.length)kira.push(`${noFiles.length} Datenraum/DatenrÃ¤ume enthalten noch keine Datei.`);
+  if(xlsx)kira.push(`${xlsx} Excel-Datei(en) eignen sich spÃ¤ter fÃ¼r VollstÃ¤ndigkeits-, Summen- und AbweichungsprÃ¼fungen.`);
+  if(!documents.length)kira.push("Noch keine Datenlieferung zur PrÃ¼fung vorhanden.");
   document.getElementById("kiraInsights").innerHTML=kira.map(x=>`<div class="insight">${esc(x)}</div>`).join("");
 }
 
@@ -674,7 +674,7 @@ function renderTaskFilters(){
   const p=document.getElementById("taskPhase"),u=document.getElementById("taskPerson"),s=document.getElementById("taskStatus");
   const pv=p.value,uv=u.value,sv=s.value;
   p.innerHTML='<option value="">Alle Phasen</option>'+uniq(tasks.map(t=>t.phase)).map(x=>`<option>${esc(x)}</option>`).join("");
-  u.innerHTML='<option value="">Alle Zuständigen</option>'+uniq(tasks.map(t=>t.responsible_name)).map(x=>`<option>${esc(x)}</option>`).join("");
+  u.innerHTML='<option value="">Alle ZustÃ¤ndigen</option>'+uniq(tasks.map(t=>t.responsible_name)).map(x=>`<option>${esc(x)}</option>`).join("");
   s.innerHTML='<option value="">Alle Status</option>'+uniq(tasks.map(t=>t.status)).map(x=>`<option value="${x}">${label(x)}</option>`).join("");
   p.value=pv;u.value=uv;s.value=sv;
 }
@@ -696,7 +696,7 @@ function filteredTasks(){
 function renderTasks(){
   document.getElementById("taskBody").innerHTML=filteredTasks().map(t=>{
     const r=roomOfTask(t.id),fids=r?folders.filter(f=>f.task_room_id===r.id).map(f=>f.id):[],dc=documents.filter(d=>fids.includes(d.folder_id)).length,qc=comments.filter(c=>c.task_id===t.id).length;
-    return `<tr><td>${t.task_number||""}</td><td>${esc(t.phase)}</td><td><strong>${esc(t.title)}</strong></td><td>${esc(t.responsible_name||"Offen")}</td><td>${dateOnly(t.due_date)}</td><td><span class="pill ${t.status}">${label(t.status)}</span></td><td>${dc}</td><td>${qc}</td><td><button class="btn btn-secondary btn-small" onclick="openRoom('${t.id}')">Öffnen</button></td></tr>`
+    return `<tr><td>${t.task_number||""}</td><td>${esc(t.phase)}</td><td><strong>${esc(t.title)}</strong></td><td>${esc(t.responsible_name||"Offen")}</td><td>${dateOnly(t.due_date)}</td><td><span class="pill ${t.status}">${label(t.status)}</span></td><td>${dc}</td><td>${qc}</td><td><button class="btn btn-secondary btn-small" onclick="openRoom('${t.id}')">Ã–ffnen</button></td></tr>`
   }).join("")||'<tr><td colspan="9" class="empty">Keine Aufgaben gefunden.</td></tr>';
 }
 
@@ -705,18 +705,18 @@ function renderRooms(){
   const list=tasks.filter(t=>{const r=roomOfTask(t.id);return r&&(!q||`${t.title} ${r.room_name}`.toLowerCase().includes(q))});
   document.getElementById("roomsGrid").innerHTML=list.map(t=>{
     const r=roomOfTask(t.id),rf=folders.filter(f=>f.task_room_id===r.id),fids=rf.map(f=>f.id),docs=documents.filter(d=>fids.includes(d.folder_id)),last=docs.map(docTime).filter(Boolean).sort().reverse()[0];
-    return `<div class="room-card"><h3>${esc(t.title)}</h3><div class="small">${esc(t.phase)} · ${esc(t.responsible_name||"Noch offen")}</div><div class="room-meta"><div><strong>${rf.length}</strong><span class="small">Ordner</span></div><div><strong>${docs.length}</strong><span class="small">Dateien</span></div><div><strong>${last?dt(last).split(",")[0]:"–"}</strong><span class="small">Letzte Lieferung</span></div></div><button class="btn btn-secondary btn-small" onclick="openRoom('${t.id}')">Datenraum öffnen</button></div>`
-  }).join("")||'<div class="empty">Keine Datenräume gefunden.</div>';
+    return `<div class="room-card"><h3>${esc(t.title)}</h3><div class="small">${esc(t.phase)} Â· ${esc(t.responsible_name||"Noch offen")}</div><div class="room-meta"><div><strong>${rf.length}</strong><span class="small">Ordner</span></div><div><strong>${docs.length}</strong><span class="small">Dateien</span></div><div><strong>${last?dt(last).split(",")[0]:"â€“"}</strong><span class="small">Letzte Lieferung</span></div></div><button class="btn btn-secondary btn-small" onclick="openRoom('${t.id}')">Datenraum Ã¶ffnen</button></div>`
+  }).join("")||'<div class="empty">Keine DatenrÃ¤ume gefunden.</div>';
 }
 
 function renderCommunication(){
   document.getElementById("questionsList").innerHTML=comments.slice(0,30).map(c=>{
     const t=taskOf(c.task_id);
-    return eventHtml({type:"question",time:c.created_at,title:t?.title||"Rückfrage",detail:commentText(c),task:t,task_id:c.task_id});
-  }).join("")||'<div class="empty">Keine Rückfragen vorhanden.</div>';
+    return eventHtml({type:"question",time:c.created_at,title:t?.title||"RÃ¼ckfrage",detail:commentText(c),task:t,task_id:c.task_id});
+  }).join("")||'<div class="empty">Keine RÃ¼ckfragen vorhanden.</div>';
   document.getElementById("deliveriesList").innerHTML=documents.slice(0,30).map(d=>{
     const t=taskForFolder(d.folder_id);
-    return eventHtml({type:"file",time:docTime(d),title:docName(d),detail:`${t?.title||"Datenraum"} · ${folderOf(d.folder_id)?.folder_name||""}`,task:t});
+    return eventHtml({type:"file",time:docTime(d),title:docName(d),detail:`${t?.title||"Datenraum"} Â· ${folderOf(d.folder_id)?.folder_name||""}`,task:t});
   }).join("")||'<div class="empty">Keine Datenlieferungen vorhanden.</div>';
 }
 
@@ -752,7 +752,7 @@ function openMetric(metric){
   document.getElementById("taskStatus").value="";
   document.getElementById("taskSearch").value="";
   quickTaskFilter=metric==="tasks"?"":metric;
-  const names={done:"Erledigte und freigegebene Aufgaben",declined:"Abgelehnte Aufgaben",overdue:"Überfällige Aufgaben"};
+  const names={done:"Erledigte und freigegebene Aufgaben",declined:"Abgelehnte Aufgaben",overdue:"ÃœberfÃ¤llige Aufgaben"};
   const bar=document.getElementById("taskQuickFilter");
   if(quickTaskFilter){document.getElementById("taskQuickFilterText").textContent=names[quickTaskFilter];bar.classList.add("show")}else bar.classList.remove("show");
   renderTasks();
@@ -793,9 +793,10 @@ document.getElementById("passwordRecoveryForm").addEventListener("submit",event=
 document.getElementById("forgotPasswordBtn").addEventListener("click",()=>void requestPasswordReset());
 document.getElementById("sendMagicLink").addEventListener("click",()=>void sendMagicLink());
 document.getElementById("checkSession").addEventListener("click",()=>void initializeAuth());
-document.getElementById("logoutBtn").addEventListener("click",async()=>{showSignedOut();const {error}=await sb.auth.signOut();if(error)showAuthNotice("Abmeldung konnte nicht bestätigt werden.","err")});
+document.getElementById("logoutBtn").addEventListener("click",async()=>{showSignedOut();const {error}=await sb.auth.signOut();if(error)showAuthNotice("Abmeldung konnte nicht bestÃ¤tigt werden.","err")});
 document.getElementById("membershipLogoutBtn").addEventListener("click",async()=>{showSignedOut();await sb.auth.signOut()});
 const authReady=initializeAuth();
 </script>
 </body>
 </html>
+
