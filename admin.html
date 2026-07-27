@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="utf-8">
@@ -103,7 +103,7 @@
         <h1>Admin-Cockpit</h1>
         <p class="lead">Freigegebene Abschlussprojekte aus Supabase laden und gezielt fortschreiben.</p>
       </div>
-      <div class="toolbar"><button class="btn btn-secondary" onclick="location.href='/cockpit'">← Zum Cockpit</button><button id="refreshBtn" class="btn btn-secondary">Aktualisieren</button></div>
+      <div class="toolbar"><button class="btn btn-secondary" onclick="location.href='/cockpit'">â† Zum Cockpit</button><button id="refreshBtn" class="btn btn-secondary">Aktualisieren</button></div>
     </div>
 
     <div id="notice" class="notice"></div>
@@ -115,7 +115,7 @@
           <input id="loginEmail" type="email" placeholder="v.kusch@web.de">
         </div>
         <button id="sendMagicLink" class="btn btn-primary">Anmeldelink senden</button>
-        <button id="checkSessionBtn" class="btn btn-secondary">Sitzung prüfen</button>
+        <button id="checkSessionBtn" class="btn btn-secondary">Sitzung prÃ¼fen</button>
       </div>
     </section>
 
@@ -127,39 +127,39 @@
 
       <div class="workspace">
         <section class="summary" id="summary">
-          <div class="metric"><span>Maßnahmen</span><strong id="mTasks">0</strong></div>
-          <div class="metric"><span>Datenräume</span><strong id="mRooms">0</strong></div>
+          <div class="metric"><span>MaÃŸnahmen</span><strong id="mTasks">0</strong></div>
+          <div class="metric"><span>DatenrÃ¤ume</span><strong id="mRooms">0</strong></div>
           <div class="metric"><span>Teamrollen</span><strong id="mMembers">0</strong></div>
           <div class="metric"><span>Abgelehnt</span><strong id="mDeclined">0</strong></div>
-          <div class="metric"><span>Rückfragen</span><strong id="mQuestions">0</strong></div>
-          <div class="metric"><span>Überfällig</span><strong id="mOverdue">0</strong></div>
+          <div class="metric"><span>RÃ¼ckfragen</span><strong id="mQuestions">0</strong></div>
+          <div class="metric"><span>ÃœberfÃ¤llig</span><strong id="mOverdue">0</strong></div>
         </section>
 
         <section class="card" style="padding:18px">
           <div class="toolbar" style="justify-content:space-between;margin-bottom:14px">
             <div>
-              <h2 id="projectTitle">Kein Projekt ausgewählt</h2>
+              <h2 id="projectTitle">Kein Projekt ausgewÃ¤hlt</h2>
               <div id="projectMeta" class="small"></div>
             </div>
             <div class="toolbar">
-              <button id="newTaskBtn" class="btn btn-primary" disabled>+ Neue Maßnahme</button>
+              <button id="newTaskBtn" class="btn btn-primary" disabled>+ Neue MaÃŸnahme</button>
               <button id="exportProjectBtn" class="btn btn-secondary" disabled>Projekt-JSON</button>
             </div>
           </div>
 
           <div class="filters">
             <select id="filterPhase"><option value="">Alle Phasen</option></select>
-            <select id="filterPerson"><option value="">Alle Zuständigen</option></select>
+            <select id="filterPerson"><option value="">Alle ZustÃ¤ndigen</option></select>
             <select id="filterStatus"><option value="">Alle Status</option></select>
-            <input id="filterSearch" type="text" placeholder="Maßnahme suchen">
+            <input id="filterSearch" type="text" placeholder="MaÃŸnahme suchen">
           </div>
 
           <div class="table-wrap" style="margin-top:14px">
             <table>
               <thead>
                 <tr>
-                  <th>Nr.</th><th>Phase</th><th>Maßnahme</th><th>Zuständig</th><th>E-Mail</th>
-                  <th>Stellvertretung</th><th>Fällig</th><th>Status</th><th>Datenraum</th><th>Aktion</th>
+                  <th>Nr.</th><th>Phase</th><th>MaÃŸnahme</th><th>ZustÃ¤ndig</th><th>E-Mail</th>
+                  <th>Stellvertretung</th><th>FÃ¤llig</th><th>Status</th><th>Datenraum</th><th>Aktion</th>
                 </tr>
               </thead>
               <tbody id="taskBody"></tbody>
@@ -173,15 +173,15 @@
               <h2 id="detailTitle">Datenraum bearbeiten</h2>
               <div id="detailMeta" class="small"></div>
             </div>
-            <button id="closeDetail" class="btn btn-secondary btn-small">Schließen</button>
+            <button id="closeDetail" class="btn btn-secondary btn-small">SchlieÃŸen</button>
           </div>
           <div class="detail-grid" style="margin-top:16px">
             <div class="field">
-              <label>Zuständige Person</label>
+              <label>ZustÃ¤ndige Person</label>
               <select id="detailResponsible"></select>
             </div>
             <div class="field">
-              <label>Fälligkeit</label>
+              <label>FÃ¤lligkeit</label>
               <input id="detailDue" type="date">
             </div>
             <div class="field">
@@ -196,14 +196,14 @@
 
           <div class="toolbar" style="margin-top:14px">
             <button id="saveTaskChanges" class="btn btn-primary">Aufgabe speichern</button>
-            <button id="openRoomLink" class="btn btn-secondary">Datenraum öffnen</button>
+            <button id="openRoomLink" class="btn btn-secondary">Datenraum Ã¶ffnen</button>
           </div>
 
           <div style="margin-top:22px">
             <h2>Ordnerstruktur</h2>
             <div id="folderList" class="folder-list"></div>
             <div class="toolbar" style="margin-top:12px">
-              <button id="addFolderBtn" class="btn btn-secondary">+ Ordner ergänzen</button>
+              <button id="addFolderBtn" class="btn btn-secondary">+ Ordner ergÃ¤nzen</button>
               <button id="saveFoldersBtn" class="btn btn-primary">Ordner speichern</button>
             </div>
           </div>
@@ -216,31 +216,31 @@
 <div id="taskModal" class="modal">
   <div class="modal-card">
     <div class="toolbar" style="justify-content:space-between">
-      <h2 style="margin:0">Neue Maßnahme</h2>
-      <button id="closeTaskModal" class="btn btn-secondary btn-small">Schließen</button>
+      <h2 style="margin:0">Neue MaÃŸnahme</h2>
+      <button id="closeTaskModal" class="btn btn-secondary btn-small">SchlieÃŸen</button>
     </div>
     <div class="detail-grid" style="margin-top:16px">
-      <div class="field"><label>Phase</label><input id="newPhase" type="text" value="10. Ergänzende Maßnahmen"></div>
-      <div class="field"><label>Fälligkeit</label><input id="newDue" type="date"></div>
-      <div class="field" style="grid-column:1/-1"><label>Maßnahme</label><input id="newTitle" type="text"></div>
+      <div class="field"><label>Phase</label><input id="newPhase" type="text" value="10. ErgÃ¤nzende MaÃŸnahmen"></div>
+      <div class="field"><label>FÃ¤lligkeit</label><input id="newDue" type="date"></div>
+      <div class="field" style="grid-column:1/-1"><label>MaÃŸnahme</label><input id="newTitle" type="text"></div>
       <div class="field"><label>Standardrolle</label><input id="newRole" type="text" value="Projektleitung Abschluss"></div>
-      <div class="field"><label>Zuständig</label><select id="newResponsible"></select></div>
+      <div class="field"><label>ZustÃ¤ndig</label><select id="newResponsible"></select></div>
     </div>
     <div class="field" style="margin-top:14px"><label>Datenraumordner, eine Zeile je Ordner</label><textarea id="newFolders">01 Aufgabenbeschreibung
 02 Eingangsdokumente
 03 Arbeitspapiere
-04 Rückfragen
+04 RÃ¼ckfragen
 05 Freigaben
 06 Finale Unterlagen</textarea></div>
     <div class="toolbar" style="justify-content:flex-end;margin-top:16px">
-      <button id="createTaskBtn" class="btn btn-primary">Maßnahme und Datenraum anlegen</button>
+      <button id="createTaskBtn" class="btn btn-primary">MaÃŸnahme und Datenraum anlegen</button>
     </div>
   </div>
 </div>
 
 <script>
-const SUPABASE_URL="https://mslbzypjtvvznyewupco.supabase.co";
-const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1zbGJ6eXBqdHZ2em55ZXd1cGNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5OTA3NDAsImV4cCI6MjEwMDU2Njc0MH0.6f9QUtpaSLUrKVkH3rUYCcZecqwMHrdledZMtoCdRQo";
+const SUPABASE_URL="https://vcozprjecsprgyeqfahn.supabase.co";
+const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZjb3pwcmplY3Nwcmd5ZXFmYWhuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUwOTM4NTcsImV4cCI6MjEwMDY2OTg1N30.oNdAhKXPGqkzWUycSSd11VGKg5LEMniVKqc9gtaRMYw";
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 
 let user=null,projects=[],currentProject=null,tasks=[],members=[],rooms=[],folders=[],comments=[];
@@ -248,8 +248,8 @@ let selectedTask=null,selectedRoom=null;
 
 const statusOptions=[
   ["planned","Geplant"],["invited","Eingeladen"],["accepted","Angenommen"],["declined","Abgelehnt"],
-  ["in_progress","In Bearbeitung"],["question","Rückfrage"],["blocked","Blockiert"],["submitted","Eingereicht"],
-  ["in_review","In Prüfung"],["approved","Freigegeben"],["completed","Erledigt"]
+  ["in_progress","In Bearbeitung"],["question","RÃ¼ckfrage"],["blocked","Blockiert"],["submitted","Eingereicht"],
+  ["in_review","In PrÃ¼fung"],["approved","Freigegeben"],["completed","Erledigt"]
 ];
 
 function notice(msg,type="info"){
@@ -293,7 +293,7 @@ function renderProjects(){
   list.innerHTML=projects.map(p=>`
     <div class="project-item ${currentProject?.id===p.id?"active":""}" data-project="${p.id}">
       <strong>${esc(p.companies?.name||p.name)}</strong>
-      <div class="small">${esc(p.name)} · ${statusLabel(p.status)}</div>
+      <div class="small">${esc(p.name)} Â· ${statusLabel(p.status)}</div>
     </div>`).join("")||'<div class="small">Keine Projekte gefunden.</div>';
   list.querySelectorAll("[data-project]").forEach(el=>el.addEventListener("click",()=>selectProject(el.dataset.project)));
 }
@@ -302,7 +302,7 @@ async function selectProject(id){
   currentProject=projects.find(p=>p.id===id);
   renderProjects();
   document.getElementById("projectTitle").textContent=currentProject?.companies?.name||currentProject?.name||"Projekt";
-  document.getElementById("projectMeta").textContent=`${currentProject?.name||""} · Abschlussstichtag ${deDate(currentProject?.closing_date)} · Status ${statusLabel(currentProject?.status)}`;
+  document.getElementById("projectMeta").textContent=`${currentProject?.name||""} Â· Abschlussstichtag ${deDate(currentProject?.closing_date)} Â· Status ${statusLabel(currentProject?.status)}`;
   document.getElementById("newTaskBtn").disabled=false;
   document.getElementById("exportProjectBtn").disabled=false;
   await Promise.all([loadMembers(),loadTasks(),loadComments()]);
@@ -318,7 +318,7 @@ async function loadMembers(){
 async function loadTasks(){
   const {data,error}=await sb.from("tasks")
     .select("*").eq("project_id",currentProject.id).order("task_number");
-  if(error){notice("Maßnahmen konnten nicht geladen werden: "+error.message,"err");return}
+  if(error){notice("MaÃŸnahmen konnten nicht geladen werden: "+error.message,"err");return}
   tasks=data||[];
 
   const taskIds=tasks.map(t=>t.id);
@@ -326,7 +326,7 @@ async function loadTasks(){
   folders=[];
   if(taskIds.length){
     const {data:r,error:re}=await sb.from("task_rooms").select("*").in("task_id",taskIds);
-    if(re){notice("Datenräume konnten nicht geladen werden: "+re.message,"err");return}
+    if(re){notice("DatenrÃ¤ume konnten nicht geladen werden: "+re.message,"err");return}
     rooms=r||[];
     const roomIds=rooms.map(x=>x.id);
     if(roomIds.length){
@@ -354,7 +354,7 @@ function renderFilters(){
   const status=document.getElementById("filterStatus");
   const phaseVal=phase.value,personVal=person.value,statusVal=status.value;
   phase.innerHTML='<option value="">Alle Phasen</option>'+uniq(tasks.map(t=>t.phase)).map(v=>`<option>${esc(v)}</option>`).join("");
-  person.innerHTML='<option value="">Alle Zuständigen</option>'+uniq(tasks.map(t=>t.responsible_name)).map(v=>`<option>${esc(v)}</option>`).join("");
+  person.innerHTML='<option value="">Alle ZustÃ¤ndigen</option>'+uniq(tasks.map(t=>t.responsible_name)).map(v=>`<option>${esc(v)}</option>`).join("");
   status.innerHTML='<option value="">Alle Status</option>'+statusOptions.map(([v,l])=>`<option value="${v}">${l}</option>`).join("");
   phase.value=phaseVal;person.value=personVal;status.value=statusVal;
 }
@@ -375,7 +375,7 @@ function filteredTasks(){
 function memberOptions(selectedEmail=""){
   return '<option value="">Noch offen</option>'+members.map(m=>`
     <option value="${esc(m.email)}" ${m.email===selectedEmail?"selected":""}>
-      ${esc(m.name||m.email)} · ${esc(m.project_role)}
+      ${esc(m.name||m.email)} Â· ${esc(m.project_role)}
     </option>`).join("");
 }
 
@@ -418,9 +418,9 @@ async function quickSave(taskId){
     status:tr.querySelector(`[data-status="${taskId}"]`).value
   };
   const {error}=await sb.from("tasks").update(payload).eq("id",taskId);
-  if(error){notice("Änderung konnte nicht gespeichert werden: "+error.message,"err");return}
+  if(error){notice("Ã„nderung konnte nicht gespeichert werden: "+error.message,"err");return}
   Object.assign(tasks.find(t=>t.id===taskId),payload);
-  notice("Änderung gespeichert.","ok");
+  notice("Ã„nderung gespeichert.","ok");
   renderSummary();
 }
 
@@ -439,7 +439,7 @@ async function openDetail(taskId){
   selectedRoom=rooms.find(r=>r.task_id===taskId)||null;
   document.getElementById("detailCard").classList.add("show");
   document.getElementById("detailTitle").textContent=selectedTask.title;
-  document.getElementById("detailMeta").textContent=`${selectedTask.phase} · ${selectedTask.technical_id}`;
+  document.getElementById("detailMeta").textContent=`${selectedTask.phase} Â· ${selectedTask.technical_id}`;
   document.getElementById("detailResponsible").innerHTML=memberOptions(selectedTask.responsible_email||"");
   document.getElementById("detailDue").value=selectedTask.due_date||"";
   document.getElementById("detailDeputy").value=selectedTask.deputy_name||"";
@@ -479,7 +479,7 @@ function renderFolderEditorLocal(){
 }
 
 document.getElementById("addFolderBtn").addEventListener("click",()=>{
-  if(!selectedRoom){notice("Für diese Aufgabe existiert noch kein Datenraum.","err");return}
+  if(!selectedRoom){notice("FÃ¼r diese Aufgabe existiert noch kein Datenraum.","err");return}
   folders.push({id:"new-"+crypto.randomUUID(),task_room_id:selectedRoom.id,folder_name:"Neuer Ordner",folder_number:999,_new:true});
   renderFolderEditorLocal();
 });
@@ -495,7 +495,7 @@ document.getElementById("saveFoldersBtn").addEventListener("click",async()=>{
   const deletes=folders.filter(f=>f.task_room_id===selectedRoom.id&&f._delete&&!f._new);
   for(const f of deletes){
     const {count}=await sb.from("documents").select("*",{count:"exact",head:true}).eq("folder_id",f.id);
-    if(count>0){notice(`Ordner „${f.folder_name}“ enthält Dateien und wurde nicht gelöscht.`,"err");return}
+    if(count>0){notice(`Ordner â€ž${f.folder_name}â€œ enthÃ¤lt Dateien und wurde nicht gelÃ¶scht.`,"err");return}
     const {error}=await sb.from("task_room_folders").delete().eq("id",f.id);
     if(error){notice(error.message,"err");return}
   }
@@ -547,7 +547,7 @@ document.getElementById("closeTaskModal").addEventListener("click",()=>document.
 
 document.getElementById("createTaskBtn").addEventListener("click",async()=>{
   const title=document.getElementById("newTitle").value.trim();
-  if(!title){notice("Bitte Maßnahme eingeben.","err");return}
+  if(!title){notice("Bitte MaÃŸnahme eingeben.","err");return}
   const email=document.getElementById("newResponsible").value;
   const member=members.find(m=>m.email===email);
   const nextNo=Math.max(0,...tasks.map(t=>Number(t.task_number)||0))+1;
@@ -574,7 +574,7 @@ document.getElementById("createTaskBtn").addEventListener("click",async()=>{
   if(fErr){notice(fErr.message,"err");return}
 
   document.getElementById("taskModal").classList.remove("show");
-  notice("Neue Maßnahme und Datenraum wurden angelegt.","ok");
+  notice("Neue MaÃŸnahme und Datenraum wurden angelegt.","ok");
   await loadTasks();
 });
 
