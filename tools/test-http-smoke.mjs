@@ -6,6 +6,9 @@ const root = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace
 const routes = new Map([
   ["/", "index.html"],
   ["/cockpit", "cockpit.html"],
+  ["/aufgaben", "cockpit.html"],
+  ["/datenraeume", "cockpit.html"],
+  ["/kommunikation", "cockpit.html"],
   ["/admin", "admin.html"],
   ["/abschlussplaner", "abschlussplaner.html"],
   ["/task", "task.html"],
@@ -59,6 +62,7 @@ const summary = {
   vercelConfiguration: {
     cleanUrls: vercel.cleanUrls,
     trailingSlash: vercel.trailingSlash,
+    protectedRewrites: vercel.rewrites,
   },
   expectedRoutes: results.length,
   actualSuccessfulRoutes: results.filter(item => item.passed).length,

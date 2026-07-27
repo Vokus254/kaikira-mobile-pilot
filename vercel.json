@@ -1,6 +1,11 @@
 {
   "cleanUrls": true,
   "trailingSlash": false,
+  "rewrites": [
+    { "source": "/aufgaben", "destination": "/cockpit" },
+    { "source": "/datenraeume", "destination": "/cockpit" },
+    { "source": "/kommunikation", "destination": "/cockpit" }
+  ],
   "headers": [
     {
       "source": "/(.*)",
