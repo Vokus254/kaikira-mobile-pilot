@@ -33,6 +33,7 @@
     .btn-small{padding:8px 11px;font-size:.84rem}
     .status{padding:9px 12px;border-radius:999px;background:var(--amber-soft);color:var(--amber);font-weight:850;font-size:.8rem}
     .status.online{background:var(--soft);color:var(--brand-dark)}
+    .context-chip{display:grid;gap:2px;max-width:250px;padding:8px 12px;border:1px solid var(--line);border-radius:12px;background:#fff;font-size:.72rem}.context-chip strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.context-chip span{color:var(--muted)}
     .auth-gate{min-height:100vh;display:grid;place-items:center;padding:24px;background:linear-gradient(180deg,#fbfcfb,var(--bg))}.auth-gate-card{width:min(100%,520px);padding:28px}.auth-gate-brand{display:flex;align-items:center;gap:12px;margin-bottom:26px;font-weight:900}.auth-gate h1{font-size:clamp(2rem,7vw,3.2rem);margin-bottom:10px}.auth-gate .lead{line-height:1.55}.auth-gate-actions{display:grid;gap:12px;margin-top:22px}.auth-gate-back{display:inline-flex;margin-top:20px;color:var(--brand-dark);font-size:.84rem;font-weight:800;text-decoration:none}.auth-link{justify-self:start;border:0;background:transparent;padding:2px 0;color:var(--brand-dark);font-size:.82rem;font-weight:800}.auth-divider{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;margin:7px 0;color:var(--muted);font-size:.75rem}.auth-divider:before,.auth-divider:after{content:"";height:1px;background:var(--line)}.auth-loading-card{display:grid;justify-items:center;gap:14px;color:var(--muted);text-align:center}.auth-spinner{width:34px;height:34px;border:3px solid #dfe8e3;border-top-color:var(--brand);border-radius:50%;animation:authSpin .8s linear infinite}@keyframes authSpin{to{transform:rotate(360deg)}}
     main{padding:30px 0 70px}
     .hero{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:20px}
@@ -177,6 +178,18 @@
   </div>
 </section>
 
+<section id="membershipGate" class="auth-gate" hidden>
+  <div class="card auth-gate-card">
+    <div class="auth-gate-brand"><div class="mark"></div><span>LUMINA</span></div>
+    <h1>Projektzugriff</h1>
+    <p id="membershipGateMessage" class="lead">Ihre aktive Projektmitgliedschaft wird geprüft.</p>
+    <div class="auth-gate-actions">
+      <button id="membershipLogoutBtn" type="button" class="btn btn-secondary">Abmelden</button>
+    </div>
+    <a class="auth-gate-back" href="/">← Zur LUMINA Landingpage</a>
+  </div>
+</section>
+
 <div id="protectedApp" hidden>
 <header>
   <div class="shell head">
@@ -190,6 +203,7 @@
       <button id="adminNav" onclick="location.href='/admin'" hidden>Admin</button>
     </nav>
     <div class="toolbar">
+      <span id="activeProjectChip" class="context-chip" hidden><strong>Kein Projekt</strong><span>Keine Rolle</span></span>
       <span id="authStatus" class="status">Nicht angemeldet</span>
       <button id="logoutBtn" class="btn btn-secondary btn-small" hidden>Abmelden</button>
     </div>
@@ -234,7 +248,7 @@
       </div>
     </section>
 
-    <div class="dashboard operational-dashboard">
+    <div id="operationalDashboard" class="dashboard operational-dashboard">
       <div class="card section">
         <div class="toolbar" style="justify-content:space-between;margin-bottom:12px">
           <h2>Aktivitätsfeed</h2>
@@ -281,13 +295,21 @@
 </main>
 </div>
 
+<script type="module">
+window.luminaCockpitReady=Promise.all([
+  import("/assets/role-resolver.mjs"),
+  import("/assets/cockpit-security.mjs"),
+  import("/assets/cockpit-filters.mjs"),
+  import("/assets/cockpit-model.mjs")
+]).then(([roles,security,filters,model])=>({roles,security,filters,model}));
+</script>
 <script>
 const SUPABASE_URL="https://mslbzypjtvvznyewupco.supabase.co";
 const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1zbGJ6eXBqdHZ2em55ZXd1cGNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5OTA3NDAsImV4cCI6MjEwMDU2Njc0MH0.6f9QUtpaSLUrKVkH3rUYCcZecqwMHrdledZMtoCdRQo";
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 const PASSWORD_RECOVERY_REDIRECT=location.origin+"/cockpit";
 
-let user=null,projects=[],currentProject=null,currentMembership=null,currentRoleProfile=null,tasks=[],rooms=[],folders=[],documents=[],comments=[],responses=[],notifications=[],activities=[];
+let user=null,projects=[],projectContexts=[],currentProject=null,currentMembership=null,currentRoleProfile=null,tasks=[],rooms=[],folders=[],documents=[],comments=[],responses=[],notifications=[],activities=[],substitutions=[],teamMembers=[];
 let bottleneckTask=null;
 let quickTaskFilter="";
 let authEpoch=0,authSubscription=null,recoverySessionActive=false;
@@ -311,9 +333,12 @@ async function query(table,select="*"){
 }
 
 function protectedViewForPath(pathname=location.pathname){return ({"/aufgaben":"tasks","/datenraeume":"rooms","/kommunikation":"communication"})[pathname]||"cockpit"}
+let cockpitLib=null;async function cockpitModules(){return cockpitLib||(cockpitLib=await window.luminaCockpitReady)}
 function resetProtectedState(){
-  authEpoch++;user=null;projects=[];currentProject=null;currentMembership=null;currentRoleProfile=null;tasks=[];rooms=[];folders=[];documents=[];comments=[];responses=[];notifications=[];activities=[];bottleneckTask=null;quickTaskFilter="";recoverySessionActive=false;
+  authEpoch++;user=null;projects=[];projectContexts=[];currentProject=null;currentMembership=null;currentRoleProfile=null;tasks=[];rooms=[];folders=[];documents=[];comments=[];responses=[];notifications=[];activities=[];substitutions=[];teamMembers=[];bottleneckTask=null;quickTaskFilter="";recoverySessionActive=false;
   document.getElementById("protectedApp").hidden=true;
+  document.getElementById("membershipGate").hidden=true;
+  document.getElementById("activeProjectChip").hidden=true;
   document.getElementById("globalMetrics").hidden=true;
   document.getElementById("plannerNav").hidden=true;document.getElementById("adminNav").hidden=true;document.getElementById("openAdmin").hidden=true;
   document.getElementById("projectSelect").innerHTML='<option value="">Bitte anmelden</option>';
@@ -321,19 +346,23 @@ function resetProtectedState(){
   document.getElementById("roleCockpitContent").innerHTML='<div class="role-empty"><strong>Projektrolle wird geladen.</strong><span>Die Ansicht kann erst nach der Prüfung Ihrer Projektmitgliedschaft aufgebaut werden.</span></div>';
   ["feed","kaiInsights","kiraInsights","taskBody","roomsGrid","questionsList","deliveriesList"].forEach(id=>document.getElementById(id).innerHTML="");
 }
-function showAuthChecking(){document.getElementById("protectedApp").hidden=true;document.getElementById("authGate").hidden=true;document.getElementById("recoveryGate").hidden=true;document.getElementById("authLoading").hidden=false}
-function showSignedOut(message=""){resetProtectedState();document.getElementById("authLoading").hidden=true;document.getElementById("recoveryGate").hidden=true;document.getElementById("authGate").hidden=false;document.getElementById("loginPassword").value="";if(message)showAuthNotice(message,"err")}
+function showAuthChecking(){document.getElementById("protectedApp").hidden=true;document.getElementById("authGate").hidden=true;document.getElementById("recoveryGate").hidden=true;document.getElementById("membershipGate").hidden=true;document.getElementById("authLoading").hidden=false}
+function showSignedOut(message=""){resetProtectedState();document.getElementById("authLoading").hidden=true;document.getElementById("recoveryGate").hidden=true;document.getElementById("membershipGate").hidden=true;document.getElementById("authGate").hidden=false;document.getElementById("loginPassword").value="";if(message)showAuthNotice(message,"err")}
+function showMembershipGate(message){
+  currentProject=null;currentMembership=null;currentRoleProfile=null;tasks=[];rooms=[];folders=[];documents=[];comments=[];responses=[];notifications=[];activities=[];substitutions=[];teamMembers=[];
+  document.getElementById("authLoading").hidden=true;document.getElementById("authGate").hidden=true;document.getElementById("recoveryGate").hidden=true;document.getElementById("protectedApp").hidden=true;document.getElementById("membershipGate").hidden=false;
+  document.getElementById("membershipGateMessage").textContent=message||"Für diesen Zugang ist keine eindeutig akzeptierte Projektrolle verfügbar. Bitte wenden Sie sich an die Projektverantwortlichen.";
+}
 async function showAuthenticated(session){
   const epoch=++authEpoch;user=session.user;recoverySessionActive=false;
-  document.getElementById("authLoading").hidden=true;document.getElementById("authGate").hidden=true;document.getElementById("recoveryGate").hidden=true;document.getElementById("protectedApp").hidden=false;
+  document.getElementById("authLoading").hidden=false;document.getElementById("authGate").hidden=true;document.getElementById("recoveryGate").hidden=true;document.getElementById("membershipGate").hidden=true;document.getElementById("protectedApp").hidden=true;
   document.getElementById("authStatus").textContent=`Angemeldet: ${user.email}`;document.getElementById("authStatus").classList.add("online");document.getElementById("logoutBtn").hidden=false;
-  activateView(protectedViewForPath());
-  await loadProjects(epoch);
+  await loadMembershipProjects(epoch);
 }
 function showPasswordRecovery(session){
   if(!session?.user){showSignedOut("Der Link ist ungültig oder abgelaufen. Bitte fordern Sie einen neuen Link an.");return}
   authEpoch++;user=session.user;recoverySessionActive=true;
-  document.getElementById("protectedApp").hidden=true;document.getElementById("authLoading").hidden=true;document.getElementById("authGate").hidden=true;document.getElementById("recoveryGate").hidden=false;
+  document.getElementById("protectedApp").hidden=true;document.getElementById("membershipGate").hidden=true;document.getElementById("authLoading").hidden=true;document.getElementById("authGate").hidden=true;document.getElementById("recoveryGate").hidden=false;
 }
 async function initializeAuth(){
   showAuthChecking();
@@ -382,74 +411,66 @@ async function updateRecoveredPassword(){
   await showAuthenticated(sessionData.session);showNotice("Ihr Passwort wurde erfolgreich aktualisiert.","ok");
 }
 
-async function loadProjects(epoch=authEpoch){
+const profilePresentation={cfo:{label:"CFO / Geschäftsführung",eyebrow:"Management-Cockpit"},project:{label:"Projektleitung Abschluss",eyebrow:"Projektsteuerung"},accounting_lead:{label:"Leiter Rechnungswesen",eyebrow:"Teamsteuerung"},worker:{label:"Fachrolle",eyebrow:"Mein Tag"}};
+async function loadMembershipProjects(epoch=authEpoch){
   if(!user||epoch!==authEpoch)return;
-  const {data,error}=await sb.from("projects").select("id,name,status,closing_date,company_id,companies(name),created_at").order("created_at",{ascending:false});
+  const {roles,security}=await cockpitModules();
+  const {data:members,error:memberError}=await sb.from("project_members").select("id,project_id,user_id,name,email,project_role,cockpit_profile,access_level,can_read,can_upload,can_edit,can_approve,can_manage_members,can_view_all_tasks,invitation_status").eq("user_id",user.id);
   if(!user||epoch!==authEpoch)return;
-  if(error){document.getElementById("projectSelect").innerHTML='<option value="">Projekte konnten nicht geladen werden</option>';showNotice("Projekte konnten nicht geladen werden: "+error.message,"err");return}
-  projects=data||[];
+  if(memberError){showMembershipGate("Ihre Projektmitgliedschaft konnte nicht sicher geprüft werden.");return}
+  const resolution=security.acceptedProjectContexts(members||[],user,roles.classifyMemberContext);projectContexts=resolution.contexts;
+  if(!projectContexts.length){showMembershipGate();return}
+  const allowedIds=projectContexts.map(context=>context.projectId);
+  const {data,error}=await sb.from("projects").select("id,name,status,closing_date,company_id,companies(name),created_at").in("id",allowedIds).order("created_at",{ascending:false});
+  if(!user||epoch!==authEpoch)return;
+  if(error){showMembershipGate("Die freigegebenen Projekte konnten nicht sicher geladen werden.");return}
+  projects=(data||[]).filter(project=>allowedIds.includes(project.id));
+  if(!projects.length){showMembershipGate("Es ist kein freigegebenes, sichtbares Projekt verfügbar.");return}
+  document.getElementById("authLoading").hidden=true;document.getElementById("protectedApp").hidden=false;activateView(protectedViewForPath());
   const sel=document.getElementById("projectSelect");
-  sel.innerHTML='<option value="">Projekt auswählen</option>'+projects.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join("");
-  const remembered=localStorage.getItem("luminaCockpitProject");
-  const chosen=projects.find(p=>p.id===remembered)||projects[0];
-  if(chosen){sel.value=chosen.id;await selectProject(chosen.id,epoch)}
+  sel.innerHTML='<option value="">Projekt auswählen</option>'+projects.map(project=>`<option value="${project.id}">${esc(project.name)}</option>`).join("");
+  const chosen=security.validatedProjectChoice({requested:new URLSearchParams(location.search).get("project"),remembered:localStorage.getItem("luminaCockpitProject"),contexts:projectContexts,projects});
+  if(chosen){sel.value=chosen;await selectProject(chosen,epoch);const requestedFilter=security&&new URLSearchParams(location.search).get("filter");if(requestedFilter)openCockpitFilter(requestedFilter)}else{document.getElementById("projectTitle").textContent="Projekt sicher auswählen";document.getElementById("projectMeta").textContent="Es werden nur akzeptierte, für Sie sichtbare Projekte angeboten."}
 }
 
 async function selectProject(id,epoch=authEpoch){
   if(!user||epoch!==authEpoch)return;
-  currentProject=projects.find(p=>p.id===id); if(!currentProject)return;
+  const context=projectContexts.find(item=>item.projectId===id);
+  currentProject=projects.find(p=>p.id===id); if(!currentProject||!context||context.status!=="resolved"){showMembershipGate();return}
+  currentMembership=context.member;const presentation=profilePresentation[context.cockpitProfile];
+  currentRoleProfile={key:context.cockpitProfile,label:currentMembership.project_role||presentation.label,eyebrow:presentation.eyebrow,canonicalRole:context.projectRole};
   localStorage.setItem("luminaCockpitProject",id);
   document.getElementById("projectTitle").textContent=currentProject.name;
   document.getElementById("projectMeta").textContent=`${currentProject.companies?.name||""} · Abschlussstichtag ${dateOnly(currentProject.closing_date)} · ${label(currentProject.status)}`;
-  await loadCurrentMembership(epoch);
-  if(!user||epoch!==authEpoch)return;
+  const chip=document.getElementById("activeProjectChip");chip.hidden=false;chip.querySelector("strong").textContent=currentProject.name;chip.querySelector("span").textContent=currentMembership.project_role;
+  await applyRoleNavigation();
   await loadProjectData(epoch);
 }
 
 function normalized(value){return String(value||"").trim().toLocaleLowerCase("de-DE")}
-function membershipPriority(member){
-  if(member.user_id&&member.user_id===user?.id)return 3;
-  if(normalized(member.email)===normalized(user?.email))return 2;
-  if(normalized(member.deputy_email)===normalized(user?.email))return 1;
-  return 0;
-}
-function deriveRoleProfile(member){
-  if(!member)return null;
-  const role=normalized(member.project_role),access=normalized(member.access_level);
-  if(access==="cfo"||/\bcfo\b|geschäftsführung|finanzvorstand/.test(role))return {key:"cfo",label:"CFO / Geschäftsführung",eyebrow:"Management-Cockpit"};
-  if(/leiter(?:in)?\s+rechnungswesen|leitung\s+rechnungswesen/.test(role))return {key:"accounting_lead",label:"Leiter Rechnungswesen",eyebrow:"Teamsteuerung"};
-  if(/bearbeit|bilanzbuch|buchhaltung/.test(role))return {key:"worker",label:"Bearbeiter / Bilanzbuchhalter",eyebrow:"Mein Tag"};
-  return {key:"unsupported",label:member.project_role||"Projektmitglied",eyebrow:"Projektmitgliedschaft"};
-}
 function memberInitials(){
   const source=currentMembership?.name||user?.email||"";
   return source.split(/[\s.@_-]+/).filter(Boolean).map(part=>part[0]).join("").slice(0,2).toUpperCase()||"–";
 }
-function applyRoleNavigation(){
-  const role=currentRoleProfile?.key;
-  document.getElementById("plannerNav").hidden=!(["cfo","accounting_lead"].includes(role)&&currentMembership?.can_edit);
-  document.getElementById("adminNav").hidden=!currentMembership?.can_manage_members;
-  document.getElementById("openAdmin").hidden=!currentMembership?.can_manage_members;
-  document.getElementById("globalMetrics").hidden=!["cfo","accounting_lead"].includes(role);
+async function applyRoleNavigation(){
+  const {security}=await cockpitModules(),nav=security.navigationFor({cockpitProfile:currentRoleProfile?.key,projectRole:currentRoleProfile?.canonicalRole,member:currentMembership});
+  document.getElementById("plannerNav").hidden=!nav.planner;document.getElementById("adminNav").hidden=!nav.admin;document.getElementById("openAdmin").hidden=!nav.admin;
+  document.getElementById("globalMetrics").hidden=true;document.getElementById("operationalDashboard").hidden=!nav.operationalDashboard;
 }
-async function loadCurrentMembership(epoch=authEpoch){
-  if(!user||epoch!==authEpoch)return;
-  currentMembership=null;currentRoleProfile=null;applyRoleNavigation();
-  const {data,error}=await sb.from("project_members")
-    .select("id,project_id,user_id,name,email,project_role,deputy_name,deputy_email,access_level,can_read,can_upload,can_edit,can_approve,can_manage_members,invitation_status")
-    .eq("project_id",currentProject.id);
-  if(!user||epoch!==authEpoch)return;
-  if(error){console.warn("project_members",error.message);showNotice("Ihre Projektrolle konnte nicht geladen werden.","err");return}
-  currentMembership=(data||[]).filter(member=>member.invitation_status!=="inactive").sort((a,b)=>membershipPriority(b)-membershipPriority(a)).find(member=>membershipPriority(member)>0)||null;
-  currentRoleProfile=deriveRoleProfile(currentMembership);applyRoleNavigation();
-}
-
 async function loadProjectData(epoch=authEpoch){
   if(!user||epoch!==authEpoch)return;
-  const {data:t,error}=await sb.from("tasks").select("*").eq("project_id",currentProject.id).order("task_number");
+  const {security}=await cockpitModules();
+  const [taskResult,substitutionResult,teamResult]=await Promise.all([
+    sb.from("tasks").select("*").eq("project_id",currentProject.id).order("task_number"),
+    sb.from("project_member_substitutions").select("id,project_id,principal_member_id,substitute_member_id,status,starts_on,ends_on").eq("project_id",currentProject.id),
+    currentMembership.can_view_all_tasks||currentMembership.can_manage_members
+      ? sb.from("project_members").select("id,project_id,name,project_role,invitation_status,can_approve,can_manage_members").eq("project_id",currentProject.id)
+      : Promise.resolve({data:[],error:null})
+  ]);
+  const {data:t,error}=taskResult;
   if(!user||epoch!==authEpoch)return;
   if(error){showNotice("Aufgaben konnten nicht geladen werden: "+error.message,"err");return}
-  tasks=t||[];
+  tasks=t||[];substitutions=(substitutionResult.data||[]).filter(row=>row.project_id===currentProject.id&&row.substitute_member_id===currentMembership.id&&security.isActiveSubstitution(row));teamMembers=(teamResult.data||[]).filter(member=>member.project_id===currentProject.id);
   const ids=tasks.map(x=>x.id);
 
   rooms=[];folders=[];documents=[];comments=[];responses=[];notifications=[];
@@ -519,10 +540,9 @@ function phaseGroup(t){const p=(t.phase||"").toLowerCase(),title=(t.title||"").t
 function managementPhases(){return ["Kick-off","SuSa","Mapping","Bilanz / GuV","Anhang / Lagebericht","Prüfung / Freigabe"]}
 function daysUntil(date){if(!date)return null;return Math.ceil((new Date(date+"T12:00:00")-new Date())/86400000)}
 function isOwnTask(task){
-  if(!currentMembership)return false;
-  const emails=[currentMembership.email,currentMembership.deputy_email,user?.email].map(normalized).filter(Boolean);
-  return task.responsible_member_id===currentMembership.id||emails.includes(normalized(task.responsible_email))||emails.includes(normalized(task.deputy_email));
+  return Boolean(currentMembership&&task.responsible_member_id===currentMembership.id);
 }
+function isSubstitutionTask(task){return substitutions.some(row=>row.principal_member_id===task.responsible_member_id)}
 function dueText(task){const days=daysUntil(task.due_date);if(days==null)return "ohne Termin";if(days<0)return `${Math.abs(days)} Tage überfällig`;if(days===0)return "heute fällig";if(days===1)return "morgen fällig";return `in ${days} Tagen`}
 function roleTaskHtml(task,context=""){
   const overdue=daysUntil(task.due_date)<0&&!isDone(task);
@@ -539,7 +559,13 @@ function renderIdentity(){
   document.getElementById("roleIdentityLabel").textContent=currentRoleProfile?.label||"Keine eigene Projektmitgliedschaft";
   document.getElementById("roleIdentityAvatar").textContent=memberInitials();
 }
-function renderManagementCockpit(){
+function workerSubstitutionHtml(substituteTasks,auditor){return `<section class="role-panel" style="margin-top:12px"><div class="role-panel-title"><h3>Stellvertretung</h3><small>nur aktuell gültige Zuweisungen</small></div><div class="role-task-list">${substituteTasks.slice(0,6).map(task=>roleTaskHtml(task,`Vertretung für ${task.responsible_name||"zugewiesene Hauptperson"}`)).join("")||'<div class="empty">Keine aktiven Stellvertretungsaufgaben.</div>'}</div>${substituteTasks.length?'<button class="panel-action" onclick="openCockpitFilter(\'substitutions\')">Stellvertretungsaufgaben öffnen →</button>':""}${auditor?'<p class="small">Prüfungssicht: Interne Budget- und Managementinformationen werden nicht angezeigt.</p>':""}</section>`}
+function cfoKiraHtml(metrics){return `<section class="role-panel" style="margin-top:12px"><div class="role-panel-title"><h3>KIRA-Einschätzung</h3><small>kompakt und datenbasiert</small></div><p class="small">${documents.length?`${documents.length} RLS-sichtbare Datenlieferung(en) liegen vor.`:"Noch keine Datenlieferung vorhanden."} ${metrics.critical.length?`${metrics.critical.length} kritische Aufgabe(n) sollten vor der nächsten Entscheidung geprüft werden.`:"Aktuell ist kein kritischer Aufgabenengpass sichtbar."}</p></section>`}
+function wireRoleKpis(content){
+  const map={"Überfällig":"overdue","Heute fällig":"today","Rückfragen / Nacharbeit":"rework","Erledigt":"done","Kritisch überfällig":"critical","Offene Reviews":"review","Nicht zugeordnet":"unassigned","Teamfortschritt":"done"};
+  content.querySelectorAll(".role-kpi").forEach(button=>{const filter=map[button.querySelector("span")?.textContent];if(filter)button.onclick=()=>openCockpitFilter(filter)});
+}
+async function renderManagementCockpit(){
   if(!currentProject)return;
   renderIdentity();
   document.getElementById("managementTitle").textContent=`${currentProject.name}${currentProject.closing_date?` · ${String(currentProject.closing_date).slice(0,4)}`:""}`;
@@ -549,32 +575,31 @@ function renderManagementCockpit(){
     content.innerHTML='<div class="role-empty"><strong>Keine eigene Projektmitgliedschaft gefunden.</strong><span>Für dieses Projekt wird keine Rollenansicht freigeschaltet. Bitte lassen Sie die Mitgliedschaft durch die Projektverantwortlichen prüfen.</span></div>';
     return;
   }
-  if(currentRoleProfile.key==="unsupported"){
-    document.getElementById("managementSubtitle").textContent=`Hinterlegte Rolle: ${currentMembership.project_role}`;
-    content.innerHTML='<div class="role-empty"><strong>Für diese Projektrolle ist noch kein Einstiegsbild definiert.</strong><span>Es wird bewusst keine höher privilegierte Ansicht als Ersatz verwendet. Die operativen Bereiche bleiben entsprechend der Datenbankberechtigungen erreichbar.</span></div>';
-    return;
-  }
-  const total=tasks.length,done=tasks.filter(isDone).length,open=Math.max(0,total-done),today=new Date().toISOString().slice(0,10);
-  const critical=tasks.filter(t=>!isDone(t)&&((t.due_date&&t.due_date<today)||["blocked","declined"].includes(t.status)));
-  const progress=total?Math.round(done/total*100):0;
-  const tasksWithFiles=tasks.filter(t=>{const r=roomOfTask(t.id);if(!r)return false;const fids=folders.filter(f=>f.task_room_id===r.id).map(f=>f.id);return documents.some(d=>fids.includes(d.folder_id))}).length;
-  const readiness=total?Math.min(100,Math.round((done/total*.65+(tasksWithFiles/total)*.35)*100)):0;
-  const finalDate=[...tasks].map(t=>t.due_date).filter(Boolean).sort().pop()||currentProject.closing_date;const release=daysUntil(finalDate);
-  bottleneckTask=critical.sort((a,b)=>(a.due_date||"9999").localeCompare(b.due_date||"9999"))[0]||tasks.filter(t=>!isDone(t)).sort((a,b)=>(a.due_date||"9999").localeCompare(b.due_date||"9999"))[0]||null;
-  if(currentRoleProfile.key==="cfo")renderCfoCockpit({content,total,done,open,critical,progress,readiness,release});
-  if(currentRoleProfile.key==="accounting_lead")renderAccountingLeadCockpit({content,critical,progress});
-  if(currentRoleProfile.key==="worker")renderWorkerCockpit({content});
+  const {model}=await cockpitModules(),metrics=model.buildCockpitModel({tasks,project:currentProject,member:currentMembership,substitutions});
+  bottleneckTask=[...metrics.critical,...metrics.open].sort((a,b)=>(a.due_date||"9999").localeCompare(b.due_date||"9999"))[0]||null;
+  if(currentRoleProfile.key==="cfo"){renderCfoCockpit({content,metrics});content.insertAdjacentHTML("beforeend",cfoKiraHtml(metrics))}
+  if(currentRoleProfile.key==="project")renderProjectCockpit({content,metrics});
+  if(currentRoleProfile.key==="accounting_lead")renderAccountingLeadCockpit({content,critical:metrics.critical,progress:metrics.actualProgress});
+  if(currentRoleProfile.key==="worker"){renderWorkerCockpit({content,metrics});content.insertAdjacentHTML("beforeend",workerSubstitutionHtml(metrics.substitute.filter(task=>!isDone(task)),currentRoleProfile.canonicalRole==="wirtschaftspruefung"))}
+  wireRoleKpis(content);
 }
-function renderCfoCockpit({content,total,done,open,critical,progress,readiness,release}){
+function renderCfoCockpit({content,metrics}){
+  const {total,done,open,critical,actualProgress:progress,planProgress,planDeviation,daysToClose}=metrics;
   document.getElementById("managementSubtitle").textContent="Gesamtstatus, Entscheidungsbedarf und Terminrisiken";
   const decisions=tasks.filter(t=>["submitted","in_review","question"].includes(t.status)).slice(0,4);
   const ownership=new Map();tasks.filter(t=>!isDone(t)).forEach(t=>{const name=t.responsible_name||"Nicht zugeordnet";ownership.set(name,(ownership.get(name)||0)+1)});
   const intervention=[...ownership.entries()].sort((a,b)=>b[1]-a[1]).slice(0,5);
   const atRisk=critical.length>0;
-  content.innerHTML=`<div class="role-alert ${atRisk?"":"ok"}"><div><strong>${atRisk?"Der Abschluss benötigt Aufmerksamkeit.":"Der Abschluss ist aktuell stabil."}</strong><span>${atRisk?`${critical.length} kritische Punkte können Folgetermine beeinflussen.`:`${done} von ${total} Aufgaben sind abgeschlossen; derzeit ist kein kritischer Engpass sichtbar.`}</span></div>${bottleneckTask?'<button class="btn btn-primary" onclick="openBottleneck()">Engpass öffnen</button>':""}</div>
-    <div class="role-kpis"><button class="role-kpi" onclick="openMetric('done')"><span>Gesamtfortschritt</span><strong>${progress} %</strong><small>${done} von ${total} abgeschlossen</small></button><button class="role-kpi" onclick="openMetric('tasks')"><span>Offene Aufgaben</span><strong>${open}</strong><small>im gesamten Projekt</small></button><button class="role-kpi critical" onclick="openCriticalTasks()"><span>Kritische Engpässe</span><strong>${critical.length}</strong><small>überfällig, blockiert oder abgelehnt</small></button><button class="role-kpi" onclick="activateView('rooms')"><span>Prüfungsreife</span><strong>${readiness} %</strong><small>${release==null?"Kein Endtermin hinterlegt":`Zieltermin in ${Math.max(0,release)} Tagen`}</small></button></div>
+  content.innerHTML=`<div class="role-alert ${atRisk?"":"ok"}"><div><strong>${atRisk?"Der Abschluss benötigt Aufmerksamkeit.":"Der Abschluss ist aktuell stabil."}</strong><span>${atRisk?`${critical.length} kritische Punkte können Folgetermine beeinflussen.`:`${done.length} von ${total} Aufgaben sind abgeschlossen; derzeit ist kein kritischer Engpass sichtbar.`}</span></div>${bottleneckTask?'<button class="btn btn-primary" onclick="openBottleneck()">Engpass öffnen</button>':""}</div>
+    <div class="role-kpis"><button class="role-kpi" onclick="openCockpitFilter('done')"><span>Ist-Fortschritt</span><strong>${progress} %</strong><small>${done.length} von ${total} abgeschlossen</small></button><button class="role-kpi" onclick="openCockpitFilter('open')"><span>Planabweichung</span><strong>${planDeviation==null?"–":`${planDeviation>0?"+":""}${planDeviation} %`}</strong><small>${planProgress==null?"Plan nicht konfiguriert":`Planfortschritt ${planProgress} %`}</small></button><button class="role-kpi critical" onclick="openCockpitFilter('critical')"><span>Kritische Engpässe</span><strong>${critical.length}</strong><small>überfällig, blockiert oder abgelehnt</small></button><button class="role-kpi" onclick="openCockpitFilter('decisions')"><span>Tage bis Abschluss</span><strong>${daysToClose==null?"–":daysToClose}</strong><small>${daysToClose==null?"Abschlussstichtag nicht konfiguriert":"bis zum Abschlussstichtag"}</small></button></div>
+    <div class="role-alert ok"><div><strong>Budget nicht konfiguriert</strong><span>Im aktuellen Projektschema ist kein verlässlich auswertbares Budgetfeld vorhanden; es werden keine Schätzwerte angezeigt.</span></div></div>
     ${phaseProgressHtml()}
     <div class="role-layout"><div class="role-stack"><section class="role-panel"><div class="role-panel-title"><h3>Entscheidungsbedarf</h3><small>Kontext vor Freigabe prüfen</small></div><div class="role-task-list">${decisions.map(t=>roleTaskHtml(t,t.responsible_name||t.phase)).join("")||'<div class="empty">Aktuell wartet keine Aufgabe auf eine Managemententscheidung.</div>'}</div></section><section class="role-panel"><div class="role-panel-title"><h3>Engpässe</h3><small>mit Auswirkung auf den Terminplan</small></div><div class="role-task-list">${critical.slice(0,4).map(t=>roleTaskHtml(t,t.responsible_name||"Nicht zugeordnet")).join("")||'<div class="empty">Keine kritischen Engpässe ermittelt.</div>'}</div></section></div><div class="role-stack"><section class="role-panel"><div class="role-panel-title"><h3>Wo ist Eingreifen erforderlich?</h3></div>${intervention.map(([name,count])=>`<div class="team-row"><div class="team-copy"><strong>${esc(name)}</strong><span>offene Verantwortlichkeiten</span></div><span class="count-badge ${count>2?"warn":""}">${count} offen</span></div>`).join("")||'<div class="empty">Keine offenen Verantwortlichkeiten.</div>'}</section><section class="role-panel"><div class="role-panel-title"><h3>Terminlage</h3></div><div class="team-row"><span>Projektstatus</span><span class="pill ${critical.length?"blocked":"approved"}">${critical.length?"Risiko":"im Plan"}</span></div><div class="team-row"><span>Abschlussziel</span><strong>${dateOnly(currentProject.closing_date)}</strong></div></section></div></div>`;
+}
+function renderProjectCockpit({content,metrics}){
+  document.getElementById("managementSubtitle").textContent="Gesamtkoordination, Termine, Zuständigkeiten und sichere Projektadministration";
+  const invitations=teamMembers.filter(member=>member.invitation_status!=="accepted"),openInvitations=invitations.filter(member=>["pending","invited"].includes(member.invitation_status)),declinedInvitations=invitations.filter(member=>member.invitation_status==="declined"),activeSubs=substitutions.length;
+  content.innerHTML=`<div class="role-alert ${metrics.critical.length?"":"ok"}"><div><strong>${metrics.critical.length?`${metrics.critical.length} kritische Vorgänge benötigen Koordination.`:"Das Projekt ist ohne kritischen Engpass."}</strong><span>${metrics.unassigned.length} offene Aufgaben ohne Zuordnung; ${metrics.reviews.length} Reviews offen.</span></div></div><div class="role-kpis"><button class="role-kpi" onclick="openCockpitFilter('open')"><span>Offen</span><strong>${metrics.open.length}</strong><small>aktive Aufgaben</small></button><button class="role-kpi critical" onclick="openCockpitFilter('overdue')"><span>Überfällig</span><strong>${metrics.overdue.length}</strong><small>terminlich im Verzug</small></button><button class="role-kpi warning" onclick="openCockpitFilter('unassigned')"><span>Nicht zugeordnet</span><strong>${metrics.unassigned.length}</strong><small>Verantwortung fehlt</small></button><button class="role-kpi" onclick="openCockpitFilter('review')"><span>Reviews</span><strong>${metrics.reviews.length}</strong><small>${invitations.length} Einladungen · ${activeSubs} aktive Vertretungen</small></button></div>${phaseProgressHtml()}<div class="role-layout"><section class="role-panel"><div class="role-panel-title"><h3>Koordinationsbedarf</h3><small>RLS-sichtbarer Projektbestand</small></div><div class="role-task-list">${[...metrics.critical,...metrics.unassigned,...metrics.reviews].filter((task,index,list)=>list.findIndex(item=>item.id===task.id)===index).slice(0,8).map(task=>roleTaskHtml(task,task.responsible_name||"Nicht zugeordnet")).join("")||'<div class="empty">Kein akuter Koordinationsbedarf.</div>'}</div></section><section class="role-panel"><div class="role-panel-title"><h3>Projektzugänge</h3><small>nur mit expliziten Rechten</small></div><div class="team-row"><span>Akzeptierte Mitglieder</span><strong>${teamMembers.filter(member=>member.invitation_status==="accepted").length}</strong></div><div class="team-row"><span>Offene Einladungen</span><strong>${invitations.length}</strong></div><div class="team-row"><span>Aktive Stellvertretungen</span><strong>${activeSubs}</strong></div>${currentMembership.can_manage_members?'<button class="panel-action" onclick="location.href=\'/admin\'">Projektverwaltung öffnen →</button>':'<div class="small">Keine Berechtigung zur Mitgliederverwaltung.</div>'}</section></div>`;
 }
 function renderAccountingLeadCockpit({content,critical,progress}){
   document.getElementById("managementSubtitle").textContent="Teamsteuerung, Engpässe, Reviews und Verantwortlichkeiten";
@@ -582,10 +607,11 @@ function renderAccountingLeadCockpit({content,critical,progress}){
   const loads=new Map();tasks.filter(t=>!isDone(t)).forEach(t=>{const name=t.responsible_name||"Nicht zugeordnet";const value=loads.get(name)||{open:0,critical:0};value.open++;if(critical.some(c=>c.id===t.id))value.critical++;loads.set(name,value)});
   content.innerHTML=`<div class="role-alert ${critical.length?"":"ok"}"><div><strong>${critical.length?`${critical.length} kritische Teamaufgaben benötigen Steuerung.`:"Das Team arbeitet ohne kritische Überfälligkeit."}</strong><span>${unassigned.length} offene Aufgaben sind noch nicht zugeordnet; ${reviews.length} warten auf Review.</span></div>${bottleneckTask?'<button class="btn btn-primary" onclick="openBottleneck()">Nächsten Engpass bearbeiten</button>':""}</div><div class="role-kpis"><button class="role-kpi critical" onclick="openCriticalTasks()"><span>Kritisch überfällig</span><strong>${critical.length}</strong><small>blockiert oder im Verzug</small></button><button class="role-kpi warning" onclick="openReviewTasks()"><span>Offene Reviews</span><strong>${reviews.length}</strong><small>warten auf Prüfung</small></button><button class="role-kpi warning" onclick="openMetric('tasks')"><span>Nicht zugeordnet</span><strong>${unassigned.length}</strong><small>Verantwortung fehlt</small></button><button class="role-kpi" onclick="openMetric('done')"><span>Teamfortschritt</span><strong>${progress} %</strong><small>gesamter Aufgabenbestand</small></button></div><div class="role-layout"><div class="role-stack"><section class="role-panel"><div class="role-panel-title"><h3>Teamaufgaben mit Handlungsbedarf</h3><small>nach Termin- und Blockadewirkung priorisiert</small></div><div class="role-task-list">${priority.map(t=>roleTaskHtml(t,t.responsible_name||"Nicht zugeordnet")).join("")||'<div class="empty">Kein akuter Handlungsbedarf.</div>'}</div></section>${phaseProgressHtml()}</div><div class="role-stack"><section class="role-panel"><div class="role-panel-title"><h3>Team-Auslastung</h3><small>offene Aufgaben und Engpässe</small></div>${[...loads.entries()].sort((a,b)=>b[1].open-a[1].open).slice(0,7).map(([name,value])=>`<div class="team-row"><div class="team-copy"><strong>${esc(name)}</strong><span>${value.critical} kritisch · ${value.open} offen</span></div><span class="count-badge ${value.critical?"warn":""}">${value.critical?"prüfen":"normal"}</span></div>`).join("")||'<div class="empty">Keine offenen Teamaufgaben.</div>'}</section><section class="role-panel"><div class="role-panel-title"><h3>Seit Ihrem letzten Login</h3></div><div class="role-change-list">${activities.slice(0,5).map(activity=>`<div class="role-change"><span class="role-change-dot"></span><div><strong>${esc(activity.title)}</strong><span>${esc(activity.detail)} · ${dt(activity.time)}</span></div></div>`).join("")||'<div class="empty">Keine neuen Aktivitäten.</div>'}</div></section></div></div>`;
 }
-function renderWorkerCockpit({content}){
+function renderWorkerCockpit({content,metrics}){
   document.getElementById("managementSubtitle").textContent="Eigene Aufgaben, Rückfragen und nächste Aktion";
+  document.getElementById("managementTitle").textContent=`Mein Tag – ${currentMembership.project_role}`;
   const mine=tasks.filter(isOwnTask),openMine=mine.filter(t=>!isDone(t)),today=new Date().toISOString().slice(0,10),overdue=openMine.filter(t=>t.due_date&&t.due_date<today),dueToday=openMine.filter(t=>t.due_date===today),submitted=mine.filter(t=>["submitted","in_review"].includes(t.status)),returned=mine.filter(t=>["declined","question"].includes(t.status));
-  const next=[...openMine].sort((a,b)=>(a.due_date||"9999").localeCompare(b.due_date||"9999"))[0]||null,myIds=new Set(mine.map(t=>t.id)),myActivities=activities.filter(activity=>myIds.has(activity.task?.id||activity.task_id));
+  const next=cockpitLib.model.prioritizeWorkerTasks(openMine)[0]||null,myIds=new Set(mine.map(t=>t.id)),myActivities=activities.filter(activity=>myIds.has(activity.task?.id||activity.task_id));
   content.innerHTML=`<div class="today-box"><div class="role-eyebrow">Mein Tag</div><h3>${openMine.length?`${openMine.length} ${openMine.length===1?"Aufgabe wartet":"Aufgaben warten"}.`:"Ihre Aufgaben sind für heute erledigt."}</h3><p>${returned.length?`${returned.length} Aufgabe(n) benötigen Rückmeldung oder Nachbesserung.`:"Konzentrieren Sie sich auf die nächste fällige Aufgabe und die dazugehörigen Nachweise."}</p>${next?`<div class="next-action"><div><strong>${esc(next.title)}</strong><span>${esc(dueText(next))} · ${esc(next.phase||"Abschlussaufgabe")}</span></div><button class="btn btn-primary" onclick="openTaskArea('${next.id}','overview')">Nächste Aufgabe öffnen</button></div>`:""}</div><div class="role-kpis"><button class="role-kpi critical" onclick="openOwnTasks()"><span>Überfällig</span><strong>${overdue.length}</strong><small>eigene offene Aufgaben</small></button><button class="role-kpi warning" onclick="openOwnTasks()"><span>Heute fällig</span><strong>${dueToday.length}</strong><small>noch zu bearbeiten</small></button><button class="role-kpi warning" onclick="openOwnTasks()"><span>Rückfragen / Nacharbeit</span><strong>${returned.length}</strong><small>benötigen Ihre Reaktion</small></button><button class="role-kpi" onclick="openOwnTasks()"><span>Erledigt</span><strong>${mine.filter(isDone).length}</strong><small>im aktuellen Projekt</small></button></div><div class="role-layout"><div class="role-stack"><section class="role-panel"><div class="role-panel-title"><h3>Meine Aufgaben</h3><small>nur Ihre eigene Zuständigkeit</small></div><div class="role-task-list">${openMine.slice(0,8).map(t=>roleTaskHtml(t,t.phase)).join("")||'<div class="empty">Keine eigenen offenen Aufgaben.</div>'}</div></section><section class="role-panel"><div class="role-panel-title"><h3>Von mir eingereicht</h3><small>derzeit keine Aktion erforderlich</small></div><div class="role-task-list">${submitted.slice(0,5).map(t=>roleTaskHtml(t,"Wartet auf Prüfung")).join("")||'<div class="empty">Keine Aufgaben warten auf Prüfung.</div>'}</div></section></div><div class="role-stack"><section class="role-panel"><div class="role-panel-title"><h3>Seit Ihrem letzten Login</h3></div><div class="role-change-list">${myActivities.slice(0,6).map(activity=>`<div class="role-change"><span class="role-change-dot"></span><div><strong>${esc(activity.title)}</strong><span>${esc(activity.detail)} · ${dt(activity.time)}</span></div></div>`).join("")||'<div class="empty">Keine neuen Aktivitäten zu Ihren Aufgaben.</div>'}</div></section><section class="role-panel"><div class="role-panel-title"><h3>Ihr Fortschritt</h3></div><div class="team-row"><span>Offen</span><span class="pill">${openMine.length}</span></div><div class="team-row"><span>Eingereicht</span><span class="pill question">${submitted.length}</span></div><div class="team-row"><span>Erledigt / freigegeben</span><span class="pill approved">${mine.filter(isDone).length}</span></div><button class="panel-action" onclick="openOwnTasks()">Alle eigenen Aufgaben →</button></section></div></div>`;
 }
 function openPhase(i){activateView("tasks");quickTaskFilter="";document.getElementById("taskPhase").value="";document.getElementById("taskSearch").value="";const ids=new Set(tasks.filter(t=>phaseGroup(t)===i).map(t=>t.id));document.getElementById("taskBody").innerHTML=tasks.filter(t=>ids.has(t.id)).map(t=>{const r=roomOfTask(t.id),fids=r?folders.filter(f=>f.task_room_id===r.id).map(f=>f.id):[],dc=documents.filter(d=>fids.includes(d.folder_id)).length,qc=comments.filter(c=>c.task_id===t.id).length;return `<tr><td>${t.task_number||""}</td><td>${esc(t.phase)}</td><td><strong>${esc(t.title)}</strong></td><td>${esc(t.responsible_name||"Offen")}</td><td>${dateOnly(t.due_date)}</td><td><span class="pill ${t.status}">${label(t.status)}</span></td><td>${dc}</td><td>${qc}</td><td><button class="btn btn-secondary btn-small" onclick="openRoom('${t.id}')">Öffnen</button></td></tr>`}).join("")||'<tr><td colspan="9" class="empty">Keine Aufgaben in dieser Phase.</td></tr>';setTimeout(()=>document.getElementById("view-tasks").scrollIntoView({behavior:"smooth"}),50)}
@@ -596,6 +622,12 @@ function openReviewTasks(){showTaskQuickFilter("review","Offene Reviews")}
 function openReleaseTasks(){activateView("tasks");document.getElementById("taskSearch").value="freigabe";renderTasks();setTimeout(()=>document.getElementById("view-tasks").scrollIntoView({behavior:"smooth"}),50)}
 function openBottleneck(){if(bottleneckTask)openTaskArea(bottleneckTask.id,"overview")}
 
+function openCockpitFilter(requested){
+  const filter=cockpitLib?.filters.normalizeCockpitFilter(requested)||"all";quickTaskFilter=filter==="all"?"":filter;
+  const params=new URLSearchParams(location.search);params.set("view","tasks");if(quickTaskFilter)params.set("filter",quickTaskFilter);else params.delete("filter");if(currentProject)params.set("project",currentProject.id);
+  if(window.history?.replaceState)window.history.replaceState({},"",`${location.pathname}?${params.toString()}`);
+  document.getElementById("taskQuickFilterText").textContent=cockpitLib?.filters.COCKPIT_FILTERS[filter]||"Alle Aufgaben";document.getElementById("taskQuickFilter").classList.toggle("show",Boolean(quickTaskFilter));activateView("tasks");renderTasks();
+}
 function eventHtml(a){
   const icon=a.type==="file"?"DOC":a.type==="question"?"?":a.type==="response"?"✓":"•";
   const cls=a.type==="response"&&a.subtype==="declined"?"declined":a.type;
@@ -650,14 +682,15 @@ function filteredTasks(){
   const p=document.getElementById("taskPhase").value,u=document.getElementById("taskPerson").value,s=document.getElementById("taskStatus").value,q=document.getElementById("taskSearch").value.toLowerCase();
   const today=new Date().toISOString().slice(0,10);
   return tasks.filter(t=>{
-    const quickOk=!quickTaskFilter
+    const quickOk=!quickTaskFilter||!["done","declined","overdue","critical","review","mine"].includes(quickTaskFilter)
       ||(quickTaskFilter==="done"&&["completed","approved"].includes(t.status))
       ||(quickTaskFilter==="declined"&&t.status==="declined")
       ||(quickTaskFilter==="overdue"&&t.due_date&&t.due_date<today&&!["completed","approved"].includes(t.status))
       ||(quickTaskFilter==="critical"&&!isDone(t)&&((t.due_date&&t.due_date<today)||["blocked","declined"].includes(t.status)))
       ||(quickTaskFilter==="review"&&["submitted","in_review"].includes(t.status))
       ||(quickTaskFilter==="mine"&&isOwnTask(t));
-    return quickOk&&(!p||t.phase===p)&&(!u||t.responsible_name===u)&&(!s||t.status===s)&&(!q||`${t.title} ${t.phase}`.toLowerCase().includes(q));
+    const secureQuickOk=!quickTaskFilter||cockpitLib?.filters.taskMatchesFilter(t,quickTaskFilter,{today,memberId:currentMembership?.id,substitutionPrincipalIds:new Set(substitutions.map(row=>row.principal_member_id))});
+    return quickOk&&secureQuickOk&&(!p||t.phase===p)&&(!u||t.responsible_name===u)&&(!s||t.status===s)&&(!q||`${t.title} ${t.phase}`.toLowerCase().includes(q));
   });
 }
 function renderTasks(){
@@ -699,6 +732,7 @@ function focusElement(id){
 }
 function clearTaskQuickFilter(){
   quickTaskFilter="";
+  const params=new URLSearchParams(location.search);params.delete("filter");params.delete("view");if(window.history?.replaceState)window.history.replaceState({},"",`${location.pathname}${params.toString()?`?${params}`:""}`);
   document.getElementById("taskQuickFilter").classList.remove("show");
   document.querySelectorAll(".metric").forEach(x=>x.classList.remove("active"));
   renderTasks();
@@ -752,7 +786,7 @@ document.getElementById("feedFilter").addEventListener("change",renderFeed);
 ["taskPhase","taskPerson","taskStatus"].forEach(id=>document.getElementById(id).addEventListener("change",renderTasks));
 document.getElementById("taskSearch").addEventListener("input",renderTasks);
 document.getElementById("roomSearch").addEventListener("input",renderRooms);
-document.getElementById("refreshBtn").addEventListener("click",()=>currentProject?selectProject(currentProject.id):loadProjects());
+document.getElementById("refreshBtn").addEventListener("click",()=>currentProject?selectProject(currentProject.id):loadMembershipProjects());
 document.getElementById("openAdmin").addEventListener("click",()=>location.href="/admin");
 document.getElementById("passwordLoginForm").addEventListener("submit",event=>{event.preventDefault();void passwordLogin()});
 document.getElementById("passwordRecoveryForm").addEventListener("submit",event=>{event.preventDefault();void updateRecoveredPassword()});
@@ -760,6 +794,7 @@ document.getElementById("forgotPasswordBtn").addEventListener("click",()=>void r
 document.getElementById("sendMagicLink").addEventListener("click",()=>void sendMagicLink());
 document.getElementById("checkSession").addEventListener("click",()=>void initializeAuth());
 document.getElementById("logoutBtn").addEventListener("click",async()=>{showSignedOut();const {error}=await sb.auth.signOut();if(error)showAuthNotice("Abmeldung konnte nicht bestätigt werden.","err")});
+document.getElementById("membershipLogoutBtn").addEventListener("click",async()=>{showSignedOut();await sb.auth.signOut()});
 const authReady=initializeAuth();
 </script>
 </body>
