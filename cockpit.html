@@ -316,7 +316,7 @@ let authEpoch=0,authSubscription=null,recoverySessionActive=false;
 let recoveryUrlSignal=new URLSearchParams(location.hash.replace(/^#/,"")).get("type")==="recovery"&&location.hash.includes("access_token=");
 const statusMap={planned:"Geplant",invited:"Eingeladen",accepted:"Angenommen",declined:"Abgelehnt",in_progress:"In Bearbeitung",question:"RÃ¼ckfrage",blocked:"Blockiert",submitted:"Eingereicht",in_review:"In PrÃ¼fung",approved:"Freigegeben",completed:"Erledigt",rooms_ready:"DatenrÃ¤ume bereit"};
 
-function esc(v){return String(v?"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function esc(v){return String(v ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function label(v){return statusMap[v]||v||"â€“"}
 function dt(v){if(!v)return "â€“";try{return new Intl.DateTimeFormat("de-DE",{dateStyle:"short",timeStyle:"short"}).format(new Date(v))}catch{return v}}
 function dateOnly(v){if(!v)return "â€“";try{return new Intl.DateTimeFormat("de-DE").format(new Date(v+"T12:00:00"))}catch{return v}}
